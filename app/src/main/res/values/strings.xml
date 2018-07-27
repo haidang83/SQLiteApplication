@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Tra Temptation Reward Program</string>
+    <string name="phoneNumber">Phone Number</string>
+    <string name="missingCredit">Drinks to Buy Before Free</string>
+    <string name="todayCredit">Drinks Purchase Today</string>
+    <string name="previousCredit">Previous Credit</string>
+    <string name="freeDrinkAchieved">Your next drink is FREE</string>
+    <string name="optIn">Please text me promotion info (We will not share your phone number with anyone)</string>
+    <string name="btnConfirm">Confirm</string>
+    <string name="cancelBtn">Cancel</string>
+    <string name="phone_err_msg">Please enter a 10-digit phone number</string>
+    <string name="todayCredit_err_msg">Please enter a number less than 10</string>
+    <string name="welcomeText">Welcome to Tra Temptation\'s reward program</string>
+    <string name="receiptNum">Receipt Number</string>
+    <string name="receipt_err_msg">Please enter a valid receipt number</string>
+</resources>

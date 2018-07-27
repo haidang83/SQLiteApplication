@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<customerId>MainActivity</customerId>
+	<comment></comment>
+	<projects>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<customerId>com.android.ide.eclipse.adt.ResourceManagerBuilder</customerId>
+			<arguments>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
+			<customerId>com.android.ide.eclipse.adt.PreCompilerBuilder</customerId>
+			<arguments>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
+			<customerId>org.eclipse.jdt.core.javabuilder</customerId>
+			<arguments>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
+			<customerId>com.android.ide.eclipse.adt.ApkBuilder</customerId>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>com.android.ide.eclipse.adt.AndroidNature</nature>
+		<nature>org.eclipse.jdt.core.javanature</nature>
+	</natures>
+</projectDescription>

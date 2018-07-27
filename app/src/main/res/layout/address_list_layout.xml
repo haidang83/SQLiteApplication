@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:weightSum="10"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/customer"
+        android:layout_width="0dp"
+        android:layout_weight="7"
+
+        android:layout_height="wrap_content" />
+    <Button
+        android:id="@+id/delete"
+        android:layout_width="0dp"
+        android:layout_weight="3"
+        android:text="Delete"
+        android:layout_height="wrap_content" />
+</LinearLayout>
