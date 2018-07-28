@@ -71,7 +71,8 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
             public void onFocusChange(View view, boolean hasFocus) {
                 if (!hasFocus){
                     if (getCustomerInfoFromDatabaseAndUpdateScreen()){
-                        requestFocusOnTodayCredit();
+                        //requestFocusOnTodayCredit();
+                        //don't request focus here because if the user presses a different input field, then there'd be 2 fields with focus
                     }
                 }
             }
@@ -90,7 +91,8 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
                 if (!hasFocus){
                     if(isTodayCreditValid()){
                         updateMissingCredit();
-                        ((EditText) findViewById(R.id.receiptNumber)).requestFocus();
+                        //((EditText) findViewById(R.id.receiptNumber)).requestFocus();
+                        //don't request focus here because if the user press a different input field, then there'll be 2 fields with focus
                     }
                 }
             }
@@ -335,10 +337,26 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
             int todayCredit = getTodayCredit();
             int previousCreditValue = customer.getTotalCredit();
             if (customer.isOptIn()){
-                //default the checkbox to checked
-                ((CheckBox) findViewById(R.id.checkbox_optIn)).setChecked(true);
+                //hide the checkbox if customer already opted in
+                ((CheckBox) findViewById(R.id.checkbox_optIn)).setVisibility(View.INVISIBLE);
+            }
+            else {
+                //handles when 1 number was entered, then another one was enter
+                ((CheckBox) findViewById(R.id.checkbox_optIn)).setVisibility(View.VISIBLE);
             }
 
+            previousCredit = (EditText) findViewById(R.id.previousCredit);
+            previousCredit.setText(String.valueOf(previousCreditValue));
+
+            updateMissingCredit();
+        }
+        else {
+            //new customer
+            //handles the case where customer looked up 1 number, and then enter a different number, so need to reload
+            int todayCredit = getTodayCredit();
+            ((CheckBox) findViewById(R.id.checkbox_optIn)).setVisibility(View.VISIBLE);
+
+            int previousCreditValue = 0;
             previousCredit = (EditText) findViewById(R.id.previousCredit);
             previousCredit.setText(String.valueOf(previousCreditValue));
 
@@ -412,29 +430,19 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
             if (customer == null){
                 customer = new Customer();
                 customer.setCustomerId(getUnformattedPhoneNumber());
+            }
 
-                //only set the opt-in date if it's new customer, or existing customer but the value changed
-                if (optIn.isChecked()){
-                    customer.setOptInDate(today);
-                    sendConfirmationText = true;
-                }
+            //only set the opt-in date if it's checked.
+            //if customer already opted-in, we'd hide the checkbox. They can opt-out from the admin screen
+            if (optIn.isChecked()){
+                customer.setOptIn(optIn.isChecked());
+                customer.setOptInDate(today);
+
+                //clear out opt-out date
+                customer.setOptOutDate(null);
+
+                sendConfirmationText = true;
             }
-            else {
-                //existing customer, check if the screen's opt-in value is different from loaded db value
-                final Date emptyDate = new Date(0);
-                if (customer.isOptIn() && !optIn.isChecked()){
-                    //previously opted in, but now opted out from screen, set the opt-out date (we'll set the opt-in bool later)
-                    customer.setOptOutDate(today);
-                    customer.setOptInDate(emptyDate); //clear opt-in date
-                }
-                else if (optIn.isChecked() && !customer.isOptIn()){
-                    //previously opted out, but now opted in from screen, set the opt-in date
-                    customer.setOptInDate(today);
-                    customer.setOptOutDate(emptyDate); //clear opt-out date
-                    sendConfirmationText = true;
-                }
-            }
-            customer.setOptIn(optIn.isChecked());
             customer.setTotalCredit(getPreviousCredit() + getTodayCredit());
             customer.setLastVisitDate(today);
 
