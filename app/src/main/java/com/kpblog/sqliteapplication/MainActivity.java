@@ -70,8 +70,9 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
             @Override
             public void onFocusChange(View view, boolean hasFocus) {
                 if (!hasFocus){
-                    getCustomerInfoFromDatabaseAndUpdateScreen();
-                    requestFocusOnTodayCredit();
+                    if (getCustomerInfoFromDatabaseAndUpdateScreen()){
+                        requestFocusOnTodayCredit();
+                    }
                 }
             }
         });
@@ -89,7 +90,6 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
                 if (!hasFocus){
                     if(isTodayCreditValid()){
                         updateMissingCredit();
-                        clearCurrentFocus();
                         ((EditText) findViewById(R.id.receiptNumber)).requestFocus();
                     }
                 }
@@ -153,8 +153,7 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
         }
         else {
             todayCreditLayout.setError(getString(R.string.todayCredit_err_msg));
-            clearCurrentFocus();
-            ((EditText) findViewById(R.id.todayCredit)).requestFocus();
+            //((EditText) findViewById(R.id.todayCredit)).requestFocus();
         }
         return isValid;
     }
@@ -284,7 +283,6 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
             //when user is done entering today's drink
             if (isTodayCreditValid()){
                 updateMissingCredit();
-                clearCurrentFocus();
                 ((EditText) findViewById(R.id.receiptNumber)).requestFocus();
             }
         }
@@ -296,7 +294,7 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
     }
 
     private void requestFocusOnTodayCredit() {
-        clearCurrentFocus();
+        //clearCurrentFocus();
         todayCredit = (EditText) findViewById(R.id.todayCredit);
         todayCredit.requestFocus();
         todayCredit.setSelection(todayCredit.getText().length());
@@ -314,8 +312,7 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
         }
         else {
             receiptNumLayout.setError(getString(R.string.receipt_err_msg));
-            clearCurrentFocus();
-            receiptNum.requestFocus();
+            //receiptNum.requestFocus();
         }
 
         return isValid;
@@ -368,11 +365,11 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
             }
             else {
                 phoneLayout.setError(getString(R.string.phone_err_msg));
-                setFocusOnPhone();
+                //setFocusOnPhone();
             }
         } catch (Exception e){
             phoneLayout.setError(getString(R.string.phone_err_msg));
-            setFocusOnPhone();
+            //setFocusOnPhone();
         }
 
 
@@ -380,7 +377,7 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
     }
 
     private void setFocusOnPhone() {
-        clearCurrentFocus();
+        //clearCurrentFocus();
         phone.requestFocus();
     }
 

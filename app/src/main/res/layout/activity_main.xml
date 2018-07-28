@@ -26,12 +26,14 @@
             android:layout_height="wrap_content">
 
             <EditText
+
                 android:id="@+id/phone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/phoneNumber"
-                android:inputType="phone|number"
-                android:imeOptions="actionNext"/>
+                android:inputType="phone"
+                android:imeOptions="actionNext">
+            </EditText>
         </android.support.design.widget.TextInputLayout>
 
         <android.support.design.widget.TextInputLayout
@@ -63,7 +65,7 @@
 
             <EditText
                 android:id="@+id/todayCredit"
-                android:inputType="phone|number"
+                android:inputType="phone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/todayCredit"
@@ -79,7 +81,7 @@
 
             <EditText
                 android:id="@+id/receiptNumber"
-                android:inputType="phone|number"
+                android:inputType="phone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/receiptNum"
