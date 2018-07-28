@@ -20,7 +20,6 @@
 
         <android.support.design.widget.TextInputLayout
             android:id="@+id/phoneLayout"
-            android:layout_below="@+id/insertLayout"
             android:focusableInTouchMode="true"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
@@ -38,7 +37,6 @@
 
         <android.support.design.widget.TextInputLayout
             android:id="@+id/previousCreditLayout"
-            android:layout_below="@+id/insertLayout"
             android:layout_width="match_parent"
             android:focusableInTouchMode="true"
             android:layout_marginTop="20dp"
@@ -57,7 +55,6 @@
 
         <android.support.design.widget.TextInputLayout
             android:id="@+id/todayCreditlayout"
-            android:layout_below="@+id/previousCreditLayout"
             android:layout_width="match_parent"
             android:focusableInTouchMode="true"
             android:layout_marginTop="20dp"
@@ -91,7 +88,6 @@
 
         <android.support.design.widget.TextInputLayout
             android:id="@+id/missingCreditlayout"
-            android:layout_below="@+id/previousCreditLayout"
             android:layout_width="match_parent"
             android:focusableInTouchMode="true"
             android:layout_marginTop="20dp"

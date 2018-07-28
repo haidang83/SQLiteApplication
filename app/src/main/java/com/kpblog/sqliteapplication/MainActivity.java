@@ -204,7 +204,6 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
                     // permission denied
                     Toast.makeText(getApplicationContext(), "permission denied", Toast.LENGTH_LONG).show();
                 }
-                return;
             }
         }
     }
