@@ -65,14 +65,7 @@ public class AddressAdapter extends BaseAdapter {
         boolean isOptIn = customer.isOptIn();*/
 
         holder.customer.setText(customer.toString());
-        holder.delete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ((MainActivity)context).deleteCustomer(customer);
-                ((MainActivity)context).list.remove(customer);
-                notifyDataSetChanged();
-            }
-        });
+
         return convertView;
     }
     class Holder{

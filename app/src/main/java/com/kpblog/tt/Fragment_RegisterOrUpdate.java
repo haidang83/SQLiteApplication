@@ -270,8 +270,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         // check permission is given
         if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
             // request permission (see result in onRequestPermissionsResult() method)
-            ActivityCompat.requestPermissions(getActivity(),
-                    new String[]{Manifest.permission.SEND_SMS},
+            requestPermissions(new String[]{Manifest.permission.SEND_SMS},
                     MY_PERMISSIONS_REQUEST_SEND_SMS);
         } else {
             // permission already granted run sms send
