@@ -1,13 +1,11 @@
 package com.kpblog.tt;
 
 import android.Manifest;
-import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.telephony.PhoneNumberFormattingTextWatcher;
@@ -58,7 +56,6 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     private ListView listView;
     private AddressAdapter addressAdapter;
     public List<Customer> list;
-    private Customer customer;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -447,7 +444,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
 
         //get customer by phone, if not exist, add
         final String phone = getUnformattedPhoneNumber();
-        customer = handler.getCustomerByPhone(phone);
+        Customer customer = handler.getCustomerById(phone);
 
         if (customer != null){
             //existing customer, update the screen with customer info
@@ -538,10 +535,11 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         boolean sendConfirmationText = false;
         try {
             final Date today = new Date(Calendar.getInstance().getTime().getTime());
-
+            final String unformattedPhoneNumber = getUnformattedPhoneNumber();
+            Customer customer = handler.getCustomerById(unformattedPhoneNumber);
             if (customer == null){
                 customer = new Customer();
-                customer.setCustomerId(getUnformattedPhoneNumber());
+                customer.setCustomerId(unformattedPhoneNumber);
             }
 
             //only set the opt-in date if it's checked.

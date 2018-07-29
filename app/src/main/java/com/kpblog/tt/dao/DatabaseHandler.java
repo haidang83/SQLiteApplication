@@ -67,9 +67,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
 
-  public Customer getCustomerByPhone(String phone) {
+  public Customer getCustomerById(String id) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_CUSTOMER, new String[] {KEY_CUSTOMER_ID, KEY_TOTALCREDIT, KEY_IS_OPT_IN, KEY_OPT_IN_DATE, KEY_LAST_VISIT_DATE, KEY_OPT_OUT_DATE, KEY_IS_TEST_USER}, KEY_CUSTOMER_ID + "=?", new String[] { phone },
+        Cursor cursor = db.query(TABLE_CUSTOMER, new String[] {KEY_CUSTOMER_ID, KEY_TOTALCREDIT, KEY_IS_OPT_IN, KEY_OPT_IN_DATE, KEY_LAST_VISIT_DATE, KEY_OPT_OUT_DATE, KEY_IS_TEST_USER}, KEY_CUSTOMER_ID + "=?", new String[] { id },
                 null, null, null, null);
         Customer customer = null;
         if (cursor != null && cursor.moveToFirst()){
