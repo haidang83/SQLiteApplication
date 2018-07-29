@@ -316,6 +316,8 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         receiptLayout.setErrorEnabled(false);
 
         missingCredit.setText(String.valueOf(FREE_DRINK_THRESHOLD - getTodayCredit()));
+
+        optIn.setChecked(false);
         optIn.setVisibility(View.VISIBLE);
 
         phone.requestFocus();

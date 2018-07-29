@@ -55,7 +55,7 @@ import java.util.List;
  *
  * 6. Add customer purchase table & populate [DONE]
  */
-public class MainActivity extends AppCompatActivity implements
+public class MainActivity extends AppCompatActivity implements  Fragment_Customer.OnFragmentInteractionListener,
                                                                 Fragment_Claim.OnFragmentInteractionListener,
                                                                 Fragment_RegisterOrUpdate.OnFragmentInteractionListener,
                                                                 Fragment_Admin.OnFragmentInteractionListener,
@@ -107,6 +107,7 @@ public class MainActivity extends AppCompatActivity implements
         adapter.addFragment(new Fragment_Claim(), getString(R.string.tab_claim));
         adapter.addFragment(new Fragment_Admin(), getString(R.string.tab_admin));
         adapter.addFragment(new Fragment_Dashboard(), getString(R.string.tab_dashboard));
+        adapter.addFragment(new Fragment_Customer(), "Customer");
         viewPager.setAdapter(adapter);
     }
 
