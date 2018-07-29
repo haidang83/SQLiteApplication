@@ -25,6 +25,7 @@ import android.widget.Toast;
 import com.kpblog.sqliteapplication.adapter.AddressAdapter;
 import com.kpblog.sqliteapplication.dao.DatabaseHandler;
 import com.kpblog.sqliteapplication.model.Customer;
+import com.kpblog.sqliteapplication.model.CustomerPurchase;
 
 import java.sql.Date;
 import java.util.Calendar;
@@ -33,7 +34,7 @@ import java.util.List;
 /**
  * issues:
  * 1. only update the opt-in, opt-out date when the value was changed from previous value (don't update every time) [DONE]
- * 2. don't show the opt-in if user already opted in(we'll have an unsubscribe button on the admin tab to opt-out)
+ * 2. don't show the opt-in if user already opted in(we'll have an unsubscribe button on the admin tab to opt-out) [DONE]
  * 3. update missing credit when Phone/previousCredit/todayCredit is updated [DONE]
  *
  * 4. tab to claim discount:
@@ -45,6 +46,8 @@ import java.util.List;
  *      b. add test user
  *      c. export/import db
  *      d. raffle/promotion
+ *
+ * 6. Add customer purchase table & populate [DONE]
  */
 public class MainActivity extends AppCompatActivity implements TextView.OnEditorActionListener{
 
@@ -132,6 +135,8 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
         });
 
         handler = new DatabaseHandler(this);
+        List<CustomerPurchase> cpList = handler.getAllCustomerPurchase();
+        Log.d("CustomerPurchase: ", cpList.toString());
 
         //uncomment to see the db entries on screen
         /*listView = (ListView) findViewById(R.id.addressListView);
@@ -448,6 +453,8 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
 
             handler.registerOrUpdateCustomer(customer);
 
+            insertCustomerPurchase(customer.getCustomerId(), getTodayCredit());
+
             if (sendConfirmationText){
                 sendConfirmText(customer.getCustomerId());
             }
@@ -462,5 +469,16 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
         }
 
         return success;
+    }
+
+    private void insertCustomerPurchase(String customerId, int todayCredit) {
+        CustomerPurchase cp = new CustomerPurchase();
+
+        cp.setCustomerId(customerId);
+        cp.setQuantity(todayCredit);
+        cp.setPurchaseDate(new java.util.Date());
+        cp.setReceiptNum(Integer.parseInt(receiptNum.getText().toString()));
+
+        handler.insertCustomerPurchase(cp);
     }
 }

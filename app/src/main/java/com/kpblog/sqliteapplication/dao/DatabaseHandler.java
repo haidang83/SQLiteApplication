@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.kpblog.sqliteapplication.model.Customer;
+import com.kpblog.sqliteapplication.model.CustomerPurchase;
 
 import java.sql.Date;
 import java.util.ArrayList;
@@ -28,6 +29,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_IS_OPT_IN = "isOptIn";
     private static final String KEY_IS_TEST_USER = "isTestUser";
 
+    private static final String TABLE_CUSTOMER_PURCHASE = "customerPurchase";
+    private static final String KEY_QUANTITY = "quantity";
+    private static final String KEY_RECEIPT_NUM = "receiptNum";
+    private static final String KEY_PURCHASE_DATE = "purchaseDate";
+
     public DatabaseHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -36,8 +42,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         //using INTEGER for DATE columns (unix time, seconds since epoch)
         String CREATE_CUSTOMER_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER)";
-
         sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_TABLE, TABLE_CUSTOMER, KEY_CUSTOMER_ID, KEY_TOTALCREDIT, KEY_LAST_VISIT_DATE, KEY_IS_OPT_IN, KEY_OPT_IN_DATE, KEY_OPT_OUT_DATE, KEY_IS_TEST_USER));
+
+        String CREATE_CUSTOMER_PURCHASE_TABLE = "CREATE TABLE %s (%s TEXT, %s INTEGER, %s INTEGER, %s INTEGER)";
+        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_PURCHASE_TABLE, TABLE_CUSTOMER_PURCHASE, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE));
     }
 
     @Override
@@ -178,5 +186,44 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         }
 
         db.close();
+    }
+
+    public void insertCustomerPurchase(CustomerPurchase cp) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(KEY_CUSTOMER_ID, cp.getCustomerId());
+        values.put(KEY_QUANTITY, cp.getQuantity());
+        values.put(KEY_RECEIPT_NUM, cp.getReceiptNum());
+        values.put(KEY_PURCHASE_DATE, cp.getPurchaseDate().getTime());
+
+        // Inserting new Row
+        db.insert(TABLE_CUSTOMER_PURCHASE, null, values);
+        db.close(); // Closing database connection
+    }
+
+    public List<CustomerPurchase> getAllCustomerPurchase() {
+        List<CustomerPurchase> cpList = new ArrayList<CustomerPurchase>();
+        // Select All Query
+        String selectQueryFormat = "SELECT %s, %s, %s, %s FROM %s";
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(String.format(selectQueryFormat, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE, TABLE_CUSTOMER_PURCHASE), null);
+
+        // Getting the address list which we already into our database
+        if (cursor.moveToFirst()) {
+            do {
+                CustomerPurchase cp = new CustomerPurchase();
+                cp.setCustomerId(cursor.getString(0));
+                cp.setQuantity(cursor.getInt(1));
+                cp.setReceiptNum(cursor.getInt(2));
+                cp.setPurchaseDate(new Date(cursor.getLong(3)));
+
+                // Adding contact to list
+                cpList.add(cp);
+            } while (cursor.moveToNext());
+        }
+
+        // return contact list
+        return cpList;
     }
 }
