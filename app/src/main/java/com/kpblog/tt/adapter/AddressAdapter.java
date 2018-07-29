@@ -1,4 +1,4 @@
-package com.kpblog.sqliteapplication.adapter;
+package com.kpblog.tt.adapter;
 
 import android.app.Activity;
 import android.content.Context;
@@ -9,9 +9,9 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.kpblog.sqliteapplication.MainActivity;
-import com.kpblog.sqliteapplication.R;
-import com.kpblog.sqliteapplication.model.Customer;
+import com.kpblog.tt.MainActivity;
+import com.kpblog.tt.R;
+import com.kpblog.tt.model.Customer;
 
 /**
  * Created by Khushvinders on 05-Feb-17.

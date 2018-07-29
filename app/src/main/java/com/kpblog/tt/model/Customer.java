@@ -1,4 +1,4 @@
-package com.kpblog.sqliteapplication.model;
+package com.kpblog.tt.model;
 
 import java.sql.Date;
 

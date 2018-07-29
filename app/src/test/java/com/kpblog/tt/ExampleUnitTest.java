@@ -1,4 +1,4 @@
-package com.kpblog.sqliteapplication;
+package com.kpblog.tt;
 
 import org.junit.Test;
 

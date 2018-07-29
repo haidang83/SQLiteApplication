@@ -1,4 +1,4 @@
-package com.kpblog.sqliteapplication.model;
+package com.kpblog.tt.model;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -42,7 +42,7 @@ public class CustomerPurchase {
 
     @Override
     public String toString(){
-        String cp = "%s, quantity=%d, receipt=%d, date=%s\n";
+        String cp = "\n%s, quantity=%d, receipt=%d, date=%s";
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         final String dateStr = sdf.format(this.purchaseDate);
         return String.format(cp, this.customerId, this.quantity, this.receiptNum, dateStr);

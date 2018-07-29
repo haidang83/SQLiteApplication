@@ -1,4 +1,4 @@
-package com.kpblog.sqliteapplication;
+package com.kpblog.tt;
 
 import android.Manifest;
 import android.content.Intent;
@@ -14,7 +14,6 @@ import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -22,10 +21,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.kpblog.sqliteapplication.adapter.AddressAdapter;
-import com.kpblog.sqliteapplication.dao.DatabaseHandler;
-import com.kpblog.sqliteapplication.model.Customer;
-import com.kpblog.sqliteapplication.model.CustomerPurchase;
+import com.kpblog.tt.adapter.AddressAdapter;
+import com.kpblog.tt.dao.DatabaseHandler;
+import com.kpblog.tt.model.Customer;
+import com.kpblog.tt.model.CustomerPurchase;
 
 import java.sql.Date;
 import java.util.Calendar;

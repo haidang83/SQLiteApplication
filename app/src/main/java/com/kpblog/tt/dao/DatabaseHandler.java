@@ -1,4 +1,4 @@
-package com.kpblog.sqliteapplication.dao;
+package com.kpblog.tt.dao;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -7,8 +7,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import com.kpblog.sqliteapplication.model.Customer;
-import com.kpblog.sqliteapplication.model.CustomerPurchase;
+import com.kpblog.tt.model.Customer;
+import com.kpblog.tt.model.CustomerPurchase;
 
 import java.sql.Date;
 import java.util.ArrayList;
