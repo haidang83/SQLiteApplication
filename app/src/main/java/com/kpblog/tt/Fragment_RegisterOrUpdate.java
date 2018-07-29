@@ -2,24 +2,22 @@ package com.kpblog.tt;
 
 import android.Manifest;
 import android.app.FragmentTransaction;
-import android.content.Intent;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.support.design.widget.TabLayout;
+import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
+import android.telephony.PhoneNumberFormattingTextWatcher;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.SmsManager;
+import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -33,33 +31,22 @@ import com.kpblog.tt.model.Customer;
 import com.kpblog.tt.model.CustomerPurchase;
 
 import java.sql.Date;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
 /**
- * issues:
- * 1. only update the opt-in, opt-out date when the value was changed from previous value (don't update every time) [DONE]
- * 2. don't show the opt-in if user already opted in(we'll have an unsubscribe button on the admin tab to opt-out) [DONE]
- * 3. update missing credit when Phone/previousCredit/todayCredit is updated [DONE]
- *
- * 4. tab to claim discount:
- *      a. if previous credit = 10, go to discount tab with phone number filled in
- *      b. if previous credit + todayCredit = 10, pressing confirm will take user to discount tab with phone number filled in
- *
- * 5. Admin tab
- *      a. opt-out
- *      b. add test user
- *      c. export/import db
- *      d. raffle/promotion
- *
- * 6. Add customer purchase table & populate [DONE]
+ * A simple {@link Fragment} subclass.
+ * Activities that contain this fragment must implement the
+ * {@link Fragment_RegisterOrUpdate.OnFragmentInteractionListener} interface
+ * to handle interaction events.
+ * Use the {@link Fragment_RegisterOrUpdate#newInstance} factory method to
+ * create an instance of this fragment.
  */
-public class MainActivity extends AppCompatActivity implements TextView.OnEditorActionListener,
-                                                                Fragment_Claim.OnFragmentInteractionListener,
-                                                                Fragment_RegisterOrUpdate.OnFragmentInteractionListener,
-                                                                Fragment_Admin.OnFragmentInteractionListener,
-                                                                Fragment_Dashboard.OnFragmentInteractionListener{
+public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEditorActionListener{
+    // TODO: Rename parameter arguments, choose names that match
+    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+    private static final String ARG_PARAM1 = "param1";
+    private static final String ARG_PARAM2 = "param2";
 
     public static final int FREE_DRINK_THRESHOLD = 10;
     public static final int TODAY_CREDIT_LIMIT = 10; //number of drinks that can be purchased at 1 time (to avoid typo)
@@ -73,92 +60,189 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
     public List<Customer> list;
     private Customer customer;
 
-    private Toolbar toolbar;
-    private TabLayout tabLayout;
-    private ViewPager viewPager;
+    // TODO: Rename and change types of parameters
+    private String mParam1;
+    private String mParam2;
+
+    private OnFragmentInteractionListener mListener;
+    private View view;
+
+    public Fragment_RegisterOrUpdate() {
+        // Required empty public constructor
+    }
+
+    /**
+     * Use this factory method to create a new instance of
+     * this fragment using the provided parameters.
+     *
+     * @param param1 Parameter 1.
+     * @param param2 Parameter 2.
+     * @return A new instance of fragment Fragment_RegisterOrUpdate.
+     */
+    // TODO: Rename and change types and number of parameters
+    public static Fragment_RegisterOrUpdate newInstance(String param1, String param2) {
+        Fragment_RegisterOrUpdate fragment = new Fragment_RegisterOrUpdate();
+        Bundle args = new Bundle();
+        args.putString(ARG_PARAM1, param1);
+        args.putString(ARG_PARAM2, param2);
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        if (getArguments() != null) {
+            mParam1 = getArguments().getString(ARG_PARAM1);
+            mParam2 = getArguments().getString(ARG_PARAM2);
+        }
 
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+    }
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        View view = inflater.inflate(R.layout.fragment_register_or_update, container, false);
 
-        viewPager = (ViewPager) findViewById(R.id.viewpager);
-        setupViewPager(viewPager);
+        return view;
+    }
 
-        tabLayout = (TabLayout) findViewById(R.id.tabs);
-        tabLayout.setupWithViewPager(viewPager);
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState){
+        phone = (EditText)(getView().findViewById(R.id.phone));
+        phone.addTextChangedListener(new PhoneNumberFormattingTextWatcher());
+        phone.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean hasFocus) {
+                if (!hasFocus){
+                    if (getCustomerInfoFromDatabaseAndUpdateScreen()){
+                        //requestFocusOnTodayCredit();
+                        //don't request focus here because if the user presses a different input field, then there'd be 2 fields with focus
+                    }
+                }
+            }
+        });
+        phone.setOnEditorActionListener(this);
+
+        previousCredit = (EditText) getView().findViewById(R.id.previousCredit);
+        previousCredit.setText(String.valueOf(0));
+
+        todayCredit = (EditText) getView().findViewById(R.id.todayCredit);
+        todayCredit.setText(String.valueOf(1));
+        todayCredit.setOnEditorActionListener(this);
+        todayCredit.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean hasFocus) {
+                if (!hasFocus){
+                    if(isTodayCreditValid()){
+                        updateMissingCredit();
+                        //((EditText) getView().findViewById(R.id.receiptNumber)).requestFocus();
+                        //don't request focus here because if the user press a different input field, then there'll be 2 fields with focus
+                    }
+                }
+            }
+        });
+
+        missingCredit = (EditText) getView().findViewById(R.id.missingCredit);
+        missingCredit.setText(String.valueOf(FREE_DRINK_THRESHOLD - getTodayCredit()));
+
+        receiptNum = (EditText) getView().findViewById(R.id.receiptNumber);
+        receiptNum.setOnEditorActionListener(this);
+
+        optIn = (CheckBox) getView().findViewById(R.id.checkbox_optIn);
+        optIn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //there's an issue while on todayCredit, user clicks back,
+                //after exiting the keyboard, the focus is still on the todayCredit
+                todayCredit.clearFocus();
+                phone.clearFocus();
+            }
+        });
+
+        confirmBtn = (Button) getView().findViewById(R.id.confirmBtn);
+        confirmBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                registerOrUpdateCustomer();
+            }
+        });
+
+        cancelBtn = (Button) getView().findViewById(R.id.cancelBtn);
+        cancelBtn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                gotoHomeScreen();
+            }
+        });
+
+        handler = new DatabaseHandler(getContext());
+        List<CustomerPurchase> cpList = handler.getAllCustomerPurchase();
+        Log.d("CustomerPurchase: ", cpList.toString());
 
         //uncomment to see the db entries on screen
-        /*listView = (ListView) findViewById(R.id.addressListView);
+        /*listView = (ListView) getView().findViewById(R.id.addressListView);
         list = handler.getAllAddress();
         addressAdapter = new AddressAdapter(this);
         listView.setAdapter(addressAdapter);*/
-
     }
 
-    private void setupViewPager(ViewPager viewPager) {
-        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        adapter.addFragment(new Fragment_RegisterOrUpdate(), getString(R.string.tab_registration));
-        adapter.addFragment(new Fragment_Claim(), getString(R.string.tab_claim));
-        adapter.addFragment(new Fragment_Admin(), getString(R.string.tab_admin));
-        adapter.addFragment(new Fragment_Dashboard(), getString(R.string.tab_dashboard));
-        viewPager.setAdapter(adapter);
+    // TODO: Rename method, update argument and hook method into UI event
+    public void onButtonPressed(Uri uri) {
+        if (mListener != null) {
+            mListener.onFragmentInteraction(uri);
+        }
     }
 
     @Override
-    public void onFragmentInteraction(Uri uri) {
-
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnFragmentInteractionListener) {
+            mListener = (OnFragmentInteractionListener) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
     }
 
-    class ViewPagerAdapter extends FragmentPagerAdapter {
-        private final List<Fragment> mFragmentList = new ArrayList<>();
-        private final List<String> mFragmentTitleList = new ArrayList<>();
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
 
-        public ViewPagerAdapter(FragmentManager manager) {
-            super(manager);
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-            return mFragmentList.get(position);
-        }
-
-        @Override
-        public int getCount() {
-            return mFragmentList.size();
-        }
-
-        public void addFragment(Fragment fragment, String title) {
-            mFragmentList.add(fragment);
-            mFragmentTitleList.add(title);
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            return mFragmentTitleList.get(position);
-        }
+    /**
+     * This interface must be implemented by activities that contain this
+     * fragment to allow an interaction in this fragment to be communicated
+     * to the activity and potentially other fragments contained in that
+     * activity.
+     * <p>
+     * See the Android Training lesson <a href=
+     * "http://developer.android.com/training/basics/fragments/communicating.html"
+     * >Communicating with Other Fragments</a> for more information.
+     */
+    public interface OnFragmentInteractionListener {
+        // TODO: Update argument type and name
+        void onFragmentInteraction(Uri uri);
     }
 
     private boolean isTodayCreditValid() {
         boolean isValid = false;
-        final String todayCreditStr = MainActivity.this.todayCredit.getText().toString();
+        EditText todayCreditEditText = (EditText)(getView().findViewById(R.id.todayCredit));
+        final String todayCreditStr = todayCreditEditText.getText().toString();
         if (todayCreditStr != null && todayCreditStr.matches(AT_LEAST_ONE_DIGIT_REGEXP)){
             int todayCredit = Integer.parseInt(todayCreditStr);
             isValid = (todayCredit < TODAY_CREDIT_LIMIT);
         }
 
-        TextInputLayout todayCreditLayout = (TextInputLayout) findViewById(R.id.todayCreditlayout);
+        TextInputLayout todayCreditLayout = (TextInputLayout) getView().findViewById(R.id.todayCreditlayout);
         if (isValid){
             todayCreditLayout.setErrorEnabled(false);
         }
         else {
             todayCreditLayout.setError(getString(R.string.todayCredit_err_msg));
-            //((EditText) findViewById(R.id.todayCredit)).requestFocus();
+            //((EditText) getView().findViewById(R.id.todayCredit)).requestFocus();
         }
         return isValid;
     }
@@ -171,11 +255,11 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
             targetPhoneNum = phoneNum;
             requestSmsPermission();
             //Toast.makeText(getApplicationContext(), "Message Sent", Toast.LENGTH_LONG).show();
-            } catch (Exception ex) {
-                Toast.makeText(getApplicationContext(),ex.getMessage().toString(),
-                        Toast.LENGTH_LONG).show();
-                ex.printStackTrace();
-            }
+        } catch (Exception ex) {
+            Toast.makeText(getContext().getApplicationContext(),ex.getMessage().toString(),
+                    Toast.LENGTH_LONG).show();
+            ex.printStackTrace();
+        }
     }
 
 
@@ -184,15 +268,15 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
     private void requestSmsPermission() {
 
         // check permission is given
-        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
             // request permission (see result in onRequestPermissionsResult() method)
-            ActivityCompat.requestPermissions(MainActivity.this,
+            ActivityCompat.requestPermissions(getActivity(),
                     new String[]{Manifest.permission.SEND_SMS},
                     MY_PERMISSIONS_REQUEST_SEND_SMS);
         } else {
             // permission already granted run sms send
             sendSms(targetPhoneNum, confirmationMsg);
-            Toast.makeText(getApplicationContext(), "Message Sent", Toast.LENGTH_LONG).show();
+            Toast.makeText(getContext().getApplicationContext(), "Message Sent", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -204,10 +288,10 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // permission was granted
                     sendSms(targetPhoneNum, confirmationMsg);
-                    Toast.makeText(getApplicationContext(), "Message Sent", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext().getApplicationContext(), "Message Sent", Toast.LENGTH_LONG).show();
                 } else {
                     // permission denied
-                    Toast.makeText(getApplicationContext(), "permission denied", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext().getApplicationContext(), "permission denied", Toast.LENGTH_LONG).show();
                 }
             }
         }
@@ -220,6 +304,36 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
     }
 
     private void gotoHomeScreen() {
+        //clear all fields
+        phone.setText("");
+        TextInputLayout phoneLayout = (TextInputLayout) getView().findViewById(R.id.phoneLayout);
+        phoneLayout.setErrorEnabled(false);
+
+        previousCredit.setText("0");
+
+        TextInputLayout todayCreditLayout = (TextInputLayout) getView().findViewById(R.id.todayCreditlayout);
+        todayCreditLayout.setErrorEnabled(false);
+        todayCredit.setText(String.valueOf(1));
+
+        receiptNum.setText("");
+        TextInputLayout receiptLayout = (TextInputLayout) getView().findViewById(R.id.receiptLayout);
+        receiptLayout.setErrorEnabled(false);
+
+        missingCredit.setText(String.valueOf(FREE_DRINK_THRESHOLD - getTodayCredit()));
+        optIn.setVisibility(View.VISIBLE);
+
+        phone.requestFocus();
+
+        /*android.support.v4.app.FragmentTransaction ftr = getFragmentManager().beginTransaction();
+        ftr.detach(Fragment_RegisterOrUpdate.this).attach(Fragment_RegisterOrUpdate.this).commit();*/
+
+        /*Fragment_RegisterOrUpdate fragment = (Fragment_RegisterOrUpdate)
+                getFragmentManager().findFragmentById(R.id.your_fragment_container_id);
+
+        getFragmentManager().beginTransaction()
+                .detach(fragment)
+                .attach(fragment)
+                .commit();*/
 
         /*go back to home screen
         Intent myIntent = new Intent(MainActivity.this, MainActivity.class);
@@ -229,22 +343,22 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
 
     private void updateMissingCredit() {
         //done with editing
-        EditText missingCreditView = (EditText) findViewById(R.id.missingCredit);
+        EditText missingCreditView = (EditText) getView().findViewById(R.id.missingCredit);
         int previousCreditValue = getPreviousCredit();
 
         int todayCredit = getTodayCredit();
         int totalCredit = previousCreditValue + todayCredit;
-        missingCreditView = (EditText) findViewById(R.id.missingCredit);
+        missingCreditView = (EditText) getView().findViewById(R.id.missingCredit);
         final int missingCredit = FREE_DRINK_THRESHOLD - totalCredit;
 
         if (missingCredit > 0){
-            ((TextInputLayout) findViewById(R.id.missingCreditlayout)).setHintEnabled(true);
+            ((TextInputLayout) getView().findViewById(R.id.missingCreditlayout)).setHintEnabled(true);
             missingCreditView.setText(String.valueOf(missingCredit));
         }
         else {
             //qualifies for free drink
             missingCreditView.setText(R.string.freeDrinkAchieved);
-            ((TextInputLayout) findViewById(R.id.missingCreditlayout)).setHintEnabled(false);
+            ((TextInputLayout) getView().findViewById(R.id.missingCreditlayout)).setHintEnabled(false);
             //TODO: need to reset the credit
         }
     }
@@ -259,7 +373,7 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
     }
 
     private int getTodayCredit() {
-        final String todayCreditStr = MainActivity.this.todayCredit.getText().toString();
+        final String todayCreditStr = todayCredit.getText().toString();
         int todayCredit = 0;
         if (todayCreditStr != null && !todayCreditStr.isEmpty()){
             todayCredit = Integer.parseInt(todayCreditStr);
@@ -288,7 +402,7 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
             //when user is done entering today's drink
             if (isTodayCreditValid()){
                 updateMissingCredit();
-                ((EditText) findViewById(R.id.receiptNumber)).requestFocus();
+                ((EditText) getView().findViewById(R.id.receiptNumber)).requestFocus();
             }
         }
         else if (id.equals(receiptNumId)){
@@ -300,17 +414,17 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
 
     private void requestFocusOnTodayCredit() {
         //clearCurrentFocus();
-        todayCredit = (EditText) findViewById(R.id.todayCredit);
+        todayCredit = (EditText) getView().findViewById(R.id.todayCredit);
         todayCredit.requestFocus();
         todayCredit.setSelection(todayCredit.getText().length());
     }
 
     private boolean isReceiptNumberValid(){
         boolean isValid = false;
-        receiptNum = (EditText) findViewById(R.id.receiptNumber);
+        receiptNum = (EditText) getView().findViewById(R.id.receiptNumber);
         String receiptNumStr = receiptNum.getText().toString();
 
-        TextInputLayout receiptNumLayout = (TextInputLayout) findViewById(R.id.receiptLayout);
+        TextInputLayout receiptNumLayout = (TextInputLayout) getView().findViewById(R.id.receiptLayout);
         if (receiptNumStr != null && receiptNumStr.matches(AT_LEAST_ONE_DIGIT_REGEXP)){
             receiptNumLayout.setErrorEnabled(false);
             isValid = true;
@@ -342,14 +456,14 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
             int previousCreditValue = customer.getTotalCredit();
             if (customer.isOptIn()){
                 //hide the checkbox if customer already opted in
-                ((CheckBox) findViewById(R.id.checkbox_optIn)).setVisibility(View.INVISIBLE);
+                ((CheckBox) getView().findViewById(R.id.checkbox_optIn)).setVisibility(View.INVISIBLE);
             }
             else {
                 //handles when 1 number was entered, then another one was enter
-                ((CheckBox) findViewById(R.id.checkbox_optIn)).setVisibility(View.VISIBLE);
+                ((CheckBox) getView().findViewById(R.id.checkbox_optIn)).setVisibility(View.VISIBLE);
             }
 
-            previousCredit = (EditText) findViewById(R.id.previousCredit);
+            previousCredit = (EditText) getView().findViewById(R.id.previousCredit);
             previousCredit.setText(String.valueOf(previousCreditValue));
 
             updateMissingCredit();
@@ -358,10 +472,10 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
             //new customer
             //handles the case where customer looked up 1 number, and then enter a different number, so need to reload
             int todayCredit = getTodayCredit();
-            ((CheckBox) findViewById(R.id.checkbox_optIn)).setVisibility(View.VISIBLE);
+            ((CheckBox) getView().findViewById(R.id.checkbox_optIn)).setVisibility(View.VISIBLE);
 
             int previousCreditValue = 0;
-            previousCredit = (EditText) findViewById(R.id.previousCredit);
+            previousCredit = (EditText) getView().findViewById(R.id.previousCredit);
             previousCredit.setText(String.valueOf(previousCreditValue));
 
             updateMissingCredit();
@@ -377,7 +491,7 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
     private boolean isPhoneNumberValid() {
         boolean isValid = false;
         String inputPhoneNum = null;
-        TextInputLayout phoneLayout = (TextInputLayout) findViewById(R.id.phoneLayout);
+        TextInputLayout phoneLayout = (TextInputLayout) getView().findViewById(R.id.phoneLayout);
         try {
             inputPhoneNum = getUnformattedPhoneNumber();
             if (inputPhoneNum != null && inputPhoneNum.matches("[0-9]{10}")){
@@ -402,11 +516,6 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
         phone.requestFocus();
     }
 
-    private void clearCurrentFocus() {
-        if (getCurrentFocus() != null){
-            getCurrentFocus().clearFocus();
-        }
-    }
 
     public void deleteCustomer(Customer customer){
         handler.deleteCustomer(customer);

@@ -13,4 +13,11 @@
     <string name="welcomeText">Welcome to Tra Temptation\'s reward program</string>
     <string name="receiptNum">Receipt Number</string>
     <string name="receipt_err_msg">Please enter a valid receipt number</string>
+    <string name="tab_registration">Registration</string>
+    <string name="tab_claim">Claim</string>
+    <string name="tab_admin">Admin</string>
+    <string name="tab_dashboard">Dashboard</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

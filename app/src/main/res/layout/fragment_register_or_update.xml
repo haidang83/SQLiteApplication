@@ -1,0 +1,136 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.kpblog.tt.Fragment_RegisterOrUpdate">
+
+    <LinearLayout
+        android:id="@+id/insertLayout"
+        android:layout_width="match_parent"
+        android:layout_marginTop="10dp"
+        android:orientation="vertical"
+        android:layout_height="wrap_content">
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/phoneLayout"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <EditText
+
+                android:id="@+id/phone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/phoneNumber"
+                android:inputType="phone"
+                android:imeOptions="actionNext">
+            </EditText>
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/previousCreditLayout"
+            android:layout_width="match_parent"
+            android:focusableInTouchMode="true"
+            android:layout_marginTop="20dp"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/previousCredit"
+                android:inputType="none"
+                android:enabled="false"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#5c5959"
+                android:hint="@string/previousCredit"
+                />
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/todayCreditlayout"
+            android:layout_width="match_parent"
+            android:focusableInTouchMode="true"
+            android:layout_marginTop="20dp"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/todayCredit"
+                android:inputType="phone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/todayCredit"
+                android:imeOptions="actionDone" />
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/receiptLayout"
+            android:layout_width="match_parent"
+            android:focusableInTouchMode="true"
+            android:layout_marginTop="20dp"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/receiptNumber"
+                android:inputType="phone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/receiptNum"
+                android:imeOptions="actionDone" />
+        </android.support.design.widget.TextInputLayout>
+
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/missingCreditlayout"
+            android:layout_width="match_parent"
+            android:focusableInTouchMode="true"
+            android:layout_marginTop="20dp"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/missingCredit"
+                android:inputType="none"
+                android:enabled="false"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#5c5959"
+                android:hint="@string/missingCredit"
+                />
+        </android.support.design.widget.TextInputLayout>
+
+        <CheckBox android:id="@+id/checkbox_optIn"
+            android:layout_marginLeft="-3dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:text="@string/optIn"/>
+
+        <LinearLayout
+            android:id="@+id/buttonLayout"
+            android:layout_width="match_parent"
+            android:layout_marginTop="40dp"
+            android:layout_marginLeft="3dp"
+            android:orientation="horizontal"
+            android:layout_height="wrap_content"
+            android:weightSum="1.0">
+
+            <Button android:id="@+id/cancelBtn"
+                android:layout_weight=".5"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:text="@string/cancelBtn"
+                android:background="@color/colorPrimary"
+                android:textColor="@android:color/white"/>
+
+            <Button android:id="@+id/confirmBtn"
+                android:layout_weight=".5"
+                android:layout_width="0dip"
+                android:layout_marginLeft="30dp"
+                android:layout_height="wrap_content"
+                android:text="@string/btnConfirm"
+                android:background="@color/colorPrimary"
+                android:textColor="@android:color/white"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>
