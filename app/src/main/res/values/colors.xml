@@ -6,4 +6,12 @@
     <color name="windowBackground">#FFFFFF</color>
     <color name="navigationBarColor">#000000</color>
     <color name="colorAccent">#c8e8ff</color>
+    <color name="text_color">
+        <selector xmlns:android="http://schemas.android.com/apk/res/android">
+            <!-- disabled state -->
+            <item android:state_enabled="false" android:color="#9D9FA2" />
+            <item android:color="#000"/>
+        </selector>
+    </color>
+    <color name="grey">#808080</color>
 </resources>

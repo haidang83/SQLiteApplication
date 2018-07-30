@@ -54,12 +54,9 @@
             <EditText
                 android:id="@+id/claimCode"
                 android:inputType="phone"
-                android:focusable="true"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingLeft="1dp"
                 android:hint="@string/claimCode"
-                android:cursorVisible="true"
                 android:imeOptions="actionDone" />
         </android.support.design.widget.TextInputLayout>
 
@@ -76,7 +73,7 @@
                 android:layout_width="0dip"
                 android:layout_height="wrap_content"
                 android:text="@string/cancelBtn"
-                android:background="@color/colorPrimary"
+                style="@style/buttonStyle"
                 android:textColor="@android:color/white"/>
 
             <Button android:id="@+id/getCodeBtn"
@@ -86,7 +83,7 @@
                 android:layout_marginLeft="30dp"
                 android:layout_height="wrap_content"
                 android:text="@string/getCode"
-                android:background="@color/colorPrimary"
+                style="@style/buttonStyle"
                 android:textColor="@android:color/white"/>
 
             <Button android:id="@+id/claimBtn"
@@ -96,7 +93,7 @@
                 android:layout_marginRight="5dp"
                 android:layout_height="wrap_content"
                 android:text="@string/btnClaim"
-                android:background="@color/colorPrimary"
+                style="@style/buttonStyle"
                 android:textColor="@android:color/white"/>
         </LinearLayout>
 

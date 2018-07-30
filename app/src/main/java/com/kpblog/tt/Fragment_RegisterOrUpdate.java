@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -103,6 +104,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         return view;
     }
 
+    private long confirmBtnLastClicked = 0;
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState){
         phone = (EditText)(getView().findViewById(R.id.phone));
@@ -160,7 +162,11 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         confirmBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                registerOrUpdateCustomer();
+                //to prevent double-click
+                if (SystemClock.elapsedRealtime() - confirmBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
+                    registerOrUpdateCustomer();
+                    confirmBtnLastClicked = SystemClock.elapsedRealtime();
+                }
             }
         });
 

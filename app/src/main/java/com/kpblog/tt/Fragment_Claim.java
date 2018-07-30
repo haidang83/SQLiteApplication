@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -21,9 +22,12 @@ import android.widget.Toast;
 
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
+import com.kpblog.tt.model.CustomerClaimCode;
+import com.kpblog.tt.model.CustomerPurchase;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
+import java.util.Date;
 import java.util.Random;
 
 /**
@@ -45,7 +49,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
     private String mParam2;
 
     private EditText phone, claimCode, freeDrink;
-    private Button confirmBtn, cancelBtn, getCodeBtn;
+    private Button claimBtn, cancelBtn, getCodeBtn;
     private DatabaseHandler handler;
 
     private OnFragmentInteractionListener mListener;
@@ -88,6 +92,9 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         return inflater.inflate(R.layout.fragment__claim, container, false);
     }
 
+
+    private long getCodeBtnLastClicked = 0;
+    private long claimBtnLastClicked = 0;
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState){
         phone = (EditText)(getView().findViewById(R.id.phone));
@@ -112,11 +119,77 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         getCodeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                requestClaimCode();
+                //to prevent double click
+                if (SystemClock.elapsedRealtime() - getCodeBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
+                    requestClaimCode();
+                    getCodeBtnLastClicked = SystemClock.elapsedRealtime();
+                }
             }
         });
 
+        claimBtn = (Button) (getView().findViewById(R.id.claimBtn));
+        claimBtn.setEnabled(false);//will enable after verifying code is correct
+        claimBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //to prevent double click
+                if (SystemClock.elapsedRealtime() - claimBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
+                    claimBtnLastClicked = SystemClock.elapsedRealtime();
+                    if (validateClaimCode()){
+                        String unformattedPhoneNum = Util.getUnformattedPhoneNumber(phone.getText().toString());
+                        //update the total credit
+                        updateTotalCreditAfterSuccessfulClaim(unformattedPhoneNum);
+                        recordClaimIntoCustomerPurchase(unformattedPhoneNum);
+                        handler.deleteClaimCodeForCustomerId(unformattedPhoneNum);
+                        claimBtn.setEnabled(false);
+                        Toast.makeText(getContext().getApplicationContext(), getString(R.string.claimSuccess_msg), Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+        });
+
+        claimCode = (EditText) (getView().findViewById(R.id.claimCode));
+        claimCode.setOnEditorActionListener(this);
+
         handler = new DatabaseHandler(getContext());
+    }
+
+    private void recordClaimIntoCustomerPurchase(String customerId) {
+        CustomerPurchase cp = new CustomerPurchase();
+
+        cp.setCustomerId(customerId);
+        cp.setQuantity(-1);
+        cp.setPurchaseDate(new java.util.Date());
+
+        handler.insertCustomerPurchase(cp);
+    }
+
+    private void updateTotalCreditAfterSuccessfulClaim(String customerId) {
+        int totalCredit = handler.getTotalCreditForCustomerId(customerId);
+        totalCredit = totalCredit - Constants.FREE_DRINK_THRESHOLD;
+        handler.updateTotalCreditForCustomerId(customerId, totalCredit);
+    }
+
+    private boolean validateClaimCode() {
+        boolean isSuccess = false;
+        String code = claimCode.getText().toString();
+        String unformattedPhoneNum = Util.getUnformattedPhoneNumber(this.phone.getText().toString());
+
+        if (code != null && code.matches(Constants.FOUR_DIGIT_REGEXP)){
+            String dbCode = handler.getClaimCodeByCustomerId(unformattedPhoneNum);
+            isSuccess = code.equals(dbCode);
+        }
+
+        TextInputLayout claimCodeLayout = (TextInputLayout) getView().findViewById(R.id.claimCodeLayout);
+        if (isSuccess){
+            claimCodeLayout.setErrorEnabled(false);
+            getCodeBtn.setEnabled(false);
+        }
+        else {
+            getCodeBtn.setEnabled(true);
+            claimCodeLayout.setError(getString(R.string.claimCode_err_msg));
+        }
+        return isSuccess;
     }
 
     private boolean requestClaimCode(){
@@ -127,18 +200,19 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
             //generate code and send sms
             String code = String.format("%04d", new Random().nextInt(10000));
             String msg = String.format(getString(R.string.getCodeMsg), code);
-            sendText(unformattedPhoneNum, msg);
+            sendText(unformattedPhoneNum, msg, code);
         }
 
         isSuccess = true;
         return isSuccess;
     }
 
-    String textMsg, targetPhoneNum;
-    private void sendText(String phoneNum, String msg) {
+    String textMsg, targetPhoneNum, codeStr;
+    private void sendText(String phoneNum, String msg, String code) {
         try {
             textMsg = msg;
             targetPhoneNum = phoneNum;
+            codeStr = code;
             requestSmsPermission();
             //Toast.makeText(getApplicationContext(), "Message Sent", Toast.LENGTH_LONG).show();
         } catch (Exception ex) {
@@ -160,7 +234,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
                     MY_PERMISSIONS_REQUEST_SEND_SMS);
         } else {
             // permission already granted run sms send
-            sendSms(targetPhoneNum, textMsg);
+            sendSms(targetPhoneNum, textMsg, codeStr);
             Toast.makeText(getContext().getApplicationContext(), "Code Sent", Toast.LENGTH_LONG).show();
         }
     }
@@ -172,7 +246,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
 
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // permission was granted
-                    sendSms(targetPhoneNum, textMsg);
+                    sendSms(targetPhoneNum, textMsg, codeStr);
                     Toast.makeText(getContext().getApplicationContext(), "Code Sent", Toast.LENGTH_LONG).show();
                 } else {
                     // permission denied
@@ -182,9 +256,20 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         }
     }
 
-    private void sendSms(String phoneNumber, String message){
+    private void sendSms(String phoneNumber, String message, String codeStr){
         SmsManager sms = SmsManager.getDefault();
         sms.sendTextMessage(phoneNumber, null, message, null, null);
+
+        insertOrUpdateClaimCodeDb(phoneNumber, codeStr);
+    }
+
+    private void insertOrUpdateClaimCodeDb(String phoneNumber, String codeStr) {
+        CustomerClaimCode cc = new CustomerClaimCode();
+        cc.setCustomerId(phoneNumber);
+        cc.setClaimCode(codeStr);
+        cc.setIssuedDate(new Date());
+
+        handler.insertOrUpdateCustomerClaimCode(cc);
     }
 
     private boolean updateCustomerFreeDrink() {
@@ -219,10 +304,13 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
             //enable the getCode button
             getCodeBtn.setEnabled(true);
             claimCode.setEnabled(true);
+            claimBtn.setEnabled(true);
         }
         else {
             getCodeBtn.setEnabled(false);
+            claimCode.setText("");
             claimCode.setEnabled(false);
+            claimBtn.setEnabled(false);
         }
     }
 
@@ -256,6 +344,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         boolean handled = false;
         String id = textView.getResources().getResourceEntryName(textView.getId());
         String phoneId = phone.getResources().getResourceEntryName(phone.getId());
+        String claimCodeId = claimCode.getResources().getResourceEntryName(claimCode.getId());
 
         if (id.equals(phoneId)) {
             //when user is done entering phone number
@@ -264,6 +353,9 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
                 requestFocusOnClaimCode();
             }
             handled = true;
+        }
+        else if (id.equals(claimCodeId)){
+            validateClaimCode();
         }
 
         return false;

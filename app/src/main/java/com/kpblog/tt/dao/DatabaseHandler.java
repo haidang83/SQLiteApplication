@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.kpblog.tt.model.Customer;
+import com.kpblog.tt.model.CustomerClaimCode;
 import com.kpblog.tt.model.CustomerPurchase;
 
 import java.sql.Date;
@@ -19,7 +20,7 @@ import java.util.List;
 public class DatabaseHandler extends SQLiteOpenHelper {
 
     private static final int DATABASE_VERSION = 1;
-    private static final String DATABASE_NAME = "kpblogs";
+    private static final String DATABASE_NAME = "traTemptation";
     private static final String TABLE_CUSTOMER = "customer";
     private static final String KEY_CUSTOMER_ID = "customerID";
     private static final String KEY_TOTALCREDIT = "totalCredit";
@@ -34,6 +35,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_RECEIPT_NUM = "receiptNum";
     private static final String KEY_PURCHASE_DATE = "purchaseDate";
 
+    private static final String TABLE_CUSTOMER_CLAIM_CODE = "customerClaimCode";
+    private static final String KEY_CLAIM_CODE = "claimCode";
+    private static final String KEY_DATE_ISSUED = "dateIssued";
+
     public DatabaseHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -44,8 +49,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         String CREATE_CUSTOMER_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER)";
         sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_TABLE, TABLE_CUSTOMER, KEY_CUSTOMER_ID, KEY_TOTALCREDIT, KEY_LAST_VISIT_DATE, KEY_IS_OPT_IN, KEY_OPT_IN_DATE, KEY_OPT_OUT_DATE, KEY_IS_TEST_USER));
 
+        //this table keeps track of all the customer purchases, each row represents a purchase, so there can be multiple rows per each customer
         String CREATE_CUSTOMER_PURCHASE_TABLE = "CREATE TABLE %s (%s TEXT, %s INTEGER, %s INTEGER, %s INTEGER)";
         sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_PURCHASE_TABLE, TABLE_CUSTOMER_PURCHASE, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE));
+
+        //this table has the outstanding claim code for the customer, only at most 1 outstanding code per customer
+        String CREATE_CUSTOMER_CLAIM_CODE_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY, %s TEXT, %s INTEGER)";
+        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_CLAIM_CODE_TABLE, TABLE_CUSTOMER_CLAIM_CODE, KEY_CUSTOMER_ID, KEY_CLAIM_CODE, KEY_DATE_ISSUED));
     }
 
     @Override
@@ -100,25 +110,12 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         }
     }
 
-    /*public Customer getAddressByName(String name) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_CUSTOMER, new String[] { KEY_ID, KEY_CUSTOMER_ID, KEY_TOTALCREDIT}, KEY_CUSTOMER_ID + "=?", new String[] { name }, null, null, null, null);
-        if (cursor != null)
-            cursor.moveToFirst();
-
-        Customer customer = new Customer();
-        customer.setTotalCredit(Integer.parseInt(cursor.getString(0)));
-        customer.setCustomerId(cursor.getString(1));
-        customer.setAddress(cursor.getString(2));
-        return customer;
-    }*/
-
     public List<Customer> getAllAddress() {
         List<Customer> customerList = new ArrayList<Customer>();
         // Select All Query
         String selectQuery = "SELECT * FROM " + TABLE_CUSTOMER;
         String selectQueryFormat = "SELECT %s, %s, %s, %s, %s, %s, %s FROM %s";
-        SQLiteDatabase db = this.getWritableDatabase();
+        SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(String.format(selectQueryFormat, KEY_CUSTOMER_ID, KEY_TOTALCREDIT, KEY_IS_OPT_IN, KEY_LAST_VISIT_DATE, KEY_OPT_IN_DATE, KEY_OPT_OUT_DATE, KEY_IS_TEST_USER, TABLE_CUSTOMER), null);
 
         // Getting the address list which we already into our database
@@ -206,7 +203,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         List<CustomerPurchase> cpList = new ArrayList<CustomerPurchase>();
         // Select All Query
         String selectQueryFormat = "SELECT %s, %s, %s, %s FROM %s";
-        SQLiteDatabase db = this.getWritableDatabase();
+        SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(String.format(selectQueryFormat, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE, TABLE_CUSTOMER_PURCHASE), null);
 
         // Getting the address list which we already into our database
@@ -223,7 +220,74 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             } while (cursor.moveToNext());
         }
 
+        db.close();
         // return contact list
         return cpList;
+    }
+
+    public void insertOrUpdateCustomerClaimCode(CustomerClaimCode cc) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(KEY_CUSTOMER_ID, cc.getCustomerId());
+        values.put(KEY_CLAIM_CODE, cc.getClaimCode());
+
+        values.put(KEY_DATE_ISSUED, cc.getIssuedDate().getTime());
+
+        int id = (int) db.insertWithOnConflict(TABLE_CUSTOMER_CLAIM_CODE, null, values, SQLiteDatabase.CONFLICT_IGNORE);
+        if (id == -1) {
+            //row already exists by Primary key(Phone Num)
+            db.update(TABLE_CUSTOMER_CLAIM_CODE, values, KEY_CUSTOMER_ID + "=?", new String[] {cc.getCustomerId()});
+        }
+
+        db.close();
+    }
+
+    public String getClaimCodeByCustomerId(String customerId) {
+        String code = "";
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Select All Query
+        Cursor cursor = db.query(TABLE_CUSTOMER_CLAIM_CODE, new String[] {KEY_CLAIM_CODE}, KEY_CUSTOMER_ID + "=?", new String[] { customerId },
+                null, null, null, null);
+
+        // Getting the address list which we already into our database
+        if (cursor != null && cursor.moveToFirst()) {
+            code = cursor.getString(0);
+        }
+
+        db.close();
+        return code;
+    }
+
+    public int getTotalCreditForCustomerId(String customerId) {
+        int totalCredit = 0;
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Select All Query
+        Cursor cursor = db.query(TABLE_CUSTOMER, new String[] {KEY_TOTALCREDIT}, KEY_CUSTOMER_ID + "=?", new String[] { customerId },
+                null, null, null, null);
+
+        // Getting the address list which we already into our database
+        if (cursor != null && cursor.moveToFirst()) {
+            totalCredit = cursor.getInt(0);
+        }
+
+        db.close();
+        return totalCredit;
+    }
+
+    public void updateTotalCreditForCustomerId(String customerId, int totalCredit) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KEY_TOTALCREDIT, totalCredit);
+        db.update(TABLE_CUSTOMER, values, KEY_CUSTOMER_ID + " = ?", new String[] { customerId });
+        db.close();
+    }
+
+    public void deleteClaimCodeForCustomerId(String customerId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_CUSTOMER_CLAIM_CODE, KEY_CUSTOMER_ID + "=?", new String []{customerId});
+        db.close();
     }
 }
