@@ -9,7 +9,6 @@ import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.telephony.PhoneNumberFormattingTextWatcher;
-import android.telephony.PhoneNumberUtils;
 import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -27,6 +26,8 @@ import com.kpblog.tt.adapter.AddressAdapter;
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
 import com.kpblog.tt.model.CustomerPurchase;
+import com.kpblog.tt.util.Constants;
+import com.kpblog.tt.util.Util;
 
 import java.sql.Date;
 import java.util.Calendar;
@@ -46,9 +47,6 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
-    public static final int FREE_DRINK_THRESHOLD = 10;
-    public static final int TODAY_CREDIT_LIMIT = 10; //number of drinks that can be purchased at 1 time (to avoid typo)
-    public static final String AT_LEAST_ONE_DIGIT_REGEXP = "[0-9]+";
     private EditText phone, todayCredit, previousCredit, missingCredit, receiptNum;
     private Button confirmBtn, cancelBtn;
     private CheckBox optIn;
@@ -142,7 +140,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         });
 
         missingCredit = (EditText) getView().findViewById(R.id.missingCredit);
-        missingCredit.setText(String.valueOf(FREE_DRINK_THRESHOLD - getTodayCredit()));
+        missingCredit.setText(String.valueOf(Constants.FREE_DRINK_THRESHOLD - getTodayCredit()));
 
         receiptNum = (EditText) getView().findViewById(R.id.receiptNumber);
         receiptNum.setOnEditorActionListener(this);
@@ -228,9 +226,9 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         boolean isValid = false;
         EditText todayCreditEditText = (EditText)(getView().findViewById(R.id.todayCredit));
         final String todayCreditStr = todayCreditEditText.getText().toString();
-        if (todayCreditStr != null && todayCreditStr.matches(AT_LEAST_ONE_DIGIT_REGEXP)){
+        if (todayCreditStr != null && todayCreditStr.matches(Constants.AT_LEAST_ONE_DIGIT_REGEXP)){
             int todayCredit = Integer.parseInt(todayCreditStr);
-            isValid = (todayCredit < TODAY_CREDIT_LIMIT);
+            isValid = (todayCredit < Constants.TODAY_CREDIT_LIMIT);
         }
 
         TextInputLayout todayCreditLayout = (TextInputLayout) getView().findViewById(R.id.todayCreditlayout);
@@ -245,10 +243,10 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     }
 
 
-    String confirmationMsg, targetPhoneNum;
-    private void sendConfirmText(String phoneNum) {
+    String textMsg, targetPhoneNum;
+    private void sendConfirmText(String phoneNum, String msg) {
         try {
-            confirmationMsg = getString(R.string.welcomeText);
+            textMsg = msg;
             targetPhoneNum = phoneNum;
             requestSmsPermission();
             //Toast.makeText(getApplicationContext(), "Message Sent", Toast.LENGTH_LONG).show();
@@ -271,7 +269,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
                     MY_PERMISSIONS_REQUEST_SEND_SMS);
         } else {
             // permission already granted run sms send
-            sendSms(targetPhoneNum, confirmationMsg);
+            sendSms(targetPhoneNum, textMsg);
             Toast.makeText(getContext().getApplicationContext(), "Message Sent", Toast.LENGTH_LONG).show();
         }
     }
@@ -283,7 +281,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
 
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // permission was granted
-                    sendSms(targetPhoneNum, confirmationMsg);
+                    sendSms(targetPhoneNum, textMsg);
                     Toast.makeText(getContext().getApplicationContext(), "Message Sent", Toast.LENGTH_LONG).show();
                 } else {
                     // permission denied
@@ -315,7 +313,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         TextInputLayout receiptLayout = (TextInputLayout) getView().findViewById(R.id.receiptLayout);
         receiptLayout.setErrorEnabled(false);
 
-        missingCredit.setText(String.valueOf(FREE_DRINK_THRESHOLD - getTodayCredit()));
+        missingCredit.setText(String.valueOf(Constants.FREE_DRINK_THRESHOLD - getTodayCredit()));
 
         optIn.setChecked(false);
         optIn.setVisibility(View.VISIBLE);
@@ -347,7 +345,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         int todayCredit = getTodayCredit();
         int totalCredit = previousCreditValue + todayCredit;
         missingCreditView = (EditText) getView().findViewById(R.id.missingCredit);
-        final int missingCredit = FREE_DRINK_THRESHOLD - totalCredit;
+        final int missingCredit = Constants.FREE_DRINK_THRESHOLD - totalCredit;
 
         if (missingCredit > 0){
             ((TextInputLayout) getView().findViewById(R.id.missingCreditlayout)).setHintEnabled(true);
@@ -423,7 +421,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         String receiptNumStr = receiptNum.getText().toString();
 
         TextInputLayout receiptNumLayout = (TextInputLayout) getView().findViewById(R.id.receiptLayout);
-        if (receiptNumStr != null && receiptNumStr.matches(AT_LEAST_ONE_DIGIT_REGEXP)){
+        if (receiptNumStr != null && receiptNumStr.matches(Constants.AT_LEAST_ONE_DIGIT_REGEXP)){
             receiptNumLayout.setErrorEnabled(false);
             isValid = true;
         }
@@ -435,17 +433,15 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         return isValid;
     }
 
-    private String getUnformattedPhoneNumber(){
-        return PhoneNumberUtils.normalizeNumber(this.phone.getText().toString());
-    }
 
     private boolean getCustomerInfoFromDatabaseAndUpdateScreen() {
-        if (!isPhoneNumberValid()){
+        final String phone = Util.getUnformattedPhoneNumber(this.phone.getText().toString());
+
+        if (!Util.isPhoneNumberValid((TextInputLayout) getView().findViewById(R.id.phoneLayout), getString(R.string.phone_err_msg), phone)){
             return false;
         }
 
         //get customer by phone, if not exist, add
-        final String phone = getUnformattedPhoneNumber();
         Customer customer = handler.getCustomerById(phone);
 
         if (customer != null){
@@ -486,28 +482,6 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         return true;
     }
 
-    private boolean isPhoneNumberValid() {
-        boolean isValid = false;
-        String inputPhoneNum = null;
-        TextInputLayout phoneLayout = (TextInputLayout) getView().findViewById(R.id.phoneLayout);
-        try {
-            inputPhoneNum = getUnformattedPhoneNumber();
-            if (inputPhoneNum != null && inputPhoneNum.matches("[0-9]{10}")){
-                phoneLayout.setErrorEnabled(false);
-                isValid = true;
-            }
-            else {
-                phoneLayout.setError(getString(R.string.phone_err_msg));
-                //setFocusOnPhone();
-            }
-        } catch (Exception e){
-            phoneLayout.setError(getString(R.string.phone_err_msg));
-            //setFocusOnPhone();
-        }
-
-
-        return isValid;
-    }
 
     private void setFocusOnPhone() {
         //clearCurrentFocus();
@@ -520,7 +494,9 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     }
 
     private boolean isAllInputValid(){
-        return isPhoneNumberValid() && isTodayCreditValid() && isReceiptNumberValid();
+        final String phone = Util.getUnformattedPhoneNumber(this.phone.getText().toString());
+        return Util.isPhoneNumberValid((TextInputLayout) getView().findViewById(R.id.phoneLayout), getString(R.string.phone_err_msg), phone)
+                && isTodayCreditValid() && isReceiptNumberValid();
     }
 
     /**
@@ -537,7 +513,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         boolean sendConfirmationText = false;
         try {
             final Date today = new Date(Calendar.getInstance().getTime().getTime());
-            final String unformattedPhoneNumber = getUnformattedPhoneNumber();
+            final String unformattedPhoneNumber = Util.getUnformattedPhoneNumber(this.phone.getText().toString());
             Customer customer = handler.getCustomerById(unformattedPhoneNumber);
             if (customer == null){
                 customer = new Customer();
@@ -563,7 +539,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
             insertCustomerPurchase(customer.getCustomerId(), getTodayCredit());
 
             if (sendConfirmationText){
-                sendConfirmText(customer.getCustomerId());
+                sendConfirmText(customer.getCustomerId(), getString(R.string.welcomeText));
             }
             else {
                 gotoHomeScreen();

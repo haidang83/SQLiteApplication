@@ -4,10 +4,102 @@
     android:layout_height="match_parent"
     tools:context="com.kpblog.tt.Fragment_Claim">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <LinearLayout
+        android:id="@+id/insertLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_marginTop="10dp"
+        android:orientation="vertical"
+        android:layout_marginLeft="3dp"
+        android:layout_height="wrap_content">
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/phoneLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/phone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/phoneNumber"
+                android:inputType="phone"
+                android:imeOptions="actionNext">
+            </EditText>
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/freeDrinkLayout"
+            android:layout_width="match_parent"
+            android:layout_marginTop="20dp"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/freeDrink"
+                android:inputType="none"
+                android:enabled="false"
+                android:focusable="false"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#5c5959"
+                android:hint="@string/freeDrink"
+                />
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/claimCodeLayout"
+            android:layout_width="match_parent"
+            android:layout_marginTop="20dp"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/claimCode"
+                android:inputType="phone"
+                android:focusable="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="1dp"
+                android:hint="@string/claimCode"
+                android:cursorVisible="true"
+                android:imeOptions="actionDone" />
+        </android.support.design.widget.TextInputLayout>
+
+        <LinearLayout
+            android:id="@+id/buttonLayout"
+            android:layout_width="match_parent"
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="3dp"
+            android:orientation="horizontal"
+            android:layout_height="wrap_content">
+
+            <Button android:id="@+id/cancelBtn"
+                android:layout_weight="1"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:text="@string/cancelBtn"
+                android:background="@color/colorPrimary"
+                android:textColor="@android:color/white"/>
+
+            <Button android:id="@+id/getCodeBtn"
+                android:enabled="false"
+                android:layout_weight="1"
+                android:layout_width="0dip"
+                android:layout_marginLeft="30dp"
+                android:layout_height="wrap_content"
+                android:text="@string/getCode"
+                android:background="@color/colorPrimary"
+                android:textColor="@android:color/white"/>
+
+            <Button android:id="@+id/claimBtn"
+                android:layout_weight="1"
+                android:layout_width="0dip"
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="5dp"
+                android:layout_height="wrap_content"
+                android:text="@string/btnClaim"
+                android:background="@color/colorPrimary"
+                android:textColor="@android:color/white"/>
+        </LinearLayout>
+
+    </LinearLayout>
 
 </FrameLayout>

@@ -1,14 +1,30 @@
 package com.kpblog.tt;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
+import android.telephony.PhoneNumberFormattingTextWatcher;
+import android.telephony.SmsManager;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 
-import com.kpblog.tt.R;
+import com.kpblog.tt.dao.DatabaseHandler;
+import com.kpblog.tt.model.Customer;
+import com.kpblog.tt.util.Constants;
+import com.kpblog.tt.util.Util;
+
+import java.util.Random;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -18,15 +34,19 @@ import com.kpblog.tt.R;
  * Use the {@link Fragment_Claim#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class Fragment_Claim extends Fragment {
+public class Fragment_Claim extends Fragment implements TextView.OnEditorActionListener{
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
+    private static final String CUSTOMER_ID_PARAM = "CUSTOMER_ID";
     private static final String ARG_PARAM2 = "param2";
 
     // TODO: Rename and change types of parameters
-    private String mParam1;
+    private String customerId;
     private String mParam2;
+
+    private EditText phone, claimCode, freeDrink;
+    private Button confirmBtn, cancelBtn, getCodeBtn;
+    private DatabaseHandler handler;
 
     private OnFragmentInteractionListener mListener;
 
@@ -46,7 +66,7 @@ public class Fragment_Claim extends Fragment {
     public static Fragment_Claim newInstance(String param1, String param2) {
         Fragment_Claim fragment = new Fragment_Claim();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
+        args.putString(CUSTOMER_ID_PARAM, param1);
         args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
         return fragment;
@@ -56,7 +76,7 @@ public class Fragment_Claim extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
+            customerId = getArguments().getString(CUSTOMER_ID_PARAM);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
     }
@@ -66,6 +86,144 @@ public class Fragment_Claim extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment__claim, container, false);
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState){
+        phone = (EditText)(getView().findViewById(R.id.phone));
+        phone.addTextChangedListener(new PhoneNumberFormattingTextWatcher());
+        phone.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean hasFocus) {
+                if (!hasFocus){
+                    if (updateCustomerFreeDrink()){
+                        //requestFocusOnTodayCredit();
+                        //don't request focus here because if the user presses a different input field, then there'd be 2 fields with focus
+                    }
+                }
+            }
+        });
+        phone.setOnEditorActionListener(this);
+
+        freeDrink = (EditText) (getView().findViewById(R.id.freeDrink));
+        freeDrink.setText(String.valueOf(0));
+
+        getCodeBtn = (Button) (getView().findViewById(R.id.getCodeBtn));
+        getCodeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                requestClaimCode();
+            }
+        });
+
+        handler = new DatabaseHandler(getContext());
+    }
+
+    private boolean requestClaimCode(){
+        boolean isSuccess = false;
+        String unformattedPhoneNum = Util.getUnformattedPhoneNumber(this.phone.getText().toString());
+        Customer c = handler.getCustomerById(unformattedPhoneNum);
+        if (c != null && c.getTotalCredit() >= Constants.FREE_DRINK_THRESHOLD){
+            //generate code and send sms
+            String code = String.format("%04d", new Random().nextInt(10000));
+            String msg = String.format(getString(R.string.getCodeMsg), code);
+            sendText(unformattedPhoneNum, msg);
+        }
+
+        isSuccess = true;
+        return isSuccess;
+    }
+
+    String textMsg, targetPhoneNum;
+    private void sendText(String phoneNum, String msg) {
+        try {
+            textMsg = msg;
+            targetPhoneNum = phoneNum;
+            requestSmsPermission();
+            //Toast.makeText(getApplicationContext(), "Message Sent", Toast.LENGTH_LONG).show();
+        } catch (Exception ex) {
+            Toast.makeText(getContext().getApplicationContext(),ex.getMessage().toString(),
+                    Toast.LENGTH_LONG).show();
+            ex.printStackTrace();
+        }
+    }
+
+
+    private static final int MY_PERMISSIONS_REQUEST_SEND_SMS = 123;
+
+    private void requestSmsPermission() {
+
+        // check permission is given
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+            // request permission (see result in onRequestPermissionsResult() method)
+            requestPermissions(new String[]{Manifest.permission.SEND_SMS},
+                    MY_PERMISSIONS_REQUEST_SEND_SMS);
+        } else {
+            // permission already granted run sms send
+            sendSms(targetPhoneNum, textMsg);
+            Toast.makeText(getContext().getApplicationContext(), "Code Sent", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_SEND_SMS: {
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted
+                    sendSms(targetPhoneNum, textMsg);
+                    Toast.makeText(getContext().getApplicationContext(), "Code Sent", Toast.LENGTH_LONG).show();
+                } else {
+                    // permission denied
+                    Toast.makeText(getContext().getApplicationContext(), "permission denied", Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
+
+    private void sendSms(String phoneNumber, String message){
+        SmsManager sms = SmsManager.getDefault();
+        sms.sendTextMessage(phoneNumber, null, message, null, null);
+    }
+
+    private boolean updateCustomerFreeDrink() {
+        boolean hasFreeDrink = false;
+
+        TextInputLayout phoneLayout = (TextInputLayout) (getView().findViewById(R.id.phoneLayout));
+        String unformattedPhoneNum = Util.getUnformattedPhoneNumber(this.phone.getText().toString());
+
+        if (!Util.isPhoneNumberValid(phoneLayout, getString(R.string.phone_err_msg), unformattedPhoneNum)){
+            return false;
+        }
+
+        Customer customer = handler.getCustomerById(unformattedPhoneNum);
+        int freeDrinkNum = 0;
+        if (customer != null){
+            freeDrinkNum = customer.getTotalCredit() / Constants.FREE_DRINK_THRESHOLD;
+            hasFreeDrink = (freeDrinkNum > 0? true: false);
+        }
+        updateFreeDrink(freeDrinkNum);
+
+        return hasFreeDrink;
+
+    }
+
+    private void updateFreeDrink(int freeDrinkNum) {
+        EditText freeDrink = (EditText) (getView().findViewById(R.id.freeDrink));
+        freeDrink.setText(String.valueOf(freeDrinkNum));
+        getCodeBtn = (Button) (getView().findViewById(R.id.getCodeBtn));
+        claimCode = (EditText) (getView().findViewById(R.id.claimCode));
+
+        if (freeDrinkNum > 0){
+            //enable the getCode button
+            getCodeBtn.setEnabled(true);
+            claimCode.setEnabled(true);
+        }
+        else {
+            getCodeBtn.setEnabled(false);
+            claimCode.setEnabled(false);
+        }
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -90,6 +248,30 @@ public class Fragment_Claim extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+
+        boolean handled = false;
+        String id = textView.getResources().getResourceEntryName(textView.getId());
+        String phoneId = phone.getResources().getResourceEntryName(phone.getId());
+
+        if (id.equals(phoneId)) {
+            //when user is done entering phone number
+            if (updateCustomerFreeDrink()){
+                //don't request the focus if the phone number entry isnt valid
+                requestFocusOnClaimCode();
+            }
+            handled = true;
+        }
+
+        return false;
+    }
+
+    private void requestFocusOnClaimCode() {
+        EditText claimCode = (EditText) (getView().findViewById(R.id.claimCode));
+        claimCode.requestFocus();
     }
 
     /**
