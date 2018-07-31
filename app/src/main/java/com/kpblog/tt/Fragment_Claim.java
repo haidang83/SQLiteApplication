@@ -45,7 +45,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
     private static final String ARG_PARAM2 = "param2";
 
     // TODO: Rename and change types of parameters
-    private String customerId;
+    private String customerId = "";
     private String mParam2;
 
     private EditText phone, claimCode, freeDrink;
@@ -62,15 +62,15 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param param1 Parameter 1.
+     * @param customerId Parameter 1.
      * @param param2 Parameter 2.
      * @return A new instance of fragment Fragment_Claim.
      */
     // TODO: Rename and change types and number of parameters
-    public static Fragment_Claim newInstance(String param1, String param2) {
+    public static Fragment_Claim newInstance(String customerId, String param2) {
         Fragment_Claim fragment = new Fragment_Claim();
         Bundle args = new Bundle();
-        args.putString(CUSTOMER_ID_PARAM, param1);
+        args.putString(CUSTOMER_ID_PARAM, customerId);
         args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
         return fragment;
@@ -97,6 +97,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
     private long claimBtnLastClicked = 0;
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState){
+        handler = new DatabaseHandler(getContext());
         phone = (EditText)(getView().findViewById(R.id.phone));
         phone.addTextChangedListener(new PhoneNumberFormattingTextWatcher());
         phone.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -159,7 +160,11 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         claimCode = (EditText) (getView().findViewById(R.id.claimCode));
         claimCode.setOnEditorActionListener(this);
 
-        handler = new DatabaseHandler(getContext());
+        if (Util.getUnformattedPhoneNumber(customerId).length() == 10){
+            //this is to handle the case where this fragment's data is passed from the other fragment
+            phone.setText(customerId);
+            updateCustomerFreeDrink();
+        }
     }
 
     private void clearScreen() {

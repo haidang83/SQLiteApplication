@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.support.design.widget.TabLayout;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -361,7 +362,6 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
             //qualifies for free drink
             missingCreditView.setText(R.string.freeDrinkAchieved);
             ((TextInputLayout) getView().findViewById(R.id.missingCreditlayout)).setHintEnabled(false);
-            //TODO: need to reset the credit
         }
     }
 
@@ -467,6 +467,15 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
             previousCredit.setText(String.valueOf(previousCreditValue));
 
             updateMissingCredit();
+
+            if (previousCreditValue >= Constants.FREE_DRINK_THRESHOLD){
+                //take user to claim tab
+                String phoneNum = Util.getUnformattedPhoneNumber(this.phone.getText().toString());
+                Fragment_Claim claim = Fragment_Claim.newInstance(phoneNum, null);
+                getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.claimFragment,claim).commit();
+                TabLayout tabs = (TabLayout)((MainActivity)getActivity()).findViewById(R.id.tabs);
+                tabs.getTabAt(1).select();
+            }
         }
         else {
             //new customer
@@ -537,7 +546,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
 
                 sendConfirmationText = true;
             }
-            customer.setTotalCredit(getPreviousCredit() + getTodayCredit());
+            customer.setTotalCredit(customer.getTotalCredit() + getTodayCredit());
             customer.setLastVisitDate(today);
 
             handler.registerOrUpdateCustomer(customer);
