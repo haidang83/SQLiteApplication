@@ -3,6 +3,8 @@ package com.kpblog.tt.util;
 import android.support.design.widget.TextInputLayout;
 import android.telephony.PhoneNumberUtils;
 
+import java.util.Random;
+
 public class Util {
 
     public static String getUnformattedPhoneNumber(String phoneStr) {
@@ -27,4 +29,7 @@ public class Util {
     }
 
 
+    public static String generateRandomCode() {
+        return String.format("%04d", new Random().nextInt(10000));
+    }
 }

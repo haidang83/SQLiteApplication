@@ -27,6 +27,7 @@ import android.widget.Toast;
 import com.kpblog.tt.adapter.AddressAdapter;
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
+import com.kpblog.tt.model.CustomerClaimCode;
 import com.kpblog.tt.model.CustomerPurchase;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
@@ -58,7 +59,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     public List<Customer> list;
 
     // TODO: Rename and change types of parameters
-    private String mParam1;
+    private String customerId = "";
     private String mParam2;
 
     private OnFragmentInteractionListener mListener;
@@ -72,15 +73,15 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param param1 Parameter 1.
+     * @param customerId Parameter 1.
      * @param param2 Parameter 2.
      * @return A new instance of fragment Fragment_RegisterOrUpdate.
      */
     // TODO: Rename and change types and number of parameters
-    public static Fragment_RegisterOrUpdate newInstance(String param1, String param2) {
+    public static Fragment_RegisterOrUpdate newInstance(String customerId, String param2) {
         Fragment_RegisterOrUpdate fragment = new Fragment_RegisterOrUpdate();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
+        args.putString(ARG_PARAM1, customerId);
         args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
         return fragment;
@@ -90,7 +91,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
+            customerId = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
 
@@ -183,6 +184,12 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         List<CustomerPurchase> cpList = handler.getAllCustomerPurchase();
         Log.d("CustomerPurchase: ", cpList.toString());
 
+        if (Util.getUnformattedPhoneNumber(customerId).length() ==10){
+            //handle on reload of the tab, if there's a valid phone number there, reload the info
+            phone.setText(customerId);
+            getCustomerInfoFromDatabaseAndUpdateScreen();
+        }
+
         //uncomment to see the db entries on screen
         /*listView = (ListView) getView().findViewById(R.id.addressListView);
         list = handler.getAllAddress();
@@ -251,7 +258,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
 
 
     String textMsg, targetPhoneNum;
-    private void sendConfirmText(String phoneNum, String msg) {
+    private void requestPermissionAndSendText(String phoneNum, String msg) {
         try {
             textMsg = msg;
             targetPhoneNum = phoneNum;
@@ -553,8 +560,16 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
 
             insertCustomerPurchase(customer.getCustomerId(), getTodayCredit());
 
+            if (customer.getTotalCredit() >= Constants.FREE_DRINK_THRESHOLD && customer.isOptIn()){
+                //send code for free drink
+                final String codeStr = Util.generateRandomCode();
+                String msg = String.format(getString(R.string.freeDrink_notice), codeStr);
+                requestPermissionAndSendText(customer.getCustomerId(), msg);
+                insertOrUpdateClaimCodeDb(customer.getCustomerId(), codeStr);
+            }
+
             if (sendConfirmationText){
-                sendConfirmText(customer.getCustomerId(), getString(R.string.welcomeText));
+                requestPermissionAndSendText(customer.getCustomerId(), getString(R.string.welcomeText));
             }
             else {
                 Toast.makeText(getContext().getApplicationContext(), getString(R.string.update_success_msg), Toast.LENGTH_LONG).show();
@@ -568,6 +583,15 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         }
 
         return success;
+    }
+
+    private void insertOrUpdateClaimCodeDb(String phoneNumber, String codeStr) {
+        CustomerClaimCode cc = new CustomerClaimCode();
+        cc.setCustomerId(phoneNumber);
+        cc.setClaimCode(codeStr);
+        cc.setIssuedDate(new java.util.Date());
+
+        handler.insertOrUpdateCustomerClaimCode(cc);
     }
 
     private void insertCustomerPurchase(String customerId, int todayCredit) {

@@ -144,6 +144,8 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
                         handler.deleteClaimCodeForCustomerId(unformattedPhoneNum);
                         claimBtn.setEnabled(false);
                         Toast.makeText(getContext().getApplicationContext(), getString(R.string.claimSuccess_msg), Toast.LENGTH_LONG).show();
+
+                        updateInfoOnSignInTab();
                     }
                 }
             }
@@ -165,6 +167,12 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
             phone.setText(customerId);
             updateCustomerFreeDrink();
         }
+    }
+
+    private void updateInfoOnSignInTab() {
+        String phoneNum = Util.getUnformattedPhoneNumber(this.phone.getText().toString());
+        Fragment_RegisterOrUpdate frag = Fragment_RegisterOrUpdate.newInstance(phoneNum, null);
+        getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.registerFragment,frag).commit();
     }
 
     private void clearScreen() {
@@ -228,7 +236,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         Customer c = handler.getCustomerById(unformattedPhoneNum);
         if (c != null && c.getTotalCredit() >= Constants.FREE_DRINK_THRESHOLD){
             //generate code and send sms
-            String code = String.format("%04d", new Random().nextInt(10000));
+            String code = Util.generateRandomCode();
             String msg = String.format(getString(R.string.getCodeMsg), code);
             sendText(unformattedPhoneNum, msg, code);
         }
@@ -236,6 +244,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         isSuccess = true;
         return isSuccess;
     }
+
 
     String textMsg, targetPhoneNum, codeStr;
     private void sendText(String phoneNum, String msg, String code) {
