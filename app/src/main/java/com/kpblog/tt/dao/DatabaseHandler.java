@@ -29,11 +29,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_OPT_OUT_DATE = "optOutDate";
     private static final String KEY_IS_OPT_IN = "isOptIn";
     private static final String KEY_IS_TEST_USER = "isTestUser";
+    private static final String KEY_LAST_CONTACTED_DATE = "lastContactedDate";
 
     private static final String TABLE_CUSTOMER_PURCHASE = "customerPurchase";
     private static final String KEY_QUANTITY = "quantity";
     private static final String KEY_RECEIPT_NUM = "receiptNum";
     private static final String KEY_PURCHASE_DATE = "purchaseDate";
+    private static final String KEY_NOTES = "notes";
 
     private static final String TABLE_CUSTOMER_CLAIM_CODE = "customerClaimCode";
     private static final String KEY_CLAIM_CODE = "claimCode";
@@ -46,12 +48,12 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         //using INTEGER for DATE columns (unix time, seconds since epoch)
-        String CREATE_CUSTOMER_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER)";
-        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_TABLE, TABLE_CUSTOMER, KEY_CUSTOMER_ID, KEY_TOTALCREDIT, KEY_LAST_VISIT_DATE, KEY_IS_OPT_IN, KEY_OPT_IN_DATE, KEY_OPT_OUT_DATE, KEY_IS_TEST_USER));
+        String CREATE_CUSTOMER_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER)";
+        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_TABLE, TABLE_CUSTOMER, KEY_CUSTOMER_ID, KEY_TOTALCREDIT, KEY_LAST_VISIT_DATE, KEY_IS_OPT_IN, KEY_OPT_IN_DATE, KEY_OPT_OUT_DATE, KEY_IS_TEST_USER, KEY_LAST_CONTACTED_DATE));
 
         //this table keeps track of all the customer purchases, each row represents a purchase, so there can be multiple rows per each customer
-        String CREATE_CUSTOMER_PURCHASE_TABLE = "CREATE TABLE %s (%s TEXT, %s INTEGER, %s INTEGER, %s INTEGER)";
-        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_PURCHASE_TABLE, TABLE_CUSTOMER_PURCHASE, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE));
+        String CREATE_CUSTOMER_PURCHASE_TABLE = "CREATE TABLE %s (%s TEXT, %s INTEGER, %s INTEGER, %s INTEGER, %s TEXT)";
+        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_PURCHASE_TABLE, TABLE_CUSTOMER_PURCHASE, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE, KEY_NOTES));
 
         //this table has the outstanding claim code for the customer, only at most 1 outstanding code per customer
         String CREATE_CUSTOMER_CLAIM_CODE_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY, %s TEXT, %s INTEGER)";
@@ -79,7 +81,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
   public Customer getCustomerById(String id) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_CUSTOMER, new String[] {KEY_CUSTOMER_ID, KEY_TOTALCREDIT, KEY_IS_OPT_IN, KEY_OPT_IN_DATE, KEY_LAST_VISIT_DATE, KEY_OPT_OUT_DATE, KEY_IS_TEST_USER}, KEY_CUSTOMER_ID + "=?", new String[] { id },
+        Cursor cursor = db.query(TABLE_CUSTOMER, new String[] {KEY_CUSTOMER_ID, KEY_TOTALCREDIT, KEY_IS_OPT_IN, KEY_OPT_IN_DATE, KEY_LAST_VISIT_DATE, KEY_OPT_OUT_DATE, KEY_IS_TEST_USER, KEY_LAST_CONTACTED_DATE}, KEY_CUSTOMER_ID + "=?", new String[] { id },
                 null, null, null, null);
         Customer customer = null;
         if (cursor != null && cursor.moveToFirst()){
@@ -95,6 +97,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             customer.setOptOutDate(new Date(cursor.getLong(5)));
 
             customer.setTestUser((cursor.getInt(6)) == 1);
+
+            customer.setLastContactedDate(new Date(cursor.getLong(7)));
         }
 
         return customer;
@@ -193,6 +197,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(KEY_QUANTITY, cp.getQuantity());
         values.put(KEY_RECEIPT_NUM, cp.getReceiptNum());
         values.put(KEY_PURCHASE_DATE, cp.getPurchaseDate().getTime());
+        values.put(KEY_NOTES, cp.getNotes());
 
         // Inserting new Row
         db.insert(TABLE_CUSTOMER_PURCHASE, null, values);
@@ -202,9 +207,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public List<CustomerPurchase> getAllCustomerPurchase() {
         List<CustomerPurchase> cpList = new ArrayList<CustomerPurchase>();
         // Select All Query
-        String selectQueryFormat = "SELECT %s, %s, %s, %s FROM %s";
+        String selectQueryFormat = "SELECT %s, %s, %s, %s, %s FROM %s";
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery(String.format(selectQueryFormat, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE, TABLE_CUSTOMER_PURCHASE), null);
+        Cursor cursor = db.rawQuery(String.format(selectQueryFormat, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE, KEY_NOTES, TABLE_CUSTOMER_PURCHASE), null);
 
         // Getting the address list which we already into our database
         if (cursor.moveToFirst()) {
@@ -214,6 +219,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 cp.setQuantity(cursor.getInt(1));
                 cp.setReceiptNum(cursor.getInt(2));
                 cp.setPurchaseDate(new Date(cursor.getLong(3)));
+                cp.setNotes(cursor.getString(4));
 
                 // Adding contact to list
                 cpList.add(cp);

@@ -8,6 +8,7 @@
     <string name="optIn">Please text me promotion info (We will not share your phone number with anyone)</string>
     <string name="btnConfirm">Confirm</string>
     <string name="cancelBtn">Cancel</string>
+    <string name="clearBtn">Clear</string>
     <string name="phone_err_msg">Please enter a 10-digit phone number</string>
     <string name="todayCredit_err_msg">Please enter a number less than 10</string>
     <string name="welcomeText">Welcome to Tra Temptation\'s reward program</string>
@@ -25,4 +26,7 @@
     <string name="getCodeMsg">Please use this code to claim your free prize: %s</string>
     <string name="claimCode_err_msg">The claim code entered is invalid</string>
     <string name="claimSuccess_msg">Success! Claim code is valid</string>
+    <string name="update_success_msg">Successfully updated drink credit</string>
+    <string name="optIn_success_msg">Successfully signed up, confirmation msg sent</string>
+    <string name="freeDrink_claim">Claimed free drink</string>
 </resources>

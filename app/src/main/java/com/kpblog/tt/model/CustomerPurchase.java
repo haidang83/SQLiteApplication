@@ -6,7 +6,7 @@ import java.util.Date;
 public class CustomerPurchase {
     private Date purchaseDate;
     private int quantity, receiptNum;
-    private String customerId;
+    private String customerId, notes;
 
     public Date getPurchaseDate() {
         return purchaseDate;
@@ -40,11 +40,19 @@ public class CustomerPurchase {
         this.customerId = customerId;
     }
 
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
     @Override
     public String toString(){
-        String cp = "\n%s, quantity=%d, receipt=%d, date=%s";
+        String cp = "\n%s, quantity=%d, receipt=%d, date=%s, %s";
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         final String dateStr = sdf.format(this.purchaseDate);
-        return String.format(cp, this.customerId, this.quantity, this.receiptNum, dateStr);
+        return String.format(cp, this.customerId, this.quantity, this.receiptNum, dateStr, this.notes);
     }
 }

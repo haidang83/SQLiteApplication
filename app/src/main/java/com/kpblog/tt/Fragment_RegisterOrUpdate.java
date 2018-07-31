@@ -276,7 +276,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         } else {
             // permission already granted run sms send
             sendSms(targetPhoneNum, textMsg);
-            Toast.makeText(getContext().getApplicationContext(), "Message Sent", Toast.LENGTH_LONG).show();
+            Toast.makeText(getContext().getApplicationContext(), getString(R.string.optIn_success_msg), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -288,7 +288,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // permission was granted
                     sendSms(targetPhoneNum, textMsg);
-                    Toast.makeText(getContext().getApplicationContext(), "Message Sent", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext().getApplicationContext(), getString(R.string.optIn_success_msg), Toast.LENGTH_LONG).show();
                 } else {
                     // permission denied
                     Toast.makeText(getContext().getApplicationContext(), "permission denied", Toast.LENGTH_LONG).show();
@@ -548,6 +548,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
                 sendConfirmText(customer.getCustomerId(), getString(R.string.welcomeText));
             }
             else {
+                Toast.makeText(getContext().getApplicationContext(), getString(R.string.update_success_msg), Toast.LENGTH_LONG).show();
                 gotoHomeScreen();
             }
 

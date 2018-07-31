@@ -49,7 +49,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
     private String mParam2;
 
     private EditText phone, claimCode, freeDrink;
-    private Button claimBtn, cancelBtn, getCodeBtn;
+    private Button claimBtn, clearBtn, getCodeBtn;
     private DatabaseHandler handler;
 
     private OnFragmentInteractionListener mListener;
@@ -128,7 +128,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         });
 
         claimBtn = (Button) (getView().findViewById(R.id.claimBtn));
-        claimBtn.setEnabled(false);//will enable after verifying code is correct
+        claimBtn.setEnabled(false);
         claimBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -148,17 +148,42 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
             }
         });
 
+        clearBtn = (Button) (getView().findViewById(R.id.clearBtn));
+        clearBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                clearScreen();
+            }
+        });
+
         claimCode = (EditText) (getView().findViewById(R.id.claimCode));
         claimCode.setOnEditorActionListener(this);
 
         handler = new DatabaseHandler(getContext());
     }
 
+    private void clearScreen() {
+        phone.setText("");
+        TextInputLayout phoneLayout = (TextInputLayout) (getView().findViewById(R.id.phoneLayout));
+        phoneLayout.setErrorEnabled(false);
+
+        claimCode.setText("");
+        TextInputLayout claimCodeLayout = (TextInputLayout) (getView().findViewById(R.id.claimCodeLayout));
+        claimCodeLayout.setErrorEnabled(false);
+
+        freeDrink.setText("0");
+
+        claimBtn.setEnabled(false);
+        getCodeBtn.setEnabled(false);
+
+    }
+
     private void recordClaimIntoCustomerPurchase(String customerId) {
         CustomerPurchase cp = new CustomerPurchase();
 
         cp.setCustomerId(customerId);
-        cp.setQuantity(-1);
+        cp.setQuantity(0);
+        cp.setNotes(getString(R.string.freeDrink_claim));
         cp.setPurchaseDate(new java.util.Date());
 
         handler.insertCustomerPurchase(cp);
@@ -166,7 +191,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
 
     private void updateTotalCreditAfterSuccessfulClaim(String customerId) {
         int totalCredit = handler.getTotalCreditForCustomerId(customerId);
-        totalCredit = totalCredit - Constants.FREE_DRINK_THRESHOLD;
+        totalCredit = totalCredit % Constants.FREE_DRINK_THRESHOLD;
         handler.updateTotalCreditForCustomerId(customerId, totalCredit);
     }
 

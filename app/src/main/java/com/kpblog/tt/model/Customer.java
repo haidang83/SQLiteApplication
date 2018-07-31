@@ -3,7 +3,7 @@ package com.kpblog.tt.model;
 import java.sql.Date;
 
 public class Customer {
-    private Date optInDate, lastVisitDate, optOutDate;
+    private Date optInDate, lastVisitDate, optOutDate, lastContactedDate;
     private boolean optIn, testUser;
     private int totalCredit;
     private String customerId;
@@ -64,9 +64,17 @@ public class Customer {
         this.testUser = testUser;
     }
 
+    public Date getLastContactedDate() {
+        return lastContactedDate;
+    }
+
+    public void setLastContactedDate(Date lastContactedDate) {
+        this.lastContactedDate = lastContactedDate;
+    }
+
     @Override
     public String toString() {
-        String customerFormat = "%s, %d, %s, %s, in=%s, test=%s, out=%s";
-        return String.format(customerFormat, this.customerId, this.totalCredit, this.lastVisitDate, this.optIn, this.optInDate, this.isTestUser(), this.optOutDate);
+        String customerFormat = "%s, %d, %s, %s, in=%s, test=%s, out=%s, lastContacted=%s";
+        return String.format(customerFormat, this.customerId, this.totalCredit, this.lastVisitDate, this.optIn, this.optInDate, this.isTestUser(), this.optOutDate, this.lastContactedDate);
     }
 }

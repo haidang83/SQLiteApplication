@@ -68,11 +68,11 @@
             android:orientation="horizontal"
             android:layout_height="wrap_content">
 
-            <Button android:id="@+id/cancelBtn"
+            <Button android:id="@+id/clearBtn"
                 android:layout_weight="1"
                 android:layout_width="0dip"
                 android:layout_height="wrap_content"
-                android:text="@string/cancelBtn"
+                android:text="@string/clearBtn"
                 style="@style/buttonStyle"
                 android:textColor="@android:color/white"/>
 
