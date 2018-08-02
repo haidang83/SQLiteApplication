@@ -284,7 +284,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         } else {
             // permission already granted run sms send
             sendSms(targetPhoneNum, textMsg);
-            Toast.makeText(getContext().getApplicationContext(), getString(R.string.optIn_success_msg), Toast.LENGTH_LONG).show();
+            Toast.makeText(getContext().getApplicationContext(), getString(R.string.cashier_toast_msg_sent), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -296,7 +296,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // permission was granted
                     sendSms(targetPhoneNum, textMsg);
-                    Toast.makeText(getContext().getApplicationContext(), getString(R.string.optIn_success_msg), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext().getApplicationContext(), getString(R.string.cashier_toast_msg_sent), Toast.LENGTH_LONG).show();
                 } else {
                     // permission denied
                     Toast.makeText(getContext().getApplicationContext(), "permission denied", Toast.LENGTH_LONG).show();
@@ -532,7 +532,6 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         }
 
         boolean success = false;
-        boolean sendConfirmationText = false;
         try {
             final Date today = new Date(Calendar.getInstance().getTime().getTime());
             final String unformattedPhoneNumber = Util.getUnformattedPhoneNumber(this.phone.getText().toString());
@@ -550,26 +549,32 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
 
                 //clear out opt-out date
                 customer.setOptOutDate(null);
-
-                sendConfirmationText = true;
             }
-            customer.setTotalCredit(customer.getTotalCredit() + getTodayCredit());
+            final int todayCredit = getTodayCredit();
+            customer.setTotalCredit(customer.getTotalCredit() + todayCredit);
             customer.setLastVisitDate(today);
 
             handler.registerOrUpdateCustomer(customer);
 
-            insertCustomerPurchase(customer.getCustomerId(), getTodayCredit());
+            insertCustomerPurchase(customer.getCustomerId(), todayCredit);
 
-            if (customer.getTotalCredit() >= Constants.FREE_DRINK_THRESHOLD && customer.isOptIn()){
-                //send code for free drink
-                final String codeStr = Util.generateRandomCode();
-                String msg = String.format(getString(R.string.freeDrink_notice), codeStr);
-                requestPermissionAndSendText(customer.getCustomerId(), msg);
-                insertOrUpdateClaimCodeDb(customer.getCustomerId(), codeStr);
-            }
+            if (customer.isOptIn()){
+                //send confirmation, based on total credit
+                int totalCredit = customer.getTotalCredit();
 
-            if (sendConfirmationText){
-                requestPermissionAndSendText(customer.getCustomerId(), getString(R.string.welcomeText));
+                if (totalCredit >= Constants.FREE_DRINK_THRESHOLD){
+                    //send code for free drink
+                    final String codeStr = Util.generateRandomCode();
+                    String msg = String.format(getString(R.string.purchase_conf_msg_free), todayCredit, totalCredit, codeStr);
+                    requestPermissionAndSendText(customer.getCustomerId(), msg);
+                    insertOrUpdateClaimCodeDb(customer.getCustomerId(), codeStr);
+                }
+                else {
+                    //send updated credit
+                    int missingCredit = Constants.FREE_DRINK_THRESHOLD - totalCredit;
+                    String msg = String.format(getString(R.string.purchase_conf_msg_notFree), todayCredit, totalCredit, missingCredit);
+                    requestPermissionAndSendText(customer.getCustomerId(), msg);
+                }
             }
             else {
                 Toast.makeText(getContext().getApplicationContext(), getString(R.string.update_success_msg), Toast.LENGTH_LONG).show();

@@ -26,8 +26,12 @@
     <string name="getCodeMsg">Please use this code to claim your free drink: %s</string>
     <string name="claimCode_err_msg">The claim code entered is invalid</string>
     <string name="claimSuccess_msg">Success! Claim code is valid</string>
+    <string name="claimSuccess_msg_textSent">Success! Claim code is valid. Confirmation sent</string>
     <string name="update_success_msg">Successfully updated drink credit</string>
-    <string name="optIn_success_msg">Successfully signed up, confirmation msg sent</string>
+    <string name="purchase_conf_msg_notFree">Thank you for your purchase at Tra Temptation. Credit earned today: %d, total credit: %d. Buy %d more and get 1 standard drink free!</string>
+    <string name="purchase_conf_msg_free">Thank you for your purchase at Tra Temptation. Credit earned today: %d, total credit: %d. Please use this code to claim your free standard drink: %s</string>
+    <string name="cashier_toast_msg_sent">Drinks updated and confirmation sent</string>
     <string name="freeDrink_claim">Claimed free drink</string>
     <string name="freeDrink_notice">You have earned 1 free drink at Tra Temptation. Please use this code to claim: %s</string>
+    <string name="successfulClaim_text">Thank you for claiming your free drink. Your total credit resets to %d</string>
 </resources>

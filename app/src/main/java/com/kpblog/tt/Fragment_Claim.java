@@ -137,15 +137,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
                 if (SystemClock.elapsedRealtime() - claimBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
                     claimBtnLastClicked = SystemClock.elapsedRealtime();
                     if (validateClaimCode()){
-                        String unformattedPhoneNum = Util.getUnformattedPhoneNumber(phone.getText().toString());
-                        //update the total credit
-                        updateTotalCreditAfterSuccessfulClaim(unformattedPhoneNum);
-                        recordClaimIntoCustomerPurchase(unformattedPhoneNum);
-                        handler.deleteClaimCodeForCustomerId(unformattedPhoneNum);
-                        claimBtn.setEnabled(false);
-                        Toast.makeText(getContext().getApplicationContext(), getString(R.string.claimSuccess_msg), Toast.LENGTH_LONG).show();
-
-                        updateInfoOnSignInTab();
+                        updateSuccessfulClaim();
                     }
                 }
             }
@@ -167,6 +159,31 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
             phone.setText(customerId);
             updateCustomerFreeDrink();
         }
+    }
+
+    private void updateSuccessfulClaim() {
+        String customerId = Util.getUnformattedPhoneNumber(phone.getText().toString());
+
+        //update the total credit
+        Customer c = handler.getCustomerById(customerId);
+        int totalCredit = c.getTotalCredit();
+        totalCredit = totalCredit % Constants.FREE_DRINK_THRESHOLD;
+        handler.updateTotalCreditForCustomerId(customerId, totalCredit);
+
+        recordClaimIntoCustomerPurchase(customerId);
+        handler.deleteClaimCodeForCustomerId(customerId);
+        claimBtn.setEnabled(false);
+
+        if (c.isOptIn()){
+            //send claim confirmation text
+            String msg = String.format(getString(R.string.successfulClaim_text), totalCredit);
+            sendText(customerId, msg, null);
+        }
+        else {
+            Toast.makeText(getContext().getApplicationContext(), getString(R.string.claimSuccess_msg), Toast.LENGTH_LONG).show();
+        }
+
+        updateInfoOnSignInTab();
     }
 
     private void updateInfoOnSignInTab() {
@@ -200,12 +217,6 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         cp.setPurchaseDate(new java.util.Date());
 
         handler.insertCustomerPurchase(cp);
-    }
-
-    private void updateTotalCreditAfterSuccessfulClaim(String customerId) {
-        int totalCredit = handler.getTotalCreditForCustomerId(customerId);
-        totalCredit = totalCredit % Constants.FREE_DRINK_THRESHOLD;
-        handler.updateTotalCreditForCustomerId(customerId, totalCredit);
     }
 
     private boolean validateClaimCode() {
@@ -253,7 +264,6 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
             targetPhoneNum = phoneNum;
             codeStr = code;
             requestSmsPermission();
-            //Toast.makeText(getApplicationContext(), "Message Sent", Toast.LENGTH_LONG).show();
         } catch (Exception ex) {
             Toast.makeText(getContext().getApplicationContext(),ex.getMessage().toString(),
                     Toast.LENGTH_LONG).show();
@@ -274,7 +284,20 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         } else {
             // permission already granted run sms send
             sendSms(targetPhoneNum, textMsg, codeStr);
+            displayToastToCashier();
+        }
+    }
+
+    private void displayToastToCashier() {
+        //2 scenarios to send sms: request code; or successful claim confirmation msg if customer opts in
+        //the successful scenario will have codeStr = null
+        if (codeStr != null && !codeStr.isEmpty()){
+            //request code flow
             Toast.makeText(getContext().getApplicationContext(), "Code Sent", Toast.LENGTH_LONG).show();
+        }
+        else {
+            //successful claim confirmation flow
+            Toast.makeText(getContext().getApplicationContext(), getString(R.string.claimSuccess_msg_textSent), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -286,7 +309,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // permission was granted
                     sendSms(targetPhoneNum, textMsg, codeStr);
-                    Toast.makeText(getContext().getApplicationContext(), "Code Sent", Toast.LENGTH_LONG).show();
+                    displayToastToCashier();
                 } else {
                     // permission denied
                     Toast.makeText(getContext().getApplicationContext(), "permission denied", Toast.LENGTH_LONG).show();
@@ -299,7 +322,11 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         SmsManager sms = SmsManager.getDefault();
         sms.sendTextMessage(phoneNumber, null, message, null, null);
 
-        insertOrUpdateClaimCodeDb(phoneNumber, codeStr);
+        if (codeStr != null && !codeStr.isEmpty()){
+            //codeStr is only empty when we send the confirmation msg after successful claim
+            //so only update db if not empty
+            insertOrUpdateClaimCodeDb(phoneNumber, codeStr);
+        }
     }
 
     private void insertOrUpdateClaimCodeDb(String phoneNumber, String codeStr) {
