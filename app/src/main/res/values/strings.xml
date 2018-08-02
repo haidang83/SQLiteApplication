@@ -34,4 +34,5 @@
     <string name="freeDrink_claim">Claimed free drink</string>
     <string name="freeDrink_notice">You have earned 1 free drink at Tra Temptation. Please use this code to claim: %s</string>
     <string name="successfulClaim_text">Thank you for claiming your free drink. Your total credit resets to %d</string>
+    <string name="singlePurchaseLimitAlert">%s, drinkPurchased: %d, receiptNum: %d, time: %s</string>
 </resources>

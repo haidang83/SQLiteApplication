@@ -7,5 +7,8 @@ public class Constants {
     public static final String FOUR_DIGIT_REGEXP = "[0-9]{4}";
     public static final String TEN_DIGIT_REGEXP = "[0-9]{10}";
 
-    public static final long BUTTON_CLICK_ELAPSE_THRESHOLD = 2000;
+    public static final long BUTTON_CLICK_ELAPSE_THRESHOLD = 3000;
+
+    public static final int SINGLE_PURCHASE_QUANTITY_LIMIT = 5;
+
 }

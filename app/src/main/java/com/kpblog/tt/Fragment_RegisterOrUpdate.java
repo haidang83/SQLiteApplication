@@ -33,6 +33,7 @@ import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
 import java.sql.Date;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
 
@@ -58,6 +59,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     private AddressAdapter addressAdapter;
     public List<Customer> list;
 
+    private String[] admin = {"4084257660", "4082888170"};//update this to real admin
     // TODO: Rename and change types of parameters
     private String customerId = "";
     private String mParam2;
@@ -257,11 +259,12 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     }
 
 
-    String textMsg, targetPhoneNum;
-    private void requestPermissionAndSendText(String phoneNum, String msg) {
+    String textMsg;
+    String[] targetPhoneNums;
+    private void requestPermissionAndSendText(String[] phoneNums, String msg) {
         try {
             textMsg = msg;
-            targetPhoneNum = phoneNum;
+            targetPhoneNums = phoneNums;
             requestSmsPermission();
             //Toast.makeText(getApplicationContext(), "Message Sent", Toast.LENGTH_LONG).show();
         } catch (Exception ex) {
@@ -283,7 +286,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
                     MY_PERMISSIONS_REQUEST_SEND_SMS);
         } else {
             // permission already granted run sms send
-            sendSms(targetPhoneNum, textMsg);
+            sendSms(targetPhoneNums, textMsg);
             Toast.makeText(getContext().getApplicationContext(), getString(R.string.cashier_toast_msg_sent), Toast.LENGTH_LONG).show();
         }
     }
@@ -295,7 +298,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
 
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // permission was granted
-                    sendSms(targetPhoneNum, textMsg);
+                    sendSms(targetPhoneNums, textMsg);
                     Toast.makeText(getContext().getApplicationContext(), getString(R.string.cashier_toast_msg_sent), Toast.LENGTH_LONG).show();
                 } else {
                     // permission denied
@@ -305,9 +308,11 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         }
     }
 
-    private void sendSms(String phoneNumber, String message){
+    private void sendSms(String[] phoneNumbers, String message){
         SmsManager sms = SmsManager.getDefault();
-        sms.sendTextMessage(phoneNumber, null, message, null, null);
+        for (String phoneNum : phoneNumbers){
+            sms.sendTextMessage(phoneNum, null, message, null, null);
+        }
         gotoHomeScreen();
     }
 
@@ -557,6 +562,10 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
             handler.registerOrUpdateCustomer(customer);
 
             insertCustomerPurchase(customer.getCustomerId(), todayCredit);
+            if (todayCredit > Constants.SINGLE_PURCHASE_QUANTITY_LIMIT){
+                final int receiptNum = Integer.parseInt(this.receiptNum.getText().toString());
+                sendAlertTextToAdmin(customer, todayCredit, receiptNum);
+            }
 
             if (customer.isOptIn()){
                 //send confirmation, based on total credit
@@ -566,14 +575,14 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
                     //send code for free drink
                     final String codeStr = Util.generateRandomCode();
                     String msg = String.format(getString(R.string.purchase_conf_msg_free), todayCredit, totalCredit, codeStr);
-                    requestPermissionAndSendText(customer.getCustomerId(), msg);
+                    requestPermissionAndSendText(new String[] {customer.getCustomerId()}, msg);
                     insertOrUpdateClaimCodeDb(customer.getCustomerId(), codeStr);
                 }
                 else {
                     //send updated credit
                     int missingCredit = Constants.FREE_DRINK_THRESHOLD - totalCredit;
                     String msg = String.format(getString(R.string.purchase_conf_msg_notFree), todayCredit, totalCredit, missingCredit);
-                    requestPermissionAndSendText(customer.getCustomerId(), msg);
+                    requestPermissionAndSendText(new String[] {customer.getCustomerId()}, msg);
                 }
             }
             else {
@@ -581,13 +590,21 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
                 gotoHomeScreen();
             }
 
+
             success = true;
         }
         catch (Exception e){
-
+            Log.d("CustomerPurchase", e.getMessage());
         }
 
         return success;
+    }
+
+    private void sendAlertTextToAdmin(Customer customer, int todayCredit, int receiptNum) {
+        java.util.Date purchaseDate = new java.util.Date();
+        String dateStr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(purchaseDate);
+        String textMsg = String.format(getString(R.string.singlePurchaseLimitAlert), customer.getCustomerId(), todayCredit, receiptNum, dateStr);
+        requestPermissionAndSendText(admin, textMsg);
     }
 
     private void insertOrUpdateClaimCodeDb(String phoneNumber, String codeStr) {
