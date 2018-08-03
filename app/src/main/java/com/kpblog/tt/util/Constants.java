@@ -11,4 +11,7 @@ public class Constants {
 
     public static final int SINGLE_PURCHASE_QUANTITY_LIMIT = 5;
 
+    public static final String[] ADMINS = {"4084257660", "4084257660"};//update this to real ADMINS
+    public static final String SHARED_PREF_ADMIN_CODE_KEY = "adminCode";
+
 }

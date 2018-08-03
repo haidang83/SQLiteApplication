@@ -59,7 +59,6 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     private AddressAdapter addressAdapter;
     public List<Customer> list;
 
-    private String[] admin = {"4084257660", "4082888170"};//update this to real admin
     // TODO: Rename and change types of parameters
     private String customerId = "";
     private String mParam2;
@@ -547,7 +546,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
             }
 
             //only set the opt-in date if it's checked.
-            //if customer already opted-in, we'd hide the checkbox. They can opt-out from the admin screen
+            //if customer already opted-in, we'd hide the checkbox. They can opt-out from the ADMINS screen
             if (optIn.isChecked()){
                 customer.setOptIn(optIn.isChecked());
                 customer.setOptInDate(today);
@@ -604,7 +603,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         java.util.Date purchaseDate = new java.util.Date();
         String dateStr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(purchaseDate);
         String textMsg = String.format(getString(R.string.singlePurchaseLimitAlert), customer.getCustomerId(), todayCredit, receiptNum, dateStr);
-        requestPermissionAndSendText(admin, textMsg);
+        requestPermissionAndSendText(Constants.ADMINS, textMsg);
     }
 
     private void insertOrUpdateClaimCodeDb(String phoneNumber, String codeStr) {

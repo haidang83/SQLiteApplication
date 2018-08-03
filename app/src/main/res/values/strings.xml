@@ -24,7 +24,7 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="btnClaim">Claim</string>
     <string name="getCodeMsg">Please use this code to claim your free drink: %s</string>
-    <string name="claimCode_err_msg">The claim code entered is invalid</string>
+    <string name="claimCode_err_msg">The code entered is invalid</string>
     <string name="claimSuccess_msg">Success! Claim code is valid</string>
     <string name="claimSuccess_msg_textSent">Success! Claim code is valid. Confirmation sent</string>
     <string name="update_success_msg">Successfully updated drink credit</string>
@@ -35,4 +35,13 @@
     <string name="freeDrink_notice">You have earned 1 free drink at Tra Temptation. Please use this code to claim: %s</string>
     <string name="successfulClaim_text">Thank you for claiming your free drink. Your total credit resets to %d</string>
     <string name="singlePurchaseLimitAlert">%s, drinkPurchased: %d, receiptNum: %d, time: %s</string>
+    <string name="unlock">Unlock</string>
+    <string name="lock">Lock</string>
+    <string name="unsubscribe">Opt Out</string>
+    <string name="adminCode">Admin Code</string>
+    <string name="adminCodeTextMsg">Admin code: %s</string>
+    <string name="adminCodeSentToastMsg">Admin code sent</string>
+    <string name="dbLocation">Db Location</string>
+    <string name="importLabel">Import</string>
+    <string name="exportLabel">Export</string>
 </resources>
