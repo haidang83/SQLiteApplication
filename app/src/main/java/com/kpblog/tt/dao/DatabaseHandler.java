@@ -20,7 +20,7 @@ import java.util.List;
 public class DatabaseHandler extends SQLiteOpenHelper {
 
     private static final int DATABASE_VERSION = 1;
-    private static final String DATABASE_NAME = "traTemptation";
+    public static final String DATABASE_NAME = "traTemptation";
     private static final String TABLE_CUSTOMER = "customer";
     private static final String KEY_CUSTOMER_ID = "customerID";
     private static final String KEY_TOTALCREDIT = "totalCredit";

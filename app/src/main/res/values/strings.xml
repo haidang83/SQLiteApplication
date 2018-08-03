@@ -44,4 +44,6 @@
     <string name="dbLocation">Db Location</string>
     <string name="importLabel">Import</string>
     <string name="exportLabel">Export</string>
+    <string name="dbExportSuccess">Database exported successfully</string>
+    <string name="dbExportFail">Database export FAILED</string>
 </resources>

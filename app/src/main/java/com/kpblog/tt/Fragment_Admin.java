@@ -6,12 +6,14 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.telephony.SmsManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,9 +21,16 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.kpblog.tt.R;
+import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -41,7 +50,7 @@ public class Fragment_Admin extends Fragment {
     private String mParam2;
 
     EditText adminCode;
-    Button getCodeBtn, lockUnlockBtn;
+    Button getCodeBtn, lockUnlockBtn, exportBtn, importBtn;
 
     private OnFragmentInteractionListener mListener;
 
@@ -84,7 +93,7 @@ public class Fragment_Admin extends Fragment {
     }
 
 
-    long getCodeBtnLastClicked, lockUnlockBtnLastClicked = 0;
+    long getCodeBtnLastClicked, lockUnlockBtnLastClicked, exportBtnLastClicked = 0;
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState){
@@ -111,6 +120,111 @@ public class Fragment_Admin extends Fragment {
                 }
             }
         });
+
+        exportBtn = (Button) (getView().findViewById(R.id.exportBtn));
+        exportBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (SystemClock.elapsedRealtime() - exportBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
+                    String state = Environment.getExternalStorageState();
+                    //external storage availability check
+                    if (!Environment.MEDIA_MOUNTED.equals(state)) {
+                        return;
+                    }
+
+                    requestReadWritePermission();
+                    exportBtnLastClicked = SystemClock.elapsedRealtime();
+                }
+            }
+        });
+    }
+
+    private static final int REQUEST_CODE_EXTERNAL_STORAGE = 234;
+    private static String[] PERMISSIONS_STORAGE = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
+
+    private void requestReadWritePermission() {
+
+        int writePermission = ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        int readPermission = ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE);
+
+        // check permission is given
+        if (writePermission != PackageManager.PERMISSION_GRANTED || readPermission != PackageManager.PERMISSION_GRANTED) {
+            // request permission (see result in onRequestPermissionsResult() method)
+            requestPermissions(PERMISSIONS_STORAGE, REQUEST_CODE_EXTERNAL_STORAGE);
+        } else {
+            if (exportDatabase()){
+                displayToast(getString(R.string.dbExportSuccess));
+            }
+            else {
+                displayToast(getString(R.string.dbExportFail));
+            }
+        }
+    }
+
+    private void displayToast(String msg) {
+        Toast.makeText(getContext().getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+    }
+
+    //http://www.zoftino.com/saving-files-to-internal-storage-&-external-storage-in-android
+    private boolean exportDatabase() {
+
+        final File downloadPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
+        String exportedFolderName = "exportedDb";
+        String fileName = sdf.format(new Date()) + ".db";
+        File exportedFolder = new File (downloadPath, exportedFolderName);
+        File dest = new File(exportedFolder, fileName);
+
+        boolean isSuccess = false;
+        OutputStream output = null;
+        FileInputStream fis = null;
+        try {
+            if (!exportedFolder.exists()){
+                exportedFolder.mkdir();
+            }
+
+            final String sourceDbName = getContext().getDatabasePath(DatabaseHandler.DATABASE_NAME).getPath();
+            File dbFile = new File(sourceDbName);
+            fis = new FileInputStream(dbFile);
+
+            // Open the empty db as the output stream
+            output = new FileOutputStream(dest);
+
+            // Transfer bytes from the inputfile to the outputfile
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = fis.read(buffer))>0){
+                output.write(buffer, 0, length);
+            }
+
+            EditText dbExportedLocation = (EditText) (getView().findViewById(R.id.locationInput));
+            dbExportedLocation.setText(String.format("%s/%s/%s", downloadPath.getName(), exportedFolderName,fileName));
+
+            isSuccess = true;
+        } catch (Exception e){
+            Log.e("Database backup", e.getMessage());
+        } finally {
+            try {
+
+                // Close the streams
+                if (output != null){
+                    output.flush();
+                    output.close();
+                }
+
+                if (fis != null) {
+                    fis.close();
+                }
+            } catch (Exception e){
+                Log.e("Database backup", e.getMessage());
+            }
+        }
+
+
+        return isSuccess;
     }
 
     private void lockUnlockAdminScreen() {
@@ -215,6 +329,15 @@ public class Fragment_Admin extends Fragment {
                 } else {
                     // permission denied
                     Toast.makeText(getContext().getApplicationContext(), "permission denied", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            case REQUEST_CODE_EXTERNAL_STORAGE: {
+                if (exportDatabase()){
+                    displayToast(getString(R.string.dbExportSuccess));
+                }
+                else {
+                    displayToast(getString(R.string.dbExportFail));
                 }
             }
         }
