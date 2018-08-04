@@ -46,4 +46,6 @@
     <string name="exportLabel">Export</string>
     <string name="dbExportSuccess">Database exported successfully</string>
     <string name="dbExportFail">Database export FAILED</string>
+    <string name="dbImportSuccess">Database imported successfully from %s</string>
+    <string name="dbImportFailed">Database import FAILED from %s</string>
 </resources>

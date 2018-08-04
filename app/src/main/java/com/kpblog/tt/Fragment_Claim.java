@@ -28,7 +28,6 @@ import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
 import java.util.Date;
-import java.util.Random;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -247,7 +246,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         Customer c = handler.getCustomerById(unformattedPhoneNum);
         if (c != null && c.getTotalCredit() >= Constants.FREE_DRINK_THRESHOLD){
             //generate code and send sms
-            String code = Util.generateRandomCode();
+            String code = Util.generateRandom4DigitCode();
             String msg = String.format(getString(R.string.getCodeMsg), code);
             sendText(unformattedPhoneNum, msg, code);
         }

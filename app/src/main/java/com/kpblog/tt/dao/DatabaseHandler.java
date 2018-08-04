@@ -10,7 +10,12 @@ import android.util.Log;
 import com.kpblog.tt.model.Customer;
 import com.kpblog.tt.model.CustomerClaimCode;
 import com.kpblog.tt.model.CustomerPurchase;
+import com.kpblog.tt.util.Util;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +69,33 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_CUSTOMER);
         onCreate(sqLiteDatabase);
+    }
+
+    /**
+     * Copies the database file at the specified location over the current
+     * internal application database.
+     * */
+    public boolean importDatabase(String sourceDbPath, String targetDbPath){
+        boolean isSuccess = false;
+        try {
+
+            // Close the SQLiteOpenHelper so it will commit the created empty
+            // database to internal storage.
+            close();
+            File newDb = new File(sourceDbPath);
+
+            File oldDb = new File(targetDbPath);
+            if (newDb.exists()) {
+                Util.copyFile(new FileInputStream(newDb), new FileOutputStream(oldDb));
+                // Access the copied database so SQLiteHelper will cache it and mark
+                // it as created.
+                getWritableDatabase().close();
+                isSuccess = true;
+            }
+        } catch (Exception e){
+            Log.e("DatabaseHandler", e.getMessage());
+        }
+        return isSuccess;
     }
 
    public void addNewCustomer(Customer customer) {

@@ -14,4 +14,5 @@ public class Constants {
     public static final String[] ADMINS = {"4084257660", "4084257660"};//update this to real ADMINS
     public static final String SHARED_PREF_ADMIN_CODE_KEY = "adminCode";
 
+    public static final String EXPORTED_FOLDER_NAME = "exportedDb";
 }

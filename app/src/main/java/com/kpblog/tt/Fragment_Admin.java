@@ -1,6 +1,7 @@
 package com.kpblog.tt;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -9,6 +10,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -28,7 +30,6 @@ import com.kpblog.tt.util.Util;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -49,9 +50,10 @@ public class Fragment_Admin extends Fragment {
     private String mParam1;
     private String mParam2;
 
+    boolean permissionRequestedOnStart = false;
     EditText adminCode;
     Button getCodeBtn, lockUnlockBtn, exportBtn, importBtn;
-
+    DatabaseHandler handler;
     private OnFragmentInteractionListener mListener;
 
     public Fragment_Admin() {
@@ -93,10 +95,10 @@ public class Fragment_Admin extends Fragment {
     }
 
 
-    long getCodeBtnLastClicked, lockUnlockBtnLastClicked, exportBtnLastClicked = 0;
-
+    long getCodeBtnLastClicked, lockUnlockBtnLastClicked, exportBtnLastClicked, importBtnLastClicked = 0;
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState){
+        handler = new DatabaseHandler(getContext());
         adminCode = (EditText) (getView().findViewById(R.id.adminCode));
 
         getCodeBtn = (Button) (getView().findViewById(R.id.getCodeBtn));
@@ -121,6 +123,10 @@ public class Fragment_Admin extends Fragment {
             }
         });
 
+        if (!permissionRequestedOnStart){
+            requestReadWritePermission_onStart();
+        }
+
         exportBtn = (Button) (getView().findViewById(R.id.exportBtn));
         exportBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -137,6 +143,85 @@ public class Fragment_Admin extends Fragment {
                 }
             }
         });
+
+        importBtn = (Button) (getView().findViewById(R.id.importBtn));
+        importBtn.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View view) {
+                if (SystemClock.elapsedRealtime() - importBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
+                    importBtnLastClicked = SystemClock.elapsedRealtime();
+
+                    final File documentPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+                    File exportedFolder = new File (documentPath, Constants.EXPORTED_FOLDER_NAME);
+
+                    final String deviceDbPath = getContext().getDatabasePath(DatabaseHandler.DATABASE_NAME).getPath();
+                    final String latestExportedDb = getLatestExportedDb(exportedFolder);
+
+                    boolean importSuccess = false;
+                    if (!latestExportedDb.isEmpty()){
+                        importSuccess = handler.importDatabase(latestExportedDb, deviceDbPath);
+                    }
+
+                    if (importSuccess){
+                        String successMsgFormat = getString(R.string.dbImportSuccess);
+                        @SuppressLint({"StringFormatInvalid", "LocalSuppress"}) String msg = String.format(successMsgFormat, getLatestExportFileName(latestExportedDb));
+                        displayToast(msg);
+                    }
+                    else {
+                        String failureMsgFormat = getString(R.string.dbImportFailed);
+                        @SuppressLint({"StringFormatInvalid", "LocalSuppress"}) String msg = String.format(failureMsgFormat, getLatestExportFileName(latestExportedDb));
+                        displayToast(msg);
+                    }
+                }
+            }
+        });
+    }
+
+    private String getLatestExportedFileName() {
+        final File documentPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        File exportedFolder = new File (documentPath, Constants.EXPORTED_FOLDER_NAME);
+        String fullPath = getLatestExportedDb(exportedFolder);
+        return getLatestExportPathDisplayName(fullPath);
+    }
+
+    @NonNull
+    //Document/exportDb/fileName
+    private String getLatestExportPathDisplayName(String fullPath) {
+        String parts[] = fullPath.split(File.separator);
+
+        int length = parts.length;
+        return parts[length - 3] + File.separator + parts[length - 2] + File.separator + parts[length - 1];
+    }
+
+    //just the file name
+    private String getLatestExportFileName(String fullPath){
+        String parts[] = fullPath.split(File.separator);
+        return parts[parts.length - 1];
+    }
+
+    /**
+     * pick the latest file in this folder
+     * @param exportedFolder
+     * @return
+     */
+    private String getLatestExportedDb(File exportedFolder) {
+        String latestFilePath = "";
+        File files[] = exportedFolder.listFiles();
+
+        if (files != null && files.length > 0){
+            File latestFile = files[0];
+
+            for (int i = 1; i < files.length; ++i){
+                if (files[i].lastModified() > latestFile.lastModified()){
+                    latestFile = files[i];
+                }
+            }
+
+            latestFilePath = latestFile.getAbsolutePath();
+        }
+
+        return latestFilePath;
     }
 
     private static final int REQUEST_CODE_EXTERNAL_STORAGE = 234;
@@ -144,6 +229,23 @@ public class Fragment_Admin extends Fragment {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
+
+
+    private final int REQUEST_CODE_EXTERNAL_STORAGE_ONSTART = 456;
+    private void requestReadWritePermission_onStart() {
+        permissionRequestedOnStart = true;
+
+        int writePermission = ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        int readPermission = ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE);
+
+        // check permission is given
+        if (writePermission != PackageManager.PERMISSION_GRANTED || readPermission != PackageManager.PERMISSION_GRANTED) {
+            // request permission (see result in onRequestPermissionsResult() method)
+            requestPermissions(PERMISSIONS_STORAGE, REQUEST_CODE_EXTERNAL_STORAGE_ONSTART);
+        } else {
+            updateLocationWithLatestFile();
+        }
+    }
 
     private void requestReadWritePermission() {
 
@@ -171,15 +273,15 @@ public class Fragment_Admin extends Fragment {
     //http://www.zoftino.com/saving-files-to-internal-storage-&-external-storage-in-android
     private boolean exportDatabase() {
 
-        final File downloadPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        final File documentPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        File exportedFolder = new File (documentPath, Constants.EXPORTED_FOLDER_NAME);
+
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
-        String exportedFolderName = "exportedDb";
         String fileName = sdf.format(new Date()) + ".db";
-        File exportedFolder = new File (downloadPath, exportedFolderName);
         File dest = new File(exportedFolder, fileName);
 
         boolean isSuccess = false;
-        OutputStream output = null;
+        FileOutputStream output = null;
         FileInputStream fis = null;
         try {
             if (!exportedFolder.exists()){
@@ -193,15 +295,10 @@ public class Fragment_Admin extends Fragment {
             // Open the empty db as the output stream
             output = new FileOutputStream(dest);
 
-            // Transfer bytes from the inputfile to the outputfile
-            byte[] buffer = new byte[1024];
-            int length;
-            while ((length = fis.read(buffer))>0){
-                output.write(buffer, 0, length);
-            }
+            Util.copyFile(fis, output);
 
             EditText dbExportedLocation = (EditText) (getView().findViewById(R.id.locationInput));
-            dbExportedLocation.setText(String.format("%s/%s/%s", downloadPath.getName(), exportedFolderName,fileName));
+            dbExportedLocation.setText(String.format("%s/%s/%s", documentPath.getName(), Constants.EXPORTED_FOLDER_NAME,fileName));
 
             isSuccess = true;
         } catch (Exception e){
@@ -241,6 +338,8 @@ public class Fragment_Admin extends Fragment {
         lockUnlockBtn.setText(getString(R.string.unlock));
         getCodeBtn.setEnabled(true);
         adminCode.setEnabled(true);
+
+        updateLocationWithLatestFile();
         getView().findViewById(R.id.adminLayout).setVisibility(View.INVISIBLE);
     }
 
@@ -275,7 +374,7 @@ public class Fragment_Admin extends Fragment {
     }
 
     private void sendCode() {
-        String code = Util.generateRandomCode();
+        String code = Util.generateRandom4DigitCode();
         String msg = String.format(getString(R.string.adminCodeTextMsg), code);
         requestPermissionAndSendText(Constants.ADMINS, msg);
 
@@ -330,6 +429,7 @@ public class Fragment_Admin extends Fragment {
                     // permission denied
                     Toast.makeText(getContext().getApplicationContext(), "permission denied", Toast.LENGTH_LONG).show();
                 }
+                break;
             }
 
             case REQUEST_CODE_EXTERNAL_STORAGE: {
@@ -339,8 +439,19 @@ public class Fragment_Admin extends Fragment {
                 else {
                     displayToast(getString(R.string.dbExportFail));
                 }
+                break;
+            }
+
+            case REQUEST_CODE_EXTERNAL_STORAGE_ONSTART: {
+                updateLocationWithLatestFile();
+                break;
             }
         }
+    }
+
+    private void updateLocationWithLatestFile() {
+        String latestFileName = getLatestExportedFileName();
+        ((EditText) (getView().findViewById(R.id.locationInput))).setText(latestFileName);
     }
 
     private void sendSms(String[] phoneNumbers, String message){

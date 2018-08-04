@@ -572,7 +572,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
 
                 if (totalCredit >= Constants.FREE_DRINK_THRESHOLD){
                     //send code for free drink
-                    final String codeStr = Util.generateRandomCode();
+                    final String codeStr = Util.generateRandom4DigitCode();
                     String msg = String.format(getString(R.string.purchase_conf_msg_free), todayCredit, totalCredit, codeStr);
                     requestPermissionAndSendText(new String[] {customer.getCustomerId()}, msg);
                     insertOrUpdateClaimCodeDb(customer.getCustomerId(), codeStr);
