@@ -155,7 +155,7 @@ public class Util {
                 SystemClock.elapsedRealtime() +
                         10 * 1000, recurringIntent);*/
 
-        alarms.setInexactRepeating(AlarmManager.RTC_WAKEUP, updateTime.getTimeInMillis(),
+        alarms.setRepeating(AlarmManager.RTC_WAKEUP, updateTime.getTimeInMillis(),
                 AlarmManager.INTERVAL_DAY, recurringIntent);
     }
 }
