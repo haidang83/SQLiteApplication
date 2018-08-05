@@ -15,4 +15,8 @@ public class Constants {
     public static final String SHARED_PREF_ADMIN_CODE_KEY = "adminCode";
 
     public static final String EXPORTED_FOLDER_NAME = "exportedDb";
+
+    public static final String PST_TIMEZONE = "America/Los_Angeles";
+    public static final int ALARM_ID = 1234;
+    public static final String DB_BACKUP_ACTION = "DB_BACKUP";
 }

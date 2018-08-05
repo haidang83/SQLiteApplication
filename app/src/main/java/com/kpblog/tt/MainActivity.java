@@ -1,40 +1,25 @@
 package com.kpblog.tt;
 
-import android.Manifest;
-import android.app.FragmentTransaction;
-import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.support.design.widget.TabLayout;
-import android.support.design.widget.TextInputLayout;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.telephony.PhoneNumberUtils;
-import android.telephony.SmsManager;
-import android.view.KeyEvent;
-import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.kpblog.tt.adapter.AddressAdapter;
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
-import com.kpblog.tt.model.CustomerPurchase;
+import com.kpblog.tt.util.Util;
 
-import java.sql.Date;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
 /**
@@ -93,6 +78,8 @@ public class MainActivity extends AppCompatActivity implements  Fragment_Custome
         tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
 
+        Util.setRecurringAlarm(getApplicationContext());
+
         //uncomment to see the db entries on screen
         /*listView = (ListView) findViewById(R.id.addressListView);
         list = handler.getAllAddress();
@@ -100,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements  Fragment_Custome
         listView.setAdapter(addressAdapter);*/
 
     }
+
 
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());

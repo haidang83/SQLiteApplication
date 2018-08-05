@@ -188,6 +188,10 @@ public class Fragment_Admin extends Fragment {
     @NonNull
     //Document/exportDb/fileName
     private String getLatestExportPathDisplayName(String fullPath) {
+        if (fullPath.isEmpty()){
+            return "";
+        }
+
         String parts[] = fullPath.split(File.separator);
 
         int length = parts.length;
@@ -273,55 +277,14 @@ public class Fragment_Admin extends Fragment {
     //http://www.zoftino.com/saving-files-to-internal-storage-&-external-storage-in-android
     private boolean exportDatabase() {
 
-        final File documentPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
-        File exportedFolder = new File (documentPath, Constants.EXPORTED_FOLDER_NAME);
+        final String sourceDbName = getContext().getDatabasePath(DatabaseHandler.DATABASE_NAME).getPath();
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
-        String fileName = sdf.format(new Date()) + ".db";
-        File dest = new File(exportedFolder, fileName);
+        String exportedDbPath = Util.exportDatabase(sourceDbName);
 
-        boolean isSuccess = false;
-        FileOutputStream output = null;
-        FileInputStream fis = null;
-        try {
-            if (!exportedFolder.exists()){
-                exportedFolder.mkdir();
-            }
+        EditText dbExportedLocation = (EditText) (getView().findViewById(R.id.locationInput));
+        dbExportedLocation.setText(exportedDbPath);
 
-            final String sourceDbName = getContext().getDatabasePath(DatabaseHandler.DATABASE_NAME).getPath();
-            File dbFile = new File(sourceDbName);
-            fis = new FileInputStream(dbFile);
-
-            // Open the empty db as the output stream
-            output = new FileOutputStream(dest);
-
-            Util.copyFile(fis, output);
-
-            EditText dbExportedLocation = (EditText) (getView().findViewById(R.id.locationInput));
-            dbExportedLocation.setText(String.format("%s/%s/%s", documentPath.getName(), Constants.EXPORTED_FOLDER_NAME,fileName));
-
-            isSuccess = true;
-        } catch (Exception e){
-            Log.e("Database backup", e.getMessage());
-        } finally {
-            try {
-
-                // Close the streams
-                if (output != null){
-                    output.flush();
-                    output.close();
-                }
-
-                if (fis != null) {
-                    fis.close();
-                }
-            } catch (Exception e){
-                Log.e("Database backup", e.getMessage());
-            }
-        }
-
-
-        return isSuccess;
+        return !exportedDbPath.isEmpty();
     }
 
     private void lockUnlockAdminScreen() {
@@ -339,7 +302,6 @@ public class Fragment_Admin extends Fragment {
         getCodeBtn.setEnabled(true);
         adminCode.setEnabled(true);
 
-        updateLocationWithLatestFile();
         getView().findViewById(R.id.adminLayout).setVisibility(View.INVISIBLE);
     }
 
@@ -367,6 +329,7 @@ public class Fragment_Admin extends Fragment {
 
             //open admin screen
             getView().findViewById(R.id.adminLayout).setVisibility(View.VISIBLE);
+            updateLocationWithLatestFile();
         }
         else {
             adminCodeLayout.setError(getString(R.string.claimCode_err_msg));
