@@ -34,6 +34,7 @@ import com.kpblog.tt.util.Util;
 
 import java.sql.Date;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -259,8 +260,8 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
 
 
     String textMsg;
-    String[] targetPhoneNums;
-    private void requestPermissionAndSendText(String[] phoneNums, String msg) {
+    List<String> targetPhoneNums;
+    private void requestPermissionAndSendText(List<String> phoneNums, String msg) {
         try {
             textMsg = msg;
             targetPhoneNums = phoneNums;
@@ -307,7 +308,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         }
     }
 
-    private void sendSms(String[] phoneNumbers, String message){
+    private void sendSms(List<String> phoneNumbers, String message){
         SmsManager sms = SmsManager.getDefault();
         for (String phoneNum : phoneNumbers){
             sms.sendTextMessage(phoneNum, null, message, null, null);
@@ -570,18 +571,21 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
                 //send confirmation, based on total credit
                 int totalCredit = customer.getTotalCredit();
 
+                List<String> phoneNumbers = new ArrayList<String>();
+                phoneNumbers.add(customer.getCustomerId());
+
                 if (totalCredit >= Constants.FREE_DRINK_THRESHOLD){
                     //send code for free drink
                     final String codeStr = Util.generateRandom4DigitCode();
                     String msg = String.format(getString(R.string.purchase_conf_msg_free), todayCredit, totalCredit, codeStr);
-                    requestPermissionAndSendText(new String[] {customer.getCustomerId()}, msg);
+                    requestPermissionAndSendText(phoneNumbers, msg);
                     insertOrUpdateClaimCodeDb(customer.getCustomerId(), codeStr);
                 }
                 else {
                     //send updated credit
                     int missingCredit = Constants.FREE_DRINK_THRESHOLD - totalCredit;
                     String msg = String.format(getString(R.string.purchase_conf_msg_notFree), todayCredit, totalCredit, missingCredit);
-                    requestPermissionAndSendText(new String[] {customer.getCustomerId()}, msg);
+                    requestPermissionAndSendText(phoneNumbers, msg);
                 }
             }
             else {
@@ -603,7 +607,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         java.util.Date purchaseDate = new java.util.Date();
         String dateStr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(purchaseDate);
         String textMsg = String.format(getString(R.string.singlePurchaseLimitAlert), customer.getCustomerId(), todayCredit, receiptNum, dateStr);
-        requestPermissionAndSendText(Constants.ADMINS, textMsg);
+        requestPermissionAndSendText(handler.getAllAdmins(), textMsg);
     }
 
     private void insertOrUpdateClaimCodeDb(String phoneNumber, String codeStr) {

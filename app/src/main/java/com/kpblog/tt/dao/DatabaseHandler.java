@@ -46,10 +46,16 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_CLAIM_CODE = "claimCode";
     private static final String KEY_DATE_ISSUED = "dateIssued";
 
+    private static final String TABLE_ADMIN = "admin";
+
     public DatabaseHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
+    /**
+     * This method only runs when there's no database
+     * @param sqLiteDatabase
+     */
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         //using INTEGER for DATE columns (unix time, seconds since epoch)
@@ -63,12 +69,40 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         //this table has the outstanding claim code for the customer, only at most 1 outstanding code per customer
         String CREATE_CUSTOMER_CLAIM_CODE_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY, %s TEXT, %s INTEGER)";
         sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_CLAIM_CODE_TABLE, TABLE_CUSTOMER_CLAIM_CODE, KEY_CUSTOMER_ID, KEY_CLAIM_CODE, KEY_DATE_ISSUED));
+
+        String CREATE_ADMIN_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY)";
+        sqLiteDatabase.execSQL(String.format(CREATE_ADMIN_TABLE, TABLE_ADMIN, KEY_CUSTOMER_ID));
+        ContentValues values = new ContentValues();
+        values.put(KEY_CUSTOMER_ID, "4084257660");
+        sqLiteDatabase.insertWithOnConflict(TABLE_ADMIN, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+    }
+
+    /**
+     * This method runs when there's an existing database, but the DATABASE_VERSION specified above is
+     * later than the internal db version
+     * https://thebhwgroup.com/blog/how-android-sqlite-onupgrade
+     * @param sqLiteDatabase
+     * @param oldVersion
+     * @param newVersion
+     */
+    @Override
+    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
+        //sample test implementation only, we already downgrade the db and add this code in onCreate()
+        /*if (newVersion == 2){
+            //version 2 is when we add the admin table
+            String CREATE_ADMIN_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY)";
+            sqLiteDatabase.execSQL(String.format(CREATE_ADMIN_TABLE, TABLE_ADMIN, KEY_CUSTOMER_ID));
+
+            ContentValues values = new ContentValues();
+            values.put(KEY_CUSTOMER_ID, "4084257660");
+            sqLiteDatabase.insertWithOnConflict(TABLE_ADMIN, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+        }*/
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
-        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_CUSTOMER);
-        onCreate(sqLiteDatabase);
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        //do nothing
+        Log.d("DatabaseHander", String.format("oldversion=%d, newVersion=%d", oldVersion, newVersion));
     }
 
     /**
@@ -132,6 +166,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
             customer.setLastContactedDate(new Date(cursor.getLong(7)));
         }
+
+        db.close();
 
         return customer;
     }
@@ -358,5 +394,63 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         db.update(TABLE_CUSTOMER, values, KEY_CUSTOMER_ID + "=?", new String[]{customerId});
         db.close();
+    }
+
+    public boolean addAdmin(String customerId) {
+        boolean isSuccess = false;
+        SQLiteDatabase db = null;
+        try {
+
+            db = this.getWritableDatabase();
+
+            ContentValues values = new ContentValues();
+            values.put(KEY_CUSTOMER_ID, customerId);
+
+            // Inserting new Row or overwrite existing one (this is ok since this table only has 1 column)
+            db.insertWithOnConflict(TABLE_ADMIN, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+            isSuccess = true;
+        } finally{
+            if (db != null)
+                db.close(); // Closing database connection
+        }
+
+        return isSuccess;
+    }
+
+    public List<String> getAllAdmins(){
+        List<String> admins = new ArrayList<String>();
+        SQLiteDatabase db = null;
+        try {
+            String selectQueryFormat = "SELECT * FROM %s";
+            db = this.getReadableDatabase();
+            Cursor cursor = db.rawQuery(String.format(selectQueryFormat, TABLE_ADMIN), null);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                admins.add(cursor.getString(0));
+            }
+        } finally {
+            if (db != null){
+                db.close();;
+            }
+        }
+
+        return admins;
+    }
+
+    public boolean remove(String customerId) {
+        boolean isSuccess = false;
+
+        SQLiteDatabase db = null;
+        try {
+            db = getWritableDatabase();
+            db.delete(TABLE_ADMIN, KEY_CUSTOMER_ID + " = ?", new String[] { customerId });
+            isSuccess = true;
+        } finally {
+            if (db != null){
+                db.close();
+            }
+        }
+
+        return isSuccess;
     }
 }

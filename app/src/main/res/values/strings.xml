@@ -55,5 +55,13 @@
     <string name="quantity">Amt</string>
     <string name="note">Note</string>
     <string name="recNum">Rec#</string>
+    <string name="addAdmin">Add Admin</string>
+    <string name="removeAdmin">Remove Admin</string>
+    <string name="addTestUer">Add Test User</string>
+    <string name="removeTestUser">Remove Test User</string>
+    <string name="adminUserAddSuccess">Admin user added successfully</string>
+    <string name="adminUserAddFail">FAILED to add admin user</string>
+    <string name="adminUserRemoveSuccess">Admin user removed successfully</string>
+    <string name="adminUserRemoveFail">FAILED to remove admin user</string>
 
 </resources>

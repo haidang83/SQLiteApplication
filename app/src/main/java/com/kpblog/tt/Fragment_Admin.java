@@ -14,6 +14,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.telephony.PhoneNumberFormattingTextWatcher;
 import android.telephony.SmsManager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +28,7 @@ import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -46,8 +48,12 @@ public class Fragment_Admin extends Fragment {
     private String mParam2;
 
     boolean permissionRequestedOnStart = false;
-    EditText adminCode;
-    Button getCodeBtn, lockUnlockBtn, exportBtn, importBtn;
+    EditText adminCode, phone;
+    Button getCodeBtn, lockUnlockBtn, exportBtn, importBtn,
+            addAdminBtn, removeAdminBtn, addTestUserBtn, removeTestUserBtn;
+
+    TextInputLayout phoneLayout;
+
     DatabaseHandler handler;
     private OnFragmentInteractionListener mListener;
 
@@ -91,6 +97,7 @@ public class Fragment_Admin extends Fragment {
 
 
     long getCodeBtnLastClicked, lockUnlockBtnLastClicked, exportBtnLastClicked, importBtnLastClicked = 0;
+    long addAdminBtnLastClicked, removeAdminBtnLastClicked, addTestUserBtnLastClicked, removeTestUserBtnLastClicked = 0;
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState){
         handler = new DatabaseHandler(getContext());
@@ -133,7 +140,7 @@ public class Fragment_Admin extends Fragment {
                         return;
                     }
 
-                    requestReadWritePermission();
+                    requestReadWritePermissionAndExportDb();
                     exportBtnLastClicked = SystemClock.elapsedRealtime();
                 }
             }
@@ -147,30 +154,87 @@ public class Fragment_Admin extends Fragment {
                 if (SystemClock.elapsedRealtime() - importBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
                     importBtnLastClicked = SystemClock.elapsedRealtime();
 
-                    final File documentPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
-                    File exportedFolder = new File (documentPath, Constants.EXPORTED_FOLDER_NAME);
+                    importDb();
+                }
+            }
+        });
 
-                    final String deviceDbPath = getContext().getDatabasePath(DatabaseHandler.DATABASE_NAME).getPath();
-                    final String latestExportedDb = getLatestExportedDb(exportedFolder);
+        phoneLayout = (TextInputLayout) getView().findViewById(R.id.phoneLayout);
+        phone = (EditText)(getView().findViewById(R.id.phone));
+        phone.addTextChangedListener(new PhoneNumberFormattingTextWatcher());
 
-                    boolean importSuccess = false;
-                    if (!latestExportedDb.isEmpty()){
-                        importSuccess = handler.importDatabase(latestExportedDb, deviceDbPath);
-                    }
+        addAdminBtn = (Button) getView().findViewById(R.id.addAdminBtn);
+        addAdminBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (SystemClock.elapsedRealtime() - addAdminBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
+                    addAdminBtnLastClicked = SystemClock.elapsedRealtime();
 
-                    if (importSuccess){
-                        String successMsgFormat = getString(R.string.dbImportSuccess);
-                        @SuppressLint({"StringFormatInvalid", "LocalSuppress"}) String msg = String.format(successMsgFormat, getLatestExportFileName(latestExportedDb));
-                        displayToast(msg);
-                    }
-                    else {
-                        String failureMsgFormat = getString(R.string.dbImportFailed);
-                        @SuppressLint({"StringFormatInvalid", "LocalSuppress"}) String msg = String.format(failureMsgFormat, getLatestExportFileName(latestExportedDb));
-                        displayToast(msg);
+                    final String unformattedPhoneNumber = Util.getUnformattedPhoneNumber(phone.getText().toString());
+
+                    if (Util.isPhoneNumberValid(phoneLayout, getString(R.string.phone_err_msg), unformattedPhoneNumber)){
+                        addAdmin(unformattedPhoneNumber);
                     }
                 }
             }
         });
+
+        removeAdminBtn = (Button) getView().findViewById(R.id.removeAdminBtn);
+        removeAdminBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (SystemClock.elapsedRealtime() - removeAdminBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD) {
+                    removeAdminBtnLastClicked = SystemClock.elapsedRealtime();
+
+                    final String unformattedPhoneNumber = Util.getUnformattedPhoneNumber(phone.getText().toString());
+                    if (Util.isPhoneNumberValid(phoneLayout, getString(R.string.phone_err_msg), unformattedPhoneNumber)){
+                        removeAdmin(unformattedPhoneNumber);
+                    }
+                }
+            }
+        });
+    }
+
+    private void removeAdmin(String customerId) {
+        if (handler.remove(customerId)){
+            displayToast(getString(R.string.adminUserRemoveSuccess));
+        }
+        else {
+            displayToast(getString(R.string.adminUserRemoveFail));
+        }
+    }
+
+    private void addAdmin(String customerId) {
+        if (handler.addAdmin(customerId)){
+            displayToast(getString(R.string.adminUserAddSuccess));
+        }
+        else {
+            displayToast(getString(R.string.adminUserAddFail));
+        }
+    }
+
+    private void importDb() {
+        final File documentPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        File exportedFolder = new File (documentPath, Constants.EXPORTED_FOLDER_NAME);
+
+        final String deviceDbPath = getContext().getDatabasePath(DatabaseHandler.DATABASE_NAME).getPath();
+        final String latestExportedDb = getLatestExportedDb(exportedFolder);
+
+        boolean importSuccess = false;
+        if (!latestExportedDb.isEmpty()){
+            importSuccess = handler.importDatabase(latestExportedDb, deviceDbPath);
+        }
+
+        if (importSuccess){
+            String successMsgFormat = getString(R.string.dbImportSuccess);
+            @SuppressLint({"StringFormatInvalid", "LocalSuppress"}) String msg = String.format(successMsgFormat, getLatestExportFileName(latestExportedDb));
+            displayToast(msg);
+        }
+        else {
+            String failureMsgFormat = getString(R.string.dbImportFailed);
+            @SuppressLint({"StringFormatInvalid", "LocalSuppress"}) String msg = String.format(failureMsgFormat, getLatestExportFileName(latestExportedDb));
+            displayToast(msg);
+        }
     }
 
     private String getLatestExportedFileName() {
@@ -242,7 +306,7 @@ public class Fragment_Admin extends Fragment {
         }
     }
 
-    private void requestReadWritePermission() {
+    private void requestReadWritePermissionAndExportDb() {
 
         int writePermission = ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
         int readPermission = ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE);
@@ -330,7 +394,7 @@ public class Fragment_Admin extends Fragment {
     private void sendCode() {
         String code = Util.generateRandom4DigitCode();
         String msg = String.format(getString(R.string.adminCodeTextMsg), code);
-        requestPermissionAndSendText(Constants.ADMINS, msg);
+        requestPermissionAndSendText(handler.getAllAdmins(), msg);
 
         //save into shared pref
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -340,8 +404,8 @@ public class Fragment_Admin extends Fragment {
     }
 
     String textMsg;
-    String[] targetPhoneNums;
-    private void requestPermissionAndSendText(String[] phoneNums, String msg) {
+    List<String> targetPhoneNums;
+    private void requestPermissionAndSendText(List<String> phoneNums, String msg) {
         try {
             textMsg = msg;
             targetPhoneNums = phoneNums;
@@ -408,7 +472,7 @@ public class Fragment_Admin extends Fragment {
         ((EditText) (getView().findViewById(R.id.locationInput))).setText(latestFileName);
     }
 
-    private void sendSms(String[] phoneNumbers, String message){
+    private void sendSms(List<String> phoneNumbers, String message){
         SmsManager sms = SmsManager.getDefault();
         for (String phoneNum : phoneNumbers){
             sms.sendTextMessage(phoneNum, null, message, null, null);
