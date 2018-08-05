@@ -29,7 +29,7 @@ public class ListViewAdapter extends ArrayAdapter<CustomerPurchase> {
     static class ViewHolder {
         public TextView purchaseDate;
         public TextView quantity;
-        public TextView note;
+        public TextView note, receiptNum;
 
     }
 
@@ -43,6 +43,7 @@ public class ListViewAdapter extends ArrayAdapter<CustomerPurchase> {
             ViewHolder viewHolder = new ViewHolder();
             viewHolder.purchaseDate = (TextView) rowView.findViewById(R.id.purchaseDate);
             viewHolder.quantity = (TextView) rowView.findViewById(R.id.quantity);
+            viewHolder.receiptNum = (TextView) rowView.findViewById(R.id.recNumber);
             viewHolder.note = (TextView) rowView.findViewById(R.id.note);
             rowView.setTag(viewHolder);
 
@@ -55,6 +56,7 @@ public class ListViewAdapter extends ArrayAdapter<CustomerPurchase> {
         holder.purchaseDate.setText(sdf.format(customerPurchase.getPurchaseDate()));
 
         holder.quantity.setText(String.valueOf(customerPurchase.getQuantity()));
+        holder.receiptNum.setText(String.valueOf(customerPurchase.getReceiptNum()));
         holder.note.setText(customerPurchase.getNotes() == null? "" : customerPurchase.getNotes());
         return rowView;
     }

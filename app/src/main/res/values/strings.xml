@@ -54,5 +54,6 @@
     <string name="purchaseDate">Date</string>
     <string name="quantity">Amt</string>
     <string name="note">Note</string>
+    <string name="recNum">Rec#</string>
 
 </resources>
