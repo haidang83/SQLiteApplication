@@ -15,7 +15,6 @@ import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.telephony.SmsManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,10 +27,6 @@ import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -229,10 +224,6 @@ public class Fragment_Admin extends Fragment {
     }
 
     private static final int REQUEST_CODE_EXTERNAL_STORAGE = 234;
-    private static String[] PERMISSIONS_STORAGE = {
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-    };
 
 
     private final int REQUEST_CODE_EXTERNAL_STORAGE_ONSTART = 456;
@@ -245,7 +236,7 @@ public class Fragment_Admin extends Fragment {
         // check permission is given
         if (writePermission != PackageManager.PERMISSION_GRANTED || readPermission != PackageManager.PERMISSION_GRANTED) {
             // request permission (see result in onRequestPermissionsResult() method)
-            requestPermissions(PERMISSIONS_STORAGE, REQUEST_CODE_EXTERNAL_STORAGE_ONSTART);
+            requestPermissions(Constants.PERMISSIONS_STORAGE_SMS, REQUEST_CODE_EXTERNAL_STORAGE_ONSTART);
         } else {
             updateLocationWithLatestFile();
         }
@@ -259,7 +250,7 @@ public class Fragment_Admin extends Fragment {
         // check permission is given
         if (writePermission != PackageManager.PERMISSION_GRANTED || readPermission != PackageManager.PERMISSION_GRANTED) {
             // request permission (see result in onRequestPermissionsResult() method)
-            requestPermissions(PERMISSIONS_STORAGE, REQUEST_CODE_EXTERNAL_STORAGE);
+            requestPermissions(Constants.PERMISSIONS_STORAGE_SMS, REQUEST_CODE_EXTERNAL_STORAGE);
         } else {
             if (exportDatabase()){
                 displayToast(getString(R.string.dbExportSuccess));

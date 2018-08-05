@@ -1,7 +1,10 @@
 package com.kpblog.tt;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -17,6 +20,7 @@ import android.widget.ListView;
 import com.kpblog.tt.adapter.AddressAdapter;
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
+import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
 import java.util.ArrayList;
@@ -62,6 +66,8 @@ public class MainActivity extends AppCompatActivity implements  Fragment_Custome
     private TabLayout tabLayout;
     private ViewPager viewPager;
 
+    boolean permissionRequestedOnStart = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,6 +84,11 @@ public class MainActivity extends AppCompatActivity implements  Fragment_Custome
         tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
 
+        if (!permissionRequestedOnStart){
+            //need to do this on parent activity so that the scheduled db backup process can have read/write permission
+            requestReadWritePermission_onStart();
+        }
+
         Util.setRecurringAlarm(getApplicationContext());
 
         //uncomment to see the db entries on screen
@@ -88,6 +99,22 @@ public class MainActivity extends AppCompatActivity implements  Fragment_Custome
 
     }
 
+    private final int REQUEST_CODE_EXTERNAL_STORAGE_ONSTART = 567;
+    private void requestReadWritePermission_onStart() {
+        permissionRequestedOnStart = true;
+
+        int smsPermission = ActivityCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS);
+        int writePermission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        int readPermission = ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+
+        // check permission is given
+        if (writePermission != PackageManager.PERMISSION_GRANTED ||
+                readPermission != PackageManager.PERMISSION_GRANTED ||
+                smsPermission != PackageManager.PERMISSION_GRANTED) {
+            // request permission (see result in onRequestPermissionsResult() method)
+            requestPermissions(Constants.PERMISSIONS_STORAGE_SMS, REQUEST_CODE_EXTERNAL_STORAGE_ONSTART);
+        }
+    }
 
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
