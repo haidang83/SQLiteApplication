@@ -18,6 +18,7 @@
     <string name="tab_claim">Claim</string>
     <string name="tab_admin">Admin</string>
     <string name="tab_dashboard">Dashboard</string>
+    <string name="tab_customer">Customer</string>
     <string name="freeDrink">Free Drinks</string>
     <string name="claimCode">4-Digit Claim Code</string>
     <string name="getCode">Get Code</string>
@@ -48,4 +49,6 @@
     <string name="dbExportFail">Database export FAILED</string>
     <string name="dbImportSuccess">Database imported successfully from %s</string>
     <string name="dbImportFailed">Database import FAILED from %s</string>
+    <string name="search">Search</string>
+    <string name="optOutSuccess">Unsubscribed successfully</string>
 </resources>

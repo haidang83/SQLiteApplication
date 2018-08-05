@@ -120,9 +120,9 @@ public class MainActivity extends AppCompatActivity implements  Fragment_Custome
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
         adapter.addFragment(new Fragment_RegisterOrUpdate(), getString(R.string.tab_registration));
         adapter.addFragment(new Fragment_Claim(), getString(R.string.tab_claim));
+        adapter.addFragment(new Fragment_Customer(), getString(R.string.tab_customer));
         adapter.addFragment(new Fragment_Admin(), getString(R.string.tab_admin));
         adapter.addFragment(new Fragment_Dashboard(), getString(R.string.tab_dashboard));
-        adapter.addFragment(new Fragment_Customer(), "Customer");
         viewPager.setAdapter(adapter);
     }
 

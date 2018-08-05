@@ -3,10 +3,20 @@ package com.kpblog.tt;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
+import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
+import android.telephony.PhoneNumberFormattingTextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import com.kpblog.tt.dao.DatabaseHandler;
+import com.kpblog.tt.util.Constants;
+import com.kpblog.tt.util.Util;
 
 
 /**
@@ -26,6 +36,12 @@ public class Fragment_Customer extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+
+    private EditText phone;
+    private Button optOutBtn, searchBtn;
+
+    private long optOutBtnLastClicked = 0, searchBtnLastClicked = 0;
+    DatabaseHandler handler;
 
     private OnFragmentInteractionListener mListener;
 
@@ -65,6 +81,51 @@ public class Fragment_Customer extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment__customer, container, false);
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        handler = new DatabaseHandler(getContext());
+
+        phone = (EditText) (getView().findViewById(R.id.phone));
+        phone.addTextChangedListener(new PhoneNumberFormattingTextWatcher());
+
+        optOutBtn = (Button) (getView().findViewById(R.id.optOutBtn));
+        optOutBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (SystemClock.elapsedRealtime() - optOutBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
+                    optOutBtnLastClicked = SystemClock.elapsedRealtime();
+                    final String unformattedPhoneNumber = Util.getUnformattedPhoneNumber(phone.getText().toString());
+                    final TextInputLayout phoneLayout = (TextInputLayout) getView().findViewById(R.id.phoneLayout);
+
+                    if (Util.isPhoneNumberValid(phoneLayout, getString(R.string.phone_err_msg), unformattedPhoneNumber)){
+                        unsubscribe(unformattedPhoneNumber);
+                    }
+                }
+            }
+        });
+
+        searchBtn = (Button) (getView().findViewById(R.id.searchBtn));
+        searchBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
+    }
+
+    private void unsubscribe(String customerId) {
+        try {
+            handler.unsubscribe(customerId);
+            displayToast(getString(R.string.optOutSuccess));
+        } catch (Exception e){
+            displayToast("unsubscribe FAILED: " + e.getMessage());
+        }
+    }
+
+    private void displayToast(String msg) {
+        Toast.makeText(getContext().getApplicationContext(), msg, Toast.LENGTH_LONG).show();
     }
 
     // TODO: Rename method, update argument and hook method into UI event

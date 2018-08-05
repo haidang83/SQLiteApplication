@@ -328,4 +328,16 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.delete(TABLE_CUSTOMER_CLAIM_CODE, KEY_CUSTOMER_ID + "=?", new String []{customerId});
         db.close();
     }
+
+    public void unsubscribe(String customerId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        values.put(KEY_IS_OPT_IN, 0);
+        values.put(KEY_OPT_IN_DATE, 0);
+        values.put(KEY_OPT_OUT_DATE, new java.util.Date().getTime());
+
+        db.update(TABLE_CUSTOMER, values, KEY_CUSTOMER_ID + "=?", new String[]{customerId});
+        db.close();
+    }
 }
