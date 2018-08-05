@@ -236,13 +236,21 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.close(); // Closing database connection
     }
 
-    public List<CustomerPurchase> getAllCustomerPurchase() {
+
+    public CustomerPurchase[] getAllCustomerPurchaseById(String customerId) {
         List<CustomerPurchase> cpList = new ArrayList<CustomerPurchase>();
         // Select All Query
-        String selectQueryFormat = "SELECT %s, %s, %s, %s, %s FROM %s";
+        String selectQueryFormat = "SELECT %s, %s, %s, %s, %s FROM %s WHERE %s=%s ORDER BY %s DESC";
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery(String.format(selectQueryFormat, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE, KEY_NOTES, TABLE_CUSTOMER_PURCHASE), null);
+        Cursor cursor = db.rawQuery(String.format(selectQueryFormat, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE, KEY_NOTES, TABLE_CUSTOMER_PURCHASE, KEY_CUSTOMER_ID, customerId, KEY_PURCHASE_DATE), null);
+        processCustomerPurchaseCursor(cpList, cursor);
 
+        db.close();
+        // return contact list
+        return cpList.toArray(new CustomerPurchase[0]);
+    }
+
+    private void processCustomerPurchaseCursor(List<CustomerPurchase> cpList, Cursor cursor) {
         // Getting the address list which we already into our database
         if (cursor.moveToFirst()) {
             do {
@@ -257,6 +265,17 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 cpList.add(cp);
             } while (cursor.moveToNext());
         }
+    }
+
+    public List<CustomerPurchase> getAllCustomerPurchase() {
+        List<CustomerPurchase> cpList = new ArrayList<CustomerPurchase>();
+        // Select All Query
+        String selectQueryFormat = "SELECT %s, %s, %s, %s, %s FROM %s";
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(String.format(selectQueryFormat, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE, KEY_NOTES, TABLE_CUSTOMER_PURCHASE), null);
+
+        // Getting the address list which we already into our database
+        processCustomerPurchaseCursor(cpList, cursor);
 
         db.close();
         // return contact list

@@ -12,11 +12,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Toast;
 
+import com.kpblog.tt.adapter.ListViewAdapter;
 import com.kpblog.tt.dao.DatabaseHandler;
+import com.kpblog.tt.model.CustomerPurchase;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
+
+import java.util.List;
 
 
 /**
@@ -39,6 +44,8 @@ public class Fragment_Customer extends Fragment {
 
     private EditText phone;
     private Button optOutBtn, searchBtn;
+    TextInputLayout phoneLayout;
+    ListView listview;
 
     private long optOutBtnLastClicked = 0, searchBtnLastClicked = 0;
     DatabaseHandler handler;
@@ -86,7 +93,8 @@ public class Fragment_Customer extends Fragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         handler = new DatabaseHandler(getContext());
-
+        
+        phoneLayout = (TextInputLayout) getView().findViewById(R.id.phoneLayout);
         phone = (EditText) (getView().findViewById(R.id.phone));
         phone.addTextChangedListener(new PhoneNumberFormattingTextWatcher());
 
@@ -97,7 +105,6 @@ public class Fragment_Customer extends Fragment {
                 if (SystemClock.elapsedRealtime() - optOutBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
                     optOutBtnLastClicked = SystemClock.elapsedRealtime();
                     final String unformattedPhoneNumber = Util.getUnformattedPhoneNumber(phone.getText().toString());
-                    final TextInputLayout phoneLayout = (TextInputLayout) getView().findViewById(R.id.phoneLayout);
 
                     if (Util.isPhoneNumberValid(phoneLayout, getString(R.string.phone_err_msg), unformattedPhoneNumber)){
                         unsubscribe(unformattedPhoneNumber);
@@ -110,9 +117,35 @@ public class Fragment_Customer extends Fragment {
         searchBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (SystemClock.elapsedRealtime() - searchBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
+                    searchBtnLastClicked = SystemClock.elapsedRealtime();
+                    final String unformattedPhoneNumber = Util.getUnformattedPhoneNumber(phone.getText().toString());
+                    
+                    if (Util.isPhoneNumberValid(phoneLayout, getString(R.string.phone_err_msg), unformattedPhoneNumber)){
+                        CustomerPurchase[] purchases = searchCustomer(unformattedPhoneNumber);
 
+                        // Create an adapter to bind data to the ListView
+                        ListViewAdapter adapter = new ListViewAdapter(getContext(), R.layout.rowlayout, R.id.purchaseDate, purchases);
+
+                        // Bind data to the ListView
+                        listview.setAdapter(adapter);
+                    }
+                }
             }
         });
+
+
+        listview = (ListView) getView().findViewById(R.id.listview);
+        // Inflate header view
+        ViewGroup headerView = (ViewGroup)getLayoutInflater().inflate(R.layout.header, listview,false);
+        // Add header view to the ListView
+        listview.addHeaderView(headerView);
+    }
+
+    private CustomerPurchase[] searchCustomer(String customerId) {
+        CustomerPurchase[] cpList = handler.getAllCustomerPurchaseById(customerId);
+
+        return cpList;
     }
 
     private void unsubscribe(String customerId) {

@@ -51,4 +51,8 @@
     <string name="dbImportFailed">Database import FAILED from %s</string>
     <string name="search">Search</string>
     <string name="optOutSuccess">Unsubscribed successfully</string>
+    <string name="purchaseDate">Date</string>
+    <string name="quantity">Amt</string>
+    <string name="note">Note</string>
+
 </resources>
