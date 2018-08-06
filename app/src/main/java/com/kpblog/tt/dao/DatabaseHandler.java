@@ -485,13 +485,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         List<Customer> customerList = new ArrayList<Customer>();
         SQLiteDatabase db = null;
         try {
-
-            //end of today
+            
             Calendar today = new GregorianCalendar();
-            today.set(Calendar.HOUR_OF_DAY, 23);
-            today.set(Calendar.MINUTE, 59);
-            today.set(Calendar.SECOND, 59);
-            today.set(Calendar.MILLISECOND, 0);
             long todayInMillis = today.getTimeInMillis();
 
             long lastVisitEndDate = todayInMillis - (lastVisitMinDayInt * Constants.DAYS_TO_MILLIS);
