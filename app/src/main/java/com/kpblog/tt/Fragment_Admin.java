@@ -24,6 +24,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.kpblog.tt.dao.DatabaseHandler;
+import com.kpblog.tt.model.Customer;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
@@ -193,6 +194,76 @@ public class Fragment_Admin extends Fragment {
                 }
             }
         });
+
+        addTestUserBtn = (Button) getView().findViewById(R.id.addTestUserBtn);
+        addTestUserBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (SystemClock.elapsedRealtime() - addTestUserBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD) {
+                    addTestUserBtnLastClicked = SystemClock.elapsedRealtime();
+
+                    final String unformattedPhoneNumber = Util.getUnformattedPhoneNumber(phone.getText().toString());
+                    if (Util.isPhoneNumberValid(phoneLayout, getString(R.string.phone_err_msg), unformattedPhoneNumber)){
+                        addTestUser(unformattedPhoneNumber);
+                    }
+                }
+            }
+        });
+
+        removeTestUserBtn = (Button) getView().findViewById(R.id.removeTestUserBtn);
+        removeTestUserBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (SystemClock.elapsedRealtime() - removeTestUserBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD) {
+                    removeTestUserBtnLastClicked = SystemClock.elapsedRealtime();
+
+                    final String unformattedPhoneNumber = Util.getUnformattedPhoneNumber(phone.getText().toString());
+                    if (Util.isPhoneNumberValid(phoneLayout, getString(R.string.phone_err_msg), unformattedPhoneNumber)){
+                        removeTestUser(unformattedPhoneNumber);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * just set the testUser indicator to false, (not remove the user)
+     * @param customerId
+     */
+    private void removeTestUser(String customerId) {
+        boolean isNewCustomer = false;
+        Customer c = handler.getCustomerById(customerId);
+        if (c == null){
+            isNewCustomer = true;
+            c = new Customer();
+            c.setCustomerId(customerId);
+        }
+        c.setTestUser(false);
+
+        if (handler.registerOrUpdateCustomer(c, isNewCustomer)){
+            displayToast(getString(R.string.testUserRemoveSuccess));
+        }
+        else {
+            displayToast(getString(R.string.testUserRemoveFail));
+        }
+    }
+
+    private void addTestUser(String customerId) {
+        boolean isNewCustomer = false;
+        Customer c = handler.getCustomerById(customerId);
+        if (c == null){
+            isNewCustomer = true;
+            c = new Customer();
+            c.setCustomerId(customerId);
+        }
+        c.setTestUser(true);
+
+        if (handler.registerOrUpdateCustomer(c, isNewCustomer)){
+            displayToast(getString(R.string.testUserAddSuccess));
+        }
+        else {
+            displayToast(getString(R.string.testUserAddFail));
+        }
     }
 
     private void removeAdmin(String customerId) {
@@ -356,6 +427,7 @@ public class Fragment_Admin extends Fragment {
         lockUnlockBtn.setText(getString(R.string.unlock));
         getCodeBtn.setEnabled(true);
         adminCode.setEnabled(true);
+        phone.setText("");
 
         getView().findViewById(R.id.adminLayout).setVisibility(View.INVISIBLE);
     }

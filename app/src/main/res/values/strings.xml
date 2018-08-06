@@ -63,5 +63,9 @@
     <string name="adminUserAddFail">FAILED to add admin user</string>
     <string name="adminUserRemoveSuccess">Admin user removed successfully</string>
     <string name="adminUserRemoveFail">FAILED to remove admin user</string>
+    <string name="testUserAddSuccess">Test user added successfully</string>
+    <string name="testUserAddFail">FAILED to add test user</string>
+    <string name="testUserRemoveSuccess">Test user removed successfully</string>
+    <string name="testUserRemoveFail">FAILED to remove test user</string>
 
 </resources>

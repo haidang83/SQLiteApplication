@@ -48,6 +48,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     private static final String TABLE_ADMIN = "admin";
 
+
+
     public DatabaseHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -229,32 +231,52 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.close();
     }
 
-    public void registerOrUpdateCustomer(Customer c) {
-        SQLiteDatabase db = this.getWritableDatabase();
+    public boolean registerOrUpdateCustomer(Customer c, boolean isNewCustomer) {
+        SQLiteDatabase db = null;
+        boolean isSuccess = false;
+        try {
 
-        ContentValues values = new ContentValues();
-        values.put(KEY_CUSTOMER_ID, c.getCustomerId());
-        values.put(KEY_TOTALCREDIT, c.getTotalCredit());
+            db = this.getWritableDatabase();
 
-        values.put(KEY_LAST_VISIT_DATE, c.getLastVisitDate().getTime());
-        values.put(KEY_IS_OPT_IN, c.isOptIn());
+            ContentValues values = new ContentValues();
+            values.put(KEY_CUSTOMER_ID, c.getCustomerId());
+            values.put(KEY_TOTALCREDIT, c.getTotalCredit());
 
-        //All dates are stored as long (secs since epoch)
-        if (c.getOptInDate() != null){
-            values.put(KEY_OPT_IN_DATE, c.getOptInDate().getTime());
+            values.put(KEY_LAST_VISIT_DATE, c.getLastVisitDate().getTime());
+            values.put(KEY_IS_OPT_IN, c.isOptIn()? 1 : 0);
+            values.put(KEY_IS_TEST_USER, c.isTestUser()? 1 : 0);
+
+            //All dates are stored as long (secs since epoch)
+            if (c.getOptInDate() != null){
+                values.put(KEY_OPT_IN_DATE, c.getOptInDate().getTime());
+            }
+            else {
+                values.put(KEY_OPT_IN_DATE, 0);
+            }
+
+            if (c.getOptOutDate() != null){
+                values.put(KEY_OPT_OUT_DATE, c.getOptOutDate().getTime());
+            }
+            else {
+                values.put(KEY_OPT_OUT_DATE, 0);
+            }
+
+            if (isNewCustomer){
+                db.insert(TABLE_CUSTOMER, null, values);
+            }
+            else {
+                //row already exists by Primary key(Phone Num)
+                db.update(TABLE_CUSTOMER, values, KEY_CUSTOMER_ID + "=?", new String[] {c.getCustomerId()});
+            }
+
+            isSuccess = true;
+        } finally {
+            if (db != null){
+                db.close();
+            }
         }
 
-        if (c.getOptOutDate() != null){
-            values.put(KEY_OPT_OUT_DATE, c.getOptOutDate().getTime());
-        }
-
-        int id = (int) db.insertWithOnConflict(TABLE_CUSTOMER, null, values, SQLiteDatabase.CONFLICT_IGNORE);
-        if (id == -1) {
-            //row already exists by Primary key(Phone Num)
-            db.update(TABLE_CUSTOMER, values, KEY_CUSTOMER_ID + "=?", new String[] {c.getCustomerId()});
-        }
-
-        db.close();
+        return isSuccess;
     }
 
     public void insertCustomerPurchase(CustomerPurchase cp) {

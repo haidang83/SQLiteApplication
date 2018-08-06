@@ -540,10 +540,13 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         try {
             final Date today = new Date(Calendar.getInstance().getTime().getTime());
             final String unformattedPhoneNumber = Util.getUnformattedPhoneNumber(this.phone.getText().toString());
+
+            boolean isNewCustomer = false;
             Customer customer = handler.getCustomerById(unformattedPhoneNumber);
             if (customer == null){
                 customer = new Customer();
                 customer.setCustomerId(unformattedPhoneNumber);
+                isNewCustomer = true;
             }
 
             //only set the opt-in date if it's checked.
@@ -559,7 +562,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
             customer.setTotalCredit(customer.getTotalCredit() + todayCredit);
             customer.setLastVisitDate(today);
 
-            handler.registerOrUpdateCustomer(customer);
+            handler.registerOrUpdateCustomer(customer, isNewCustomer);
 
             insertCustomerPurchase(customer.getCustomerId(), todayCredit);
             if (todayCredit > Constants.SINGLE_PURCHASE_QUANTITY_LIMIT){
