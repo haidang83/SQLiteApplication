@@ -24,6 +24,8 @@ public class Constants {
     public static final int ALARM_ID = 1234;
     public static final String DB_BACKUP_ACTION = "DB_BACKUP";
 
+    public static long DAYS_TO_MILLIS = 24 * 60 * 60 * 1000;
+
     public static String[] PERMISSIONS_STORAGE_SMS = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,

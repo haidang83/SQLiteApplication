@@ -15,13 +15,11 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.kpblog.tt.adapter.ListViewAdapter;
+import com.kpblog.tt.adapter.CustomerPurchaseListViewAdapter;
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.CustomerPurchase;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
-
-import java.util.List;
 
 
 /**
@@ -125,7 +123,7 @@ public class Fragment_Customer extends Fragment {
                         CustomerPurchase[] purchases = searchCustomer(unformattedPhoneNumber);
 
                         // Create an adapter to bind data to the ListView
-                        ListViewAdapter adapter = new ListViewAdapter(getContext(), R.layout.rowlayout, R.id.purchaseDate, purchases);
+                        CustomerPurchaseListViewAdapter adapter = new CustomerPurchaseListViewAdapter(getContext(), R.layout.customer_row_layout, R.id.purchaseDate, purchases);
 
                         // Bind data to the ListView
                         listview.setAdapter(adapter);
@@ -136,9 +134,9 @@ public class Fragment_Customer extends Fragment {
 
 
         listview = (ListView) getView().findViewById(R.id.listview);
-        // Inflate header view
-        ViewGroup headerView = (ViewGroup)getLayoutInflater().inflate(R.layout.header, listview,false);
-        // Add header view to the ListView
+        // Inflate customerHeader view
+        ViewGroup headerView = (ViewGroup)getLayoutInflater().inflate(R.layout.customer_header, listview,false);
+        // Add customerHeader view to the ListView
         listview.addHeaderView(headerView);
     }
 

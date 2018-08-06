@@ -13,12 +13,12 @@ import android.widget.TextView;
 import com.kpblog.tt.R;
 import com.kpblog.tt.model.CustomerPurchase;
 
-public class ListViewAdapter extends ArrayAdapter<CustomerPurchase> {
+public class CustomerPurchaseListViewAdapter extends ArrayAdapter<CustomerPurchase> {
     int groupid;
     CustomerPurchase[] item_list;
     ArrayList<String> desc;
     Context context;
-    public ListViewAdapter(Context context, int vg, int id, CustomerPurchase[] item_list){
+    public CustomerPurchaseListViewAdapter(Context context, int vg, int id, CustomerPurchase[] item_list){
         super(context,vg, id, item_list);
         this.context=context;
         groupid=vg;
@@ -36,7 +36,7 @@ public class ListViewAdapter extends ArrayAdapter<CustomerPurchase> {
     public View getView(int position, View convertView, ViewGroup parent) {
 
         View rowView = convertView;
-        // Inflate the rowlayout.xml file if convertView is null
+        // Inflate the customerRowLayoutowLayout.xml file if convertView is null
         if(rowView==null){
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             rowView= inflater.inflate(groupid, parent, false);

@@ -10,6 +10,7 @@ import android.util.Log;
 import com.kpblog.tt.model.Customer;
 import com.kpblog.tt.model.CustomerClaimCode;
 import com.kpblog.tt.model.CustomerPurchase;
+import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
 import java.io.File;
@@ -18,6 +19,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.Date;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 
@@ -474,5 +477,68 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         }
 
         return isSuccess;
+    }
+
+    public List<Customer> searchCustomerByLastVisitAndText(int lastVisitMinDayInt,
+                                                           int lastVisitMaxDayInt, int lastTextMinDayInt) {
+
+        List<Customer> customerList = new ArrayList<Customer>();
+        SQLiteDatabase db = null;
+        try {
+
+            //end of today
+            Calendar today = new GregorianCalendar();
+            today.set(Calendar.HOUR_OF_DAY, 23);
+            today.set(Calendar.MINUTE, 59);
+            today.set(Calendar.SECOND, 59);
+            today.set(Calendar.MILLISECOND, 0);
+            long todayInMillis = today.getTimeInMillis();
+
+            long lastVisitEndDate = todayInMillis - (lastVisitMinDayInt * Constants.DAYS_TO_MILLIS);
+
+            long lastVisitStartDate = 0;
+
+            if (lastVisitMaxDayInt > 0) {
+                //if lastVisitMaxDay is specified, then calculate it from today. Otherwise just use 0 for epoch start
+                lastVisitStartDate = todayInMillis - (lastVisitMaxDayInt * Constants.DAYS_TO_MILLIS);
+            }
+
+            long lastTextDate = todayInMillis - (lastTextMinDayInt * Constants.DAYS_TO_MILLIS);
+
+            /**
+             * SELECT customerId, lastVisitDate, totalCredit, lastContactDate
+             FROM table_name
+             WHERE (lastContactDate IS NULL OR lastContactDate < lastTextDate)
+             AND (lastVisitDate > lastVisitStartDate and lastVisitDate < lastVisitEndDate)
+             */
+            String selectClauseFormat = String.format("SELECT %s, %s, %s, %s FROM %s ", KEY_CUSTOMER_ID, KEY_LAST_VISIT_DATE, KEY_TOTALCREDIT, KEY_LAST_CONTACTED_DATE, TABLE_CUSTOMER);
+
+            String lastContactDateCondition = String.format("(%s is NULL OR %s < %d)", KEY_LAST_CONTACTED_DATE, KEY_LAST_CONTACTED_DATE, lastTextDate);
+
+            String lastVisitDateCondition = String.format("(%s > %d AND %s < %d)", KEY_LAST_VISIT_DATE, lastVisitStartDate, KEY_LAST_VISIT_DATE, lastVisitEndDate);
+
+            String selectQuery = selectClauseFormat + " WHERE " + lastContactDateCondition + " AND " + lastVisitDateCondition + " ORDER BY " + KEY_LAST_VISIT_DATE + " ASC";
+
+            db = getReadableDatabase();
+
+            Cursor cursor = db.rawQuery(selectQuery, null);
+            if (cursor != null && cursor.moveToFirst()){
+                do {
+                    Customer c = new Customer();
+                    c.setCustomerId(cursor.getString(0));
+                    c.setLastVisitDate(new Date(cursor.getLong(1)));
+                    c.setTotalCredit(cursor.getInt(2));
+                    c.setLastContactedDate(new Date(cursor.getLong(3)));
+
+                    customerList.add(c);
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            if (db != null){
+                db.close();
+            }
+        }
+
+        return customerList;
     }
 }

@@ -3,12 +3,22 @@ package com.kpblog.tt;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
+import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
 
-import com.kpblog.tt.R;
+import com.kpblog.tt.adapter.CustomerListViewAdapter;
+import com.kpblog.tt.dao.DatabaseHandler;
+import com.kpblog.tt.model.Customer;
+import com.kpblog.tt.util.Constants;
+
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -23,6 +33,13 @@ public class Fragment_Dashboard extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+
+    DatabaseHandler handler;
+    EditText lastVisitMinDay, lastVisitMaxDay, lastTextMinDay;
+    TextInputLayout lastVisitMinLayout, lastVisitMaxLayout, lastTextMinLayout;
+    ListView listView;
+    Button search;
+    long searchBtnLastClicked = 0;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -66,6 +83,95 @@ public class Fragment_Dashboard extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment__dashboard, container, false);
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        handler = new DatabaseHandler(getContext());
+
+        lastVisitMinLayout = (TextInputLayout) getView().findViewById(R.id.minLayout);
+        lastVisitMinDay = (EditText) getView().findViewById(R.id.minimumDay);
+
+        lastVisitMaxLayout = (TextInputLayout) getView().findViewById(R.id.maxLayout);
+        lastVisitMaxDay = (EditText) getView().findViewById(R.id.maximumDay);
+
+        lastTextMinLayout = (TextInputLayout) getView().findViewById(R.id.lastTextMinLayout);
+        lastTextMinDay = (EditText) getView().findViewById(R.id.lastTextMinimumDay);
+
+        search = (Button) getView().findViewById(R.id.searchBtn);
+        search.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (SystemClock.elapsedRealtime() - searchBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD) {
+                    searchBtnLastClicked = SystemClock.elapsedRealtime();
+
+                    validateInputAndSearchCustomers();
+                }
+            }
+        });
+
+        listView = (ListView) getView().findViewById(R.id.listview);
+        // Inflate customerHeader view
+        ViewGroup headerView = (ViewGroup)getLayoutInflater().inflate(R.layout.dashboard_header, listView,false);
+        // Add customerHeader view to the ListView
+        listView.addHeaderView(headerView);
+    }
+
+    private void validateInputAndSearchCustomers() {
+        boolean validInput = true;
+
+        int lastVisitMinDayInt = 0, lastVisitMaxDayInt = 0, lastTextMinDayInt = 0;
+
+        String lastVisitMinDayStr = lastVisitMinDay.getText().toString();
+        if (!lastVisitMinDayStr.isEmpty()){
+            if (lastVisitMinDayStr.matches(Constants.AT_LEAST_ONE_DIGIT_REGEXP)) {
+                lastVisitMinLayout.setErrorEnabled(false);
+                lastVisitMinDayInt = Integer.parseInt(lastVisitMinDayStr);
+            }
+            else {
+                lastVisitMinLayout.setError("*");
+                validInput = false;
+            }
+        }
+
+        String lastVisitMaxDayStr = lastVisitMaxDay.getText().toString();
+        if (!lastVisitMaxDayStr.isEmpty()){
+            if (lastVisitMaxDayStr.matches(Constants.AT_LEAST_ONE_DIGIT_REGEXP)){
+                lastVisitMaxLayout.setErrorEnabled(false);
+                lastVisitMaxDayInt = Integer.parseInt(lastVisitMaxDayStr);
+            }
+            else {
+                lastVisitMaxLayout.setError("*");
+                validInput = false;
+            }
+        }
+
+        String lastTextMinDayStr = lastTextMinDay.getText().toString();
+        if (!lastTextMinDayStr.isEmpty()){
+            if (lastTextMinDayStr.matches(Constants.AT_LEAST_ONE_DIGIT_REGEXP)){
+                lastTextMinLayout.setErrorEnabled(false);
+                lastTextMinDayInt = Integer.parseInt(lastTextMinDayStr);
+            }
+            else {
+                lastTextMinLayout.setError("*");
+                validInput = false;
+            }
+        }
+
+        if (validInput){
+            Customer[] customers = searchCustomers(lastVisitMinDayInt, lastVisitMaxDayInt, lastTextMinDayInt);
+
+            // Create an adapter to bind data to the ListView
+            CustomerListViewAdapter adapter = new CustomerListViewAdapter(getContext(), R.layout.dashboard_row_layout, R.id.phone, customers);
+
+            // Bind data to the ListView
+            listView.setAdapter(adapter);
+        }
+    }
+
+    private Customer[] searchCustomers(int lastVisitMinDayInt, int lastVisitMaxDayInt, int lastTextMinDayInt) {
+        List<Customer> customerList = handler.searchCustomerByLastVisitAndText(lastVisitMinDayInt, lastVisitMaxDayInt, lastTextMinDayInt);
+        return customerList.toArray(new Customer[0]);
     }
 
     // TODO: Rename method, update argument and hook method into UI event
