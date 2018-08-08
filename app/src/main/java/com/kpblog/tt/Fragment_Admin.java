@@ -19,8 +19,10 @@ import android.telephony.SmsManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.kpblog.tt.dao.DatabaseHandler;
@@ -52,6 +54,8 @@ public class Fragment_Admin extends Fragment {
     EditText adminCode, phone;
     Button getCodeBtn, lockUnlockBtn, exportBtn, importBtn,
             addAdminBtn, removeAdminBtn, addTestUserBtn, removeTestUserBtn;
+
+    Spinner adminDropdown;
 
     TextInputLayout phoneLayout;
 
@@ -103,6 +107,11 @@ public class Fragment_Admin extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState){
         handler = new DatabaseHandler(getContext());
         adminCode = (EditText) (getView().findViewById(R.id.adminCode));
+
+        adminDropdown = (Spinner) getView().findViewById(R.id.adminPhoneDropdown);
+        String[] admins = handler.getAllAdmins().toArray(new String[0]);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_dropdown_item, admins);
+        adminDropdown.setAdapter(adapter);
 
         getCodeBtn = (Button) (getView().findViewById(R.id.getCodeBtn));
         getCodeBtn.setOnClickListener(new View.OnClickListener() {
@@ -466,7 +475,7 @@ public class Fragment_Admin extends Fragment {
     private void sendCode() {
         String code = Util.generateRandom4DigitCode();
         String msg = String.format(getString(R.string.adminCodeTextMsg), code);
-        requestPermissionAndSendText(handler.getAllAdmins(), msg);
+        requestPermissionAndSendText(adminDropdown.getSelectedItem().toString(), msg);
 
         //save into shared pref
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -476,11 +485,11 @@ public class Fragment_Admin extends Fragment {
     }
 
     String textMsg;
-    List<String> targetPhoneNums;
-    private void requestPermissionAndSendText(List<String> phoneNums, String msg) {
+    String targetPhoneNum;
+    private void requestPermissionAndSendText(String phoneNum, String msg) {
         try {
             textMsg = msg;
-            targetPhoneNums = phoneNums;
+            targetPhoneNum = phoneNum;
             requestSmsPermission();
         } catch (Exception ex) {
             Toast.makeText(getContext().getApplicationContext(),ex.getMessage().toString(),
@@ -501,7 +510,7 @@ public class Fragment_Admin extends Fragment {
                     MY_PERMISSIONS_REQUEST_SEND_SMS);
         } else {
             // permission already granted run sms send
-            sendSms(targetPhoneNums, textMsg);
+            sendSms(targetPhoneNum, textMsg);
             Toast.makeText(getContext().getApplicationContext(), getString(R.string.adminCodeSentToastMsg), Toast.LENGTH_LONG).show();
         }
     }
@@ -513,7 +522,7 @@ public class Fragment_Admin extends Fragment {
 
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // permission was granted
-                    sendSms(targetPhoneNums, textMsg);
+                    sendSms(targetPhoneNum, textMsg);
                     Toast.makeText(getContext().getApplicationContext(), getString(R.string.adminCodeSentToastMsg), Toast.LENGTH_LONG).show();
                 } else {
                     // permission denied
@@ -544,11 +553,9 @@ public class Fragment_Admin extends Fragment {
         ((EditText) (getView().findViewById(R.id.locationInput))).setText(latestFileName);
     }
 
-    private void sendSms(List<String> phoneNumbers, String message){
+    private void sendSms(String phoneNumber, String message){
         SmsManager sms = SmsManager.getDefault();
-        for (String phoneNum : phoneNumbers){
-            sms.sendTextMessage(phoneNum, null, message, null, null);
-        }
+        sms.sendTextMessage(phoneNumber, null, message, null, null);
     }
 
     // TODO: Rename method, update argument and hook method into UI event
