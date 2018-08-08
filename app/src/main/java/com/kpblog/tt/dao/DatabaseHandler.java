@@ -449,9 +449,12 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             String selectQueryFormat = "SELECT * FROM %s";
             db = this.getReadableDatabase();
             Cursor cursor = db.rawQuery(String.format(selectQueryFormat, TABLE_ADMIN), null);
+            if (cursor != null && cursor.moveToFirst()){
 
-            if (cursor != null && cursor.moveToFirst()) {
-                admins.add(cursor.getString(0));
+                do {
+                    admins.add(cursor.getString(0));
+
+                } while (cursor.moveToNext());
             }
         } finally {
             if (db != null){
@@ -485,7 +488,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         List<Customer> customerList = new ArrayList<Customer>();
         SQLiteDatabase db = null;
         try {
-            
+
             Calendar today = new GregorianCalendar();
             long todayInMillis = today.getTimeInMillis();
 

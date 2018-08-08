@@ -67,8 +67,8 @@
     <string name="testUserAddFail">FAILED to add test user</string>
     <string name="testUserRemoveSuccess">Test user removed successfully</string>
     <string name="testUserRemoveFail">FAILED to remove test user</string>
-    <string name="daysSinceLastVisit">Days since last visit</string>
+    <string name="daysSinceLastVisit">Have not visited(days)</string>
     <string name="to">--</string>
-    <string name="daysSinceLastText">Days since last text</string>
+    <string name="daysSinceLastText">Have not texted(days)</string>
 
 </resources>
