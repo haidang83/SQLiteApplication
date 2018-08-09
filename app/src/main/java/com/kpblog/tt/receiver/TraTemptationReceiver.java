@@ -9,6 +9,8 @@ import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
+import java.util.Calendar;
+
 /**
  * [good example] https://code.tutsplus.com/tutorials/android-fundamentals-scheduling-recurring-tasks--mobile-5788
  * [persist when device turns off] http://blog.teamtreehouse.com/scheduling-time-sensitive-tasks-in-android-with-alarmmanager
@@ -24,9 +26,12 @@ public class TraTemptationReceiver extends BroadcastReceiver {
         final String intentAction = intent.getAction();
         if (Intent.ACTION_BOOT_COMPLETED.equals(intentAction)) {
             //called when boot is completed
-            Util.setRecurringAlarm(context);
+            Util.setNextDbBackupAlarm(context, Util.getNightlyDbBackupTime());
         }
         else if (Constants.DB_BACKUP_ACTION.equals(intentAction)) {
+            //schedule the next backup time
+            Util.setNextDbBackupAlarm(context, Util.getNightlyDbBackupTime());
+
             final String sourceDbName = context.getDatabasePath(DatabaseHandler.DATABASE_NAME).getPath();
             String exportedDbPath = Util.exportDatabase(sourceDbName);
         }

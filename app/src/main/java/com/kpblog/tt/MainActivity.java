@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements  Fragment_Custome
             requestReadWritePermission_onStart();
         }
 
-        Util.setRecurringAlarm(getApplicationContext());
+        Util.setNextDbBackupAlarm(getApplicationContext(), Util.getNightlyDbBackupTime());
 
         //uncomment to see the db entries on screen
         /*listView = (ListView) findViewById(R.id.addressListView);
@@ -98,6 +98,7 @@ public class MainActivity extends AppCompatActivity implements  Fragment_Custome
         listView.setAdapter(addressAdapter);*/
 
     }
+
 
     private final int REQUEST_CODE_EXTERNAL_STORAGE_ONSTART = 567;
     private void requestReadWritePermission_onStart() {

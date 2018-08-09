@@ -5,7 +5,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Environment;
-import android.os.SystemClock;
 import android.support.design.widget.TextInputLayout;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
@@ -21,7 +20,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
-import java.util.TimeZone;
 
 public class Util {
 
@@ -133,26 +131,29 @@ public class Util {
         }
     }
 
-    public static void setRecurringAlarm(Context context) {
-        Intent receiverIntent = new Intent(context, TraTemptationReceiver.class);
-        receiverIntent.setAction(Constants.DB_BACKUP_ACTION);
-
-
+    public static Calendar getNightlyDbBackupTime() {
         Calendar alarmTime = Calendar.getInstance();
-        alarmTime.setTimeZone(TimeZone.getTimeZone(Constants.PST_TIMEZONE));
-        alarmTime.set(Calendar.HOUR_OF_DAY, 23);
+        alarmTime.set(Calendar.HOUR_OF_DAY, 21);
         alarmTime.set(Calendar.MINUTE, 30);
+        alarmTime.set(Calendar.SECOND, 0);
 
-        final long now = Calendar.getInstance(TimeZone.getTimeZone(Constants.PST_TIMEZONE)).getTimeInMillis();
-        if (now > alarmTime.getTimeInMillis()){
+        final long now = System.currentTimeMillis();
+        if (now >= alarmTime.getTimeInMillis()){
             //current time is already later than the alarm time, set for next day; because if we set now, the task will run immediately
             alarmTime.add(Calendar.DAY_OF_MONTH, 1);
         }
 
+        return alarmTime;
+    }
+
+    public static void setNextDbBackupAlarm(Context context, Calendar alarmTime) {
+        Intent receiverIntent = new Intent(context, TraTemptationReceiver.class);
+        receiverIntent.setAction(Constants.DB_BACKUP_ACTION);
+
         //https://stackoverflow.com/questions/10930034/is-there-any-way-to-check-if-an-alarm-is-already-set/11411073
         //use same id to overwrite the old one
-        PendingIntent recurringIntent = PendingIntent.getBroadcast(context,
-                Constants.ALARM_ID, receiverIntent, 0);
+        PendingIntent dbBackupPendingIntent = PendingIntent.getBroadcast(context,
+                Constants.NIGHT_ALARM_ID, receiverIntent, 0);
 
         AlarmManager alarms = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
@@ -161,7 +162,7 @@ public class Util {
                 SystemClock.elapsedRealtime() +
                         10 * 1000, recurringIntent);*/
 
-        alarms.setRepeating(AlarmManager.RTC_WAKEUP, alarmTime.getTimeInMillis(),
-                AlarmManager.INTERVAL_DAY, recurringIntent);
+        alarms.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, alarmTime.getTimeInMillis(), dbBackupPendingIntent);
+        Log.d("Util", "db backup scheduled for " + new SimpleDateFormat(Constants.YYYY_MM_HH_MM_SS_FORMAT).format(alarmTime.getTime()));
     }
 }

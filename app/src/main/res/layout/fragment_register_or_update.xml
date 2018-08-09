@@ -32,6 +32,13 @@
             </EditText>
         </android.support.design.widget.TextInputLayout>
 
+        <CheckBox android:id="@+id/checkbox_optIn"
+            android:layout_marginLeft="-3dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/optIn"/>
+
         <android.support.design.widget.TextInputLayout
             android:id="@+id/previousCreditLayout"
             android:layout_width="match_parent"
@@ -100,13 +107,6 @@
                 android:hint="@string/missingCredit"
                 />
         </android.support.design.widget.TextInputLayout>
-
-        <CheckBox android:id="@+id/checkbox_optIn"
-            android:layout_marginLeft="-3dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
-            android:text="@string/optIn"/>
 
         <LinearLayout
             android:id="@+id/buttonLayout"

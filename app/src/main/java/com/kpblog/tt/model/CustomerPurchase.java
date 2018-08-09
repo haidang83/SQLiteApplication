@@ -1,5 +1,7 @@
 package com.kpblog.tt.model;
 
+import com.kpblog.tt.util.Constants;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -51,7 +53,7 @@ public class CustomerPurchase {
     @Override
     public String toString(){
         String cp = "\n%s, quantity=%d, receipt=%d, date=%s, %s";
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat(Constants.YYYY_MM_HH_MM_SS_FORMAT);
         final String dateStr = sdf.format(this.purchaseDate);
         return String.format(cp, this.customerId, this.quantity, this.receiptNum, dateStr, this.notes);
     }

@@ -19,9 +19,10 @@ public class Constants {
     public static final String SHARED_PREF_ADMIN_CODE_KEY = "adminCode";
 
     public static final String EXPORTED_FOLDER_NAME = "exportedDb";
-
+    public static final String YYYY_MM_HH_MM_SS_FORMAT = "yyyy-MM-dd HH:mm:ss";
     public static final String PST_TIMEZONE = "America/Los_Angeles";
-    public static final int ALARM_ID = 1234;
+    public static final int NIGHT_ALARM_ID = 1234;
+    public static final int MORNING_ALARM_ID = 2345;
     public static final String DB_BACKUP_ACTION = "DB_BACKUP";
 
     public static long DAYS_TO_MILLIS = 24 * 60 * 60 * 1000;
