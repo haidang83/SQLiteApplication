@@ -183,8 +183,8 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         });
 
         handler = new DatabaseHandler(getContext());
-        List<CustomerPurchase> cpList = handler.getAllCustomerPurchase();
-        Log.d("CustomerPurchase: ", cpList.toString());
+        /*List<CustomerPurchase> cpList = handler.getAllCustomerPurchase();
+        Log.d("CustomerPurchase: ", cpList.toString());*/
 
         if (Util.getUnformattedPhoneNumber(customerId).length() ==10){
             //handle on reload of the tab, if there's a valid phone number there, reload the info

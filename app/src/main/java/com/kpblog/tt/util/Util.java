@@ -133,7 +133,7 @@ public class Util {
 
     public static Calendar getNightlyDbBackupTime() {
         Calendar alarmTime = Calendar.getInstance();
-        alarmTime.set(Calendar.HOUR_OF_DAY, 21);
+        alarmTime.set(Calendar.HOUR_OF_DAY, 23);
         alarmTime.set(Calendar.MINUTE, 30);
         alarmTime.set(Calendar.SECOND, 0);
 
