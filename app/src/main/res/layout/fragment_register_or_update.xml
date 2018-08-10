@@ -48,85 +48,89 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="@drawable/border">
-        <TextView
-            android:layout_marginLeft="-3dp"
-            android:layout_marginRight="1.5dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
-            android:text="CASHIER"
-            android:gravity="center"
-            android:background="@color/colorPrimary" />
-
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/previousCreditLayout"
-            android:layout_width="match_parent"
-            android:focusableInTouchMode="true"
-            android:layout_marginTop="15dp"
-            android:layout_height="wrap_content">
-
-            <EditText
-                android:id="@+id/previousCredit"
-                android:inputType="none"
-                android:enabled="false"
+            <TextView
+                android:layout_marginLeft="-3dp"
+                android:layout_marginRight="1.5dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="#5c5959"
-                android:hint="@string/previousCredit"
-                />
-        </android.support.design.widget.TextInputLayout>
+                android:textStyle="bold"
+                android:textColor="@android:color/white"
+                android:text="CASHIER"
+                android:gravity="center"
+                android:background="@color/colorPrimary" />
 
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/todayCreditlayout"
-            android:layout_width="match_parent"
-            android:focusableInTouchMode="true"
-            android:layout_marginTop="15dp"
-            android:layout_height="wrap_content">
-
-            <EditText
-                android:id="@+id/todayCredit"
-                android:inputType="phone"
+            <android.support.design.widget.TextInputLayout
+                android:layout_marginLeft="2dp"
+                android:id="@+id/previousCreditLayout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/todayCredit"
-                android:imeOptions="actionDone" />
-        </android.support.design.widget.TextInputLayout>
+                android:focusableInTouchMode="true"
+                android:layout_marginTop="15dp"
+                android:layout_height="wrap_content">
 
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/receiptLayout"
-            android:layout_width="match_parent"
-            android:focusableInTouchMode="true"
-            android:layout_marginTop="15dp"
-            android:layout_height="wrap_content">
+                <EditText
+                    android:id="@+id/previousCredit"
+                    android:inputType="none"
+                    android:enabled="false"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#5c5959"
+                    android:hint="@string/previousCredit"
+                    />
+            </android.support.design.widget.TextInputLayout>
 
-            <EditText
-                android:id="@+id/receiptNumber"
-                android:inputType="phone"
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/todayCreditlayout"
+                android:layout_marginLeft="2dp"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/receiptNum"
-                android:imeOptions="actionDone" />
-        </android.support.design.widget.TextInputLayout>
+                android:focusableInTouchMode="true"
+                android:layout_marginTop="15dp"
+                android:layout_height="wrap_content">
 
+                <EditText
+                    android:id="@+id/todayCredit"
+                    android:inputType="phone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/todayCredit"
+                    android:imeOptions="actionDone" />
+            </android.support.design.widget.TextInputLayout>
 
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/missingCreditlayout"
-            android:layout_width="match_parent"
-            android:focusableInTouchMode="true"
-            android:layout_marginTop="15dp"
-            android:layout_height="wrap_content">
-
-            <EditText
-                android:id="@+id/missingCredit"
-                android:inputType="none"
-                android:enabled="false"
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/receiptLayout"
+                android:layout_marginLeft="2dp"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#5c5959"
-                android:hint="@string/missingCredit"
-                />
-        </android.support.design.widget.TextInputLayout>
+                android:focusableInTouchMode="true"
+                android:layout_marginTop="15dp"
+                android:layout_height="wrap_content">
+
+                <EditText
+                    android:id="@+id/receiptNumber"
+                    android:inputType="phone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/receiptNum"
+                    android:imeOptions="actionDone" />
+            </android.support.design.widget.TextInputLayout>
+
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/missingCreditlayout"
+                android:layout_marginLeft="2dp"
+                android:layout_width="match_parent"
+                android:focusableInTouchMode="true"
+                android:layout_marginTop="15dp"
+                android:layout_height="wrap_content">
+
+                <EditText
+                    android:id="@+id/missingCredit"
+                    android:inputType="none"
+                    android:enabled="false"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#5c5959"
+                    android:hint="@string/missingCredit"
+                    />
+            </android.support.design.widget.TextInputLayout>
         </LinearLayout>
         <LinearLayout
             android:id="@+id/buttonLayout"
