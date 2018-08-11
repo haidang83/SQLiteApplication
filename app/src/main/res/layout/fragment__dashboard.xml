@@ -19,7 +19,23 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:id="@+id/daysSinceLastVisitLayout">
-            <EditText
+
+            <!--https://stackoverflow.com/questions/39677978/use-string-array-to-populate-spinner-->
+            <Spinner
+                android:id="@+id/lastVisitOrTotalCreditDropdown"
+                android:layout_weight="6"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginRight="0dp"
+                android:paddingRight="0dp"
+                android:layout_marginLeft="-5dp"
+                android:layout_gravity="start"
+                android:theme="@style/SpinnerItemTextAppearance"
+                android:entries="@array/lastVisitOrTotalCreditDropDownList"
+                android:gravity="bottom"
+                android:spinnerMode="dropdown"/>
+
+            <!--<EditText
                 android:text="@string/daysSinceLastVisit"
                 android:enabled="false"
                 android:layout_weight="6.5"
@@ -27,15 +43,15 @@
                 android:textStyle="bold"
                 android:gravity="bottom"
                 android:textAllCaps="true"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent" />-->
 
             <android.support.design.widget.TextInputLayout
-                android:id="@+id/minLayout"
+                android:id="@+id/lastVisitOrDrinkCreditMinLayout"
                 android:layout_weight="1.5"
                 android:layout_width="0dp"
                 android:layout_height="match_parent">
                 <EditText
-                    android:id="@+id/minimumDay"
+                    android:id="@+id/lastVisitOrDrinkCreditMin"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:inputType="phone"
@@ -54,13 +70,13 @@
                 android:layout_height="match_parent" />
 
             <android.support.design.widget.TextInputLayout
-                android:id="@+id/maxLayout"
+                android:id="@+id/lastVisitOrDrinkCreditMaxLayout"
                 android:layout_weight="1.5"
                 android:layout_width="0dp"
                 android:layout_height="match_parent">
 
                 <EditText
-                    android:id="@+id/maximumDay"
+                    android:id="@+id/lastVisitOrDrinkCreditMax"
                     android:hint="Max"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -79,11 +95,12 @@
             <EditText
                 android:text="@string/daysSinceLastText"
                 android:enabled="false"
-                android:layout_weight="6.5"
+                android:layout_weight="6"
                 android:layout_width="0dp"
                 android:textStyle="bold"
                 android:textAllCaps="true"
                 android:gravity="bottom"
+                android:textColor="@color/grey"
                 android:layout_height="match_parent" />
 
             <android.support.design.widget.TextInputLayout

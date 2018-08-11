@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
 
 import com.kpblog.tt.adapter.CustomerListViewAdapter;
 import com.kpblog.tt.dao.DatabaseHandler;
@@ -35,11 +36,12 @@ public class Fragment_Dashboard extends Fragment {
     private static final String ARG_PARAM2 = "param2";
 
     DatabaseHandler handler;
-    EditText lastVisitMinDay, lastVisitMaxDay, lastTextMinDay;
-    TextInputLayout lastVisitMinLayout, lastVisitMaxLayout, lastTextMinLayout;
+    EditText lastVisitOrDrinkCreditMin, lastVisitOrDrinkCreditMax, lastTextMinDay;
+    TextInputLayout lastVisitOrDrinkCreditMinLayout, lastVisitOrDrinkCreditMaxLayout, lastTextMinLayout;
     ListView listView;
     Button search;
     long searchBtnLastClicked = 0;
+    Spinner lastVisitOrTotalCreditDropdown;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -89,11 +91,13 @@ public class Fragment_Dashboard extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         handler = new DatabaseHandler(getContext());
 
-        lastVisitMinLayout = (TextInputLayout) getView().findViewById(R.id.minLayout);
-        lastVisitMinDay = (EditText) getView().findViewById(R.id.minimumDay);
+        lastVisitOrTotalCreditDropdown = (Spinner) getView().findViewById(R.id.lastVisitOrTotalCreditDropdown);
 
-        lastVisitMaxLayout = (TextInputLayout) getView().findViewById(R.id.maxLayout);
-        lastVisitMaxDay = (EditText) getView().findViewById(R.id.maximumDay);
+        lastVisitOrDrinkCreditMinLayout = (TextInputLayout) getView().findViewById(R.id.lastVisitOrDrinkCreditMinLayout);
+        lastVisitOrDrinkCreditMin = (EditText) getView().findViewById(R.id.lastVisitOrDrinkCreditMin);
+
+        lastVisitOrDrinkCreditMaxLayout = (TextInputLayout) getView().findViewById(R.id.lastVisitOrDrinkCreditMaxLayout);
+        lastVisitOrDrinkCreditMax = (EditText) getView().findViewById(R.id.lastVisitOrDrinkCreditMax);
 
         lastTextMinLayout = (TextInputLayout) getView().findViewById(R.id.lastTextMinLayout);
         lastTextMinDay = (EditText) getView().findViewById(R.id.lastTextMinimumDay);
@@ -120,29 +124,46 @@ public class Fragment_Dashboard extends Fragment {
     private void validateInputAndSearchCustomers() {
         boolean validInput = true;
 
-        int lastVisitMinDayInt = 0, lastVisitMaxDayInt = 0, lastTextMinDayInt = 0;
+        int lastVisitOrDrinkCreditMinInt = 0, lastVisitOrDrinkCreditMaxInt = 0, lastTextMinDayInt = 0;
 
-        String lastVisitMinDayStr = lastVisitMinDay.getText().toString();
-        if (!lastVisitMinDayStr.isEmpty()){
-            if (lastVisitMinDayStr.matches(Constants.AT_LEAST_ONE_DIGIT_REGEXP)) {
-                lastVisitMinLayout.setErrorEnabled(false);
-                lastVisitMinDayInt = Integer.parseInt(lastVisitMinDayStr);
+        String selection = lastVisitOrTotalCreditDropdown.getSelectedItem().toString();
+        boolean isDaysNotVisitedSelection = false;
+        if (getString(R.string.daysNotVisitedText).equals(selection)){
+            isDaysNotVisitedSelection = true;
+        }
+
+        String lastVisitOrDrinkCreditMinStr = lastVisitOrDrinkCreditMin.getText().toString();
+        if (!lastVisitOrDrinkCreditMinStr.isEmpty()){
+            if (lastVisitOrDrinkCreditMinStr.matches(Constants.AT_LEAST_ONE_DIGIT_REGEXP)) {
+                lastVisitOrDrinkCreditMinLayout.setErrorEnabled(false);
+                lastVisitOrDrinkCreditMinInt = Integer.parseInt(lastVisitOrDrinkCreditMinStr);
             }
             else {
-                lastVisitMinLayout.setError("*");
+                lastVisitOrDrinkCreditMinLayout.setError("*");
                 validInput = false;
             }
         }
 
-        String lastVisitMaxDayStr = lastVisitMaxDay.getText().toString();
-        if (!lastVisitMaxDayStr.isEmpty()){
-            if (lastVisitMaxDayStr.matches(Constants.AT_LEAST_ONE_DIGIT_REGEXP)){
-                lastVisitMaxLayout.setErrorEnabled(false);
-                lastVisitMaxDayInt = Integer.parseInt(lastVisitMaxDayStr);
+        String lastVisitOrDrinkCreditMaxStr = lastVisitOrDrinkCreditMax.getText().toString();
+        if (!lastVisitOrDrinkCreditMaxStr.isEmpty()){
+            if (lastVisitOrDrinkCreditMaxStr.matches(Constants.AT_LEAST_ONE_DIGIT_REGEXP)){
+                lastVisitOrDrinkCreditMaxLayout.setErrorEnabled(false);
+                lastVisitOrDrinkCreditMaxInt = Integer.parseInt(lastVisitOrDrinkCreditMaxStr);
             }
             else {
-                lastVisitMaxLayout.setError("*");
+                lastVisitOrDrinkCreditMaxLayout.setError("*");
                 validInput = false;
+            }
+        }
+
+        if (lastVisitOrDrinkCreditMinInt != 0 && lastVisitOrDrinkCreditMaxInt != 0){
+            if (lastVisitOrDrinkCreditMinInt > lastVisitOrDrinkCreditMaxInt) {
+                //both min and max are specified, and min > max
+                lastVisitOrDrinkCreditMinLayout.setError("*");
+                validInput = false;
+            }
+            else {
+                lastVisitOrDrinkCreditMinLayout.setErrorEnabled(false);
             }
         }
 
@@ -159,7 +180,7 @@ public class Fragment_Dashboard extends Fragment {
         }
 
         if (validInput){
-            Customer[] customers = searchCustomers(lastVisitMinDayInt, lastVisitMaxDayInt, lastTextMinDayInt);
+            Customer[] customers = searchCustomers(isDaysNotVisitedSelection, lastVisitOrDrinkCreditMinInt, lastVisitOrDrinkCreditMaxInt, lastTextMinDayInt);
 
             // Create an adapter to bind data to the ListView
             CustomerListViewAdapter adapter = new CustomerListViewAdapter(getContext(), R.layout.dashboard_row_layout, R.id.phone, customers);
@@ -169,8 +190,8 @@ public class Fragment_Dashboard extends Fragment {
         }
     }
 
-    private Customer[] searchCustomers(int lastVisitMinDayInt, int lastVisitMaxDayInt, int lastTextMinDayInt) {
-        List<Customer> customerList = handler.searchCustomerByLastVisitAndText(lastVisitMinDayInt, lastVisitMaxDayInt, lastTextMinDayInt);
+    private Customer[] searchCustomers(boolean isDaysNotVisitedSelection, int lastVisitMinDayInt, int lastVisitMaxDayInt, int lastTextMinDayInt) {
+        List<Customer> customerList = handler.searchCustomerByLastVisitAndText(isDaysNotVisitedSelection, lastVisitMinDayInt, lastVisitMaxDayInt, lastTextMinDayInt);
         return customerList.toArray(new Customer[0]);
     }
 

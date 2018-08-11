@@ -67,8 +67,13 @@
     <string name="testUserAddFail">FAILED to add test user</string>
     <string name="testUserRemoveSuccess">Test user removed successfully</string>
     <string name="testUserRemoveFail">FAILED to remove test user</string>
-    <string name="daysSinceLastVisit">Have not visited(days)</string>
     <string name="to">--</string>
-    <string name="daysSinceLastText">Have not texted(days)</string>
+    <string name="daysSinceLastText">Days not texted</string>
+    <string name="daysNotVisitedText">DAYS NOT VISITED</string>
+    <string name="totalDrinkCreditText">TOTAL DRINK CREDIT</string>
+    <string-array name="lastVisitOrTotalCreditDropDownList">
+        <item>@string/daysNotVisitedText</item>
+        <item>@string/totalDrinkCreditText</item>
+    </string-array>
 
 </resources>
