@@ -135,10 +135,6 @@ public class Fragment_Admin extends Fragment {
             }
         });
 
-        if (!permissionRequestedOnStart){
-            requestReadWritePermission_onStart();
-        }
-
         exportBtn = (Button) (getView().findViewById(R.id.exportBtn));
         exportBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -233,6 +229,12 @@ public class Fragment_Admin extends Fragment {
                 }
             }
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateLocationWithLatestFile();
     }
 
     /**
