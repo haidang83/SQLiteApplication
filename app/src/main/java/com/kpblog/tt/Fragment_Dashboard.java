@@ -136,7 +136,7 @@ public class Fragment_Dashboard extends Fragment {
                     //hide soft keyboard
                     InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(getView().getWindowToken(), 0);
-                    
+
                     searchBtnLastClicked = SystemClock.elapsedRealtime();
 
                     validateInputAndSearchCustomers();
@@ -263,7 +263,6 @@ public class Fragment_Dashboard extends Fragment {
         }
 
         if (validInput){
-            String sortOrder = ascDescDropdown.getSelectedItem().toString();
             String sortByColumnUI = orderByDropdown.getSelectedItem().toString();
             String sortByDbColumn = DatabaseHandler.KEY_LAST_VISIT_DATE;
             if (sortByColumnUI.equals(getString(R.string.totalDrinkCreditText))){
@@ -271,6 +270,16 @@ public class Fragment_Dashboard extends Fragment {
             }
             else if (sortByColumnUI.equals(getString(R.string.daysSinceLastText))){
                 sortByDbColumn = DatabaseHandler.KEY_LAST_CONTACTED_DATE;
+            }
+
+            String sortOrder = ascDescDropdown.getSelectedItem().toString();
+            final String asc = getString(R.string.asc);
+            final String desc = getString(R.string.desc);
+
+            if (sortByDbColumn.equals(DatabaseHandler.KEY_LAST_CONTACTED_DATE) ||
+                    sortByDbColumn.equals(DatabaseHandler.KEY_LAST_VISIT_DATE)){
+                //flip the sort order
+                sortOrder = sortOrder.equals(asc)? desc : asc;
             }
 
             Customer[] customers = searchCustomers(isDaysNotVisitedSelection, lastVisitOrDrinkCreditMinInt,
