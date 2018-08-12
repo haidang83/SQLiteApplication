@@ -68,12 +68,21 @@
     <string name="testUserRemoveSuccess">Test user removed successfully</string>
     <string name="testUserRemoveFail">FAILED to remove test user</string>
     <string name="to">--</string>
-    <string name="daysSinceLastText">Days not texted</string>
+    <string name="daysSinceLastText">DAYS NOT TEXTED</string>
     <string name="daysNotVisitedText">DAYS NOT VISITED</string>
     <string name="totalDrinkCreditText">TOTAL DRINK CREDIT</string>
     <string-array name="lastVisitOrTotalCreditDropDownList">
         <item>@string/daysNotVisitedText</item>
         <item>@string/totalDrinkCreditText</item>
     </string-array>
-
+    <string name="orderBy">order by</string>
+    <string name="asc">asc</string>
+    <string name="desc">desc</string>
+    <string-array name="ascDescDropDownList">
+        <item>@string/asc</item>
+        <item>@string/desc</item>
+    </string-array>
+    <string-array name="orderByDropDownList">
+        <item>@string/daysSinceLastText</item>
+    </string-array>
 </resources>

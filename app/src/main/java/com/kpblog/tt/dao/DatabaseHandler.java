@@ -32,13 +32,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "traTemptation";
     private static final String TABLE_CUSTOMER = "customer";
     private static final String KEY_CUSTOMER_ID = "customerID";
-    private static final String KEY_TOTALCREDIT = "totalCredit";
-    private static final String KEY_LAST_VISIT_DATE = "lastVisitDate";
+    public static final String KEY_TOTALCREDIT = "totalCredit";
+    public static final String KEY_LAST_VISIT_DATE = "lastVisitDate";
     private static final String KEY_OPT_IN_DATE = "optInDate";
     private static final String KEY_OPT_OUT_DATE = "optOutDate";
     private static final String KEY_IS_OPT_IN = "isOptIn";
     private static final String KEY_IS_TEST_USER = "isTestUser";
-    private static final String KEY_LAST_CONTACTED_DATE = "lastContactedDate";
+    public static final String KEY_LAST_CONTACTED_DATE = "lastContactedDate";
 
     private static final String TABLE_CUSTOMER_PURCHASE = "customerPurchase";
     private static final String KEY_QUANTITY = "quantity";
@@ -485,13 +485,18 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     public List<Customer> searchCustomerByLastVisitAndText(boolean isLastVisitSelected,
                                                            int lastVisitOrDrinkCreditMin,
-                                                           int lastVisitOrDrinkCreditMax, int lastTextMinDayInt) {
+                                                           int lastVisitOrDrinkCreditMax,
+                                                           int lastTextMinDayInt,
+                                                           int lastTextMaxDayInt,
+                                                           String sortByDbColumn,
+                                                           String sortOrder) {
 
         List<Customer> customerList = new ArrayList<Customer>();
         SQLiteDatabase db = null;
         try {
 
-            String selectQuery = getSelectQuery(isLastVisitSelected, lastVisitOrDrinkCreditMin, lastVisitOrDrinkCreditMax, lastTextMinDayInt);
+            String selectQuery = getSelectQuery(isLastVisitSelected, lastVisitOrDrinkCreditMin, lastVisitOrDrinkCreditMax,
+                                    lastTextMinDayInt, lastTextMaxDayInt, sortByDbColumn, sortOrder);
 
             db = getReadableDatabase();
 
@@ -517,30 +522,37 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     @NonNull
-    private String getSelectQuery(boolean isLastVisitSelected, int lastVisitOrDrinkCreditMin, int lastVisitOrDrinkCreditMax, int lastTextMinDayInt) {
+    private String getSelectQuery(boolean isLastVisitSelected, int lastVisitOrDrinkCreditMin,
+                                  int lastVisitOrDrinkCreditMax, int lastTextMinDayInt, int lastTextMaxDayInt,
+                                  String sortByDbColumn, String sortOrder) {
+
         Calendar today = new GregorianCalendar();
         long todayInMillis = today.getTimeInMillis();
 
         long lastVisitEndDate = todayInMillis - (lastVisitOrDrinkCreditMin * Constants.DAYS_TO_MILLIS);
 
-        long lastVisitStartDate = 0;
+        long lastVisitStartDate = 0, lastTextStartDate = 0;
 
         if (lastVisitOrDrinkCreditMax > 0) {
             //if lastVisitMaxDay is specified, then calculate it from today. Otherwise just use 0 for epoch start
             lastVisitStartDate = todayInMillis - (lastVisitOrDrinkCreditMax * Constants.DAYS_TO_MILLIS);
         }
 
-        long lastTextDate = todayInMillis - (lastTextMinDayInt * Constants.DAYS_TO_MILLIS);
+        long lastTextEndDate = todayInMillis - (lastTextMinDayInt * Constants.DAYS_TO_MILLIS);
+        if (lastTextMaxDayInt > 0){
+            //lastTextMaxDay is specified, calculate it from today. Otherwise just use 0 for epoch start
+            lastTextStartDate = todayInMillis - (lastTextMaxDayInt * Constants.DAYS_TO_MILLIS);
+        }
 
         /**
          * SELECT customerId, lastVisitDate, totalCredit, lastContactDate
          FROM table_name
-         WHERE (lastContactDate IS NULL OR lastContactDate < lastTextDate)
-         AND (lastVisitDate > lastVisitStartDate and lastVisitDate < lastVisitEndDate)
+         WHERE (lastContactDate IS NULL OR (lastContactDate >= lastTextStartDate AND lastContactDate <= lastTextEndDate))
+         AND (lastVisitDate >= lastVisitStartDate and lastVisitDate =< lastVisitEndDate)
          */
         String selectClauseFormat = String.format("SELECT %s, %s, %s, %s FROM %s ", KEY_CUSTOMER_ID, KEY_LAST_VISIT_DATE, KEY_TOTALCREDIT, KEY_LAST_CONTACTED_DATE, TABLE_CUSTOMER);
 
-        String lastContactDateCondition = String.format("(%s is NULL OR %s <= %d)", KEY_LAST_CONTACTED_DATE, KEY_LAST_CONTACTED_DATE, lastTextDate);
+        String lastContactDateCondition = String.format("(%s is NULL OR (%s >= %d AND %s <= %d))", KEY_LAST_CONTACTED_DATE, KEY_LAST_CONTACTED_DATE, lastTextStartDate, KEY_LAST_CONTACTED_DATE, lastTextEndDate);
 
         String lastVisitDateCondition = String.format("(%s >= %d AND %s <= %d)", KEY_LAST_VISIT_DATE, lastVisitStartDate, KEY_LAST_VISIT_DATE, lastVisitEndDate);
 
@@ -552,7 +564,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         String selectCondition = isLastVisitSelected? lastVisitDateCondition : totalDrinkCreditCondition;
 
-        return selectClauseFormat + " WHERE " + lastContactDateCondition + " AND " + selectCondition + " ORDER BY " + KEY_LAST_VISIT_DATE + " ASC";
+        return selectClauseFormat + " WHERE " + lastContactDateCondition + " AND " + selectCondition + " ORDER BY " + sortByDbColumn + " " + sortOrder;
     }
 
 }

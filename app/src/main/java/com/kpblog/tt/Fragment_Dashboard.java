@@ -9,16 +9,23 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 
 import com.kpblog.tt.adapter.CustomerListViewAdapter;
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
 import com.kpblog.tt.util.Constants;
 
+import org.w3c.dom.Text;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -36,12 +43,12 @@ public class Fragment_Dashboard extends Fragment {
     private static final String ARG_PARAM2 = "param2";
 
     DatabaseHandler handler;
-    EditText lastVisitOrDrinkCreditMin, lastVisitOrDrinkCreditMax, lastTextMinDay;
-    TextInputLayout lastVisitOrDrinkCreditMinLayout, lastVisitOrDrinkCreditMaxLayout, lastTextMinLayout;
+    EditText lastVisitOrDrinkCreditMin, lastVisitOrDrinkCreditMax, lastTextMinDay, lastTextMaxDay;
+    TextInputLayout lastVisitOrDrinkCreditMinLayout, lastVisitOrDrinkCreditMaxLayout, lastTextMinLayout, lastTextMaxLayout;
     ListView listView;
     Button search;
     long searchBtnLastClicked = 0;
-    Spinner lastVisitOrTotalCreditDropdown;
+    Spinner lastVisitOrTotalCreditDropdown, orderByDropdown, ascDescDropdown;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -92,6 +99,17 @@ public class Fragment_Dashboard extends Fragment {
         handler = new DatabaseHandler(getContext());
 
         lastVisitOrTotalCreditDropdown = (Spinner) getView().findViewById(R.id.lastVisitOrTotalCreditDropdown);
+        lastVisitOrTotalCreditDropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                updateOrderByDropdownValues();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
 
         lastVisitOrDrinkCreditMinLayout = (TextInputLayout) getView().findViewById(R.id.lastVisitOrDrinkCreditMinLayout);
         lastVisitOrDrinkCreditMin = (EditText) getView().findViewById(R.id.lastVisitOrDrinkCreditMin);
@@ -102,14 +120,27 @@ public class Fragment_Dashboard extends Fragment {
         lastTextMinLayout = (TextInputLayout) getView().findViewById(R.id.lastTextMinLayout);
         lastTextMinDay = (EditText) getView().findViewById(R.id.lastTextMinimumDay);
 
+        lastTextMaxLayout = (TextInputLayout) getView().findViewById(R.id.lastTextMaxLayout);
+        lastTextMaxDay = (EditText) getView().findViewById(R.id.lastTextMaximumDay);
+
+        orderByDropdown = (Spinner) getView().findViewById(R.id.orderByDropdown);
+        setOrderByDropdownAdapter();
+
+        ascDescDropdown = (Spinner) getView().findViewById(R.id.ascDescDropdown);
+
         search = (Button) getView().findViewById(R.id.searchBtn);
         search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (SystemClock.elapsedRealtime() - searchBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD) {
+                    //hide soft keyboard
+                    InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(getView().getWindowToken(), 0);
+                    
                     searchBtnLastClicked = SystemClock.elapsedRealtime();
 
                     validateInputAndSearchCustomers();
+
                 }
             }
         });
@@ -121,10 +152,39 @@ public class Fragment_Dashboard extends Fragment {
         listView.addHeaderView(headerView);
     }
 
+    private void updateOrderByDropdownValues() {
+        orderByDropdown = (Spinner) getView().findViewById(R.id.orderByDropdown);
+        String selectedItem = lastVisitOrTotalCreditDropdown.getSelectedItem().toString();
+        if (selectedItem.equals(getString(R.string.totalDrinkCreditText))){
+            ArrayAdapter<String> orderByAdapter = (ArrayAdapter<String>) orderByDropdown.getAdapter();
+            orderByAdapter.add(getString(R.string.totalDrinkCreditText));
+            orderByAdapter.remove(getString(R.string.daysNotVisitedText));
+            orderByAdapter.notifyDataSetChanged();
+        }
+        else if (selectedItem.equals(getString(R.string.daysNotVisitedText))){
+            ArrayAdapter<String> orderByAdapter = (ArrayAdapter<String>) orderByDropdown.getAdapter();
+            orderByAdapter.add(getString(R.string.daysNotVisitedText));
+            orderByAdapter.remove(getString(R.string.totalDrinkCreditText));
+            orderByAdapter.notifyDataSetChanged();
+        }
+    }
+
+    private void setOrderByDropdownAdapter() {
+        ArrayList<String> orderByValues = new ArrayList<String>();
+        orderByValues.add(getString(R.string.daysSinceLastText));
+        ArrayAdapter<String> orderByDropdownAdapter = new ArrayAdapter<String>(getContext(), R.layout.orderby_spinner_item, orderByValues);
+        orderByDropdownAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        orderByDropdown.setAdapter(orderByDropdownAdapter);
+    }
+
+    private String[] getOrderByItems() {
+        return new String[] {lastVisitOrTotalCreditDropdown.getSelectedItem().toString(), getString(R.string.daysSinceLastText)};
+    }
+
     private void validateInputAndSearchCustomers() {
         boolean validInput = true;
 
-        int lastVisitOrDrinkCreditMinInt = 0, lastVisitOrDrinkCreditMaxInt = 0, lastTextMinDayInt = 0;
+        int lastVisitOrDrinkCreditMinInt = 0, lastVisitOrDrinkCreditMaxInt = 0, lastTextMinDayInt = 0, lastTextMaxDayInt = 0;
 
         String selection = lastVisitOrTotalCreditDropdown.getSelectedItem().toString();
         boolean isDaysNotVisitedSelection = false;
@@ -179,8 +239,42 @@ public class Fragment_Dashboard extends Fragment {
             }
         }
 
+        String lastTextMaxDayStr = lastTextMaxDay.getText().toString();
+        if (!lastTextMaxDayStr.isEmpty()){
+            if (lastTextMaxDayStr.matches(Constants.AT_LEAST_ONE_DIGIT_REGEXP)){
+                lastTextMaxLayout.setErrorEnabled(false);
+                lastTextMaxDayInt = Integer.parseInt(lastTextMaxDayStr);
+            }
+            else {
+                lastTextMaxLayout.setError("*");
+                validInput = false;
+            }
+        }
+
+        if (lastTextMinDayInt != 0 && lastTextMaxDayInt != 0){
+            if (lastTextMinDayInt > lastTextMaxDayInt){
+                //both specified, and min >= max
+                lastTextMinLayout.setError("*");
+                validInput = false;
+            }
+            else {
+                lastTextMinLayout.setErrorEnabled(false);
+            }
+        }
+
         if (validInput){
-            Customer[] customers = searchCustomers(isDaysNotVisitedSelection, lastVisitOrDrinkCreditMinInt, lastVisitOrDrinkCreditMaxInt, lastTextMinDayInt);
+            String sortOrder = ascDescDropdown.getSelectedItem().toString();
+            String sortByColumnUI = orderByDropdown.getSelectedItem().toString();
+            String sortByDbColumn = DatabaseHandler.KEY_LAST_VISIT_DATE;
+            if (sortByColumnUI.equals(getString(R.string.totalDrinkCreditText))){
+                sortByDbColumn = DatabaseHandler.KEY_TOTALCREDIT;
+            }
+            else if (sortByColumnUI.equals(getString(R.string.daysSinceLastText))){
+                sortByDbColumn = DatabaseHandler.KEY_LAST_CONTACTED_DATE;
+            }
+
+            Customer[] customers = searchCustomers(isDaysNotVisitedSelection, lastVisitOrDrinkCreditMinInt,
+                    lastVisitOrDrinkCreditMaxInt, lastTextMinDayInt, lastTextMaxDayInt, sortByDbColumn, sortOrder);
 
             // Create an adapter to bind data to the ListView
             CustomerListViewAdapter adapter = new CustomerListViewAdapter(getContext(), R.layout.dashboard_row_layout, R.id.phone, customers);
@@ -190,8 +284,12 @@ public class Fragment_Dashboard extends Fragment {
         }
     }
 
-    private Customer[] searchCustomers(boolean isDaysNotVisitedSelection, int lastVisitMinDayInt, int lastVisitMaxDayInt, int lastTextMinDayInt) {
-        List<Customer> customerList = handler.searchCustomerByLastVisitAndText(isDaysNotVisitedSelection, lastVisitMinDayInt, lastVisitMaxDayInt, lastTextMinDayInt);
+    private Customer[] searchCustomers(boolean isDaysNotVisitedSelection, int lastVisitMinDayInt, int lastVisitMaxDayInt,
+                                       int lastTextMinDayInt, int lastTextMaxDayInt,
+                                       String sortByDbColumn, String sortOrder) {
+
+        List<Customer> customerList = handler.searchCustomerByLastVisitAndText(isDaysNotVisitedSelection, lastVisitMinDayInt,
+                                                lastVisitMaxDayInt, lastTextMinDayInt, lastTextMaxDayInt, sortByDbColumn, sortOrder);
         return customerList.toArray(new Customer[0]);
     }
 
