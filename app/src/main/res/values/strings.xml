@@ -94,8 +94,13 @@
     <string name="discountClaimType">Discount Claim</string>
     <string-array name="transactionTypes">
         <item>@string/drinkClaimType</item>
-        <item>@string/discountClaimType</item>
         <item>@string/purchaseType</item>
     </string-array>
     <string name="numericOnlyInput">Numeric Only</string>
+    <string name="orderByTime">TIME</string>
+    <string name="orderByQuantity">Amount</string>
+    <string-array name="transactionOrderByDropDownList">
+        <item>@string/orderByTime</item>
+        <item>@string/orderByQuantity</item>
+    </string-array>
 </resources>

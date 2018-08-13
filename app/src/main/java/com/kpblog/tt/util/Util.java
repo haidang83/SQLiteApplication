@@ -9,6 +9,7 @@ import android.support.design.widget.TextInputLayout;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 
+import com.kpblog.tt.model.Customer;
 import com.kpblog.tt.receiver.TraTemptationReceiver;
 
 import java.io.File;
@@ -164,5 +165,19 @@ public class Util {
 
         alarms.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, alarmTime.getTimeInMillis(), dbBackupPendingIntent);
         Log.d("Util", "db backup scheduled for " + new SimpleDateFormat(Constants.YYYY_MM_HH_MM_SS_FORMAT).format(alarmTime.getTime()));
+    }
+
+    /**
+     * create this method because the PhoneUtils returns a different format (xxx) xxx-xxxx
+     * xxx-xxx-xxxx
+     * @param customer
+     * @return
+     */
+    public static String formatPhoneNumber(String customerId) {
+        String areaCode = customerId.substring(0, 3);
+        String line = customerId.substring(3, 6);
+        String number = customerId.substring(6,10);
+
+        return areaCode + "-" + line + "-" + number;
     }
 }

@@ -12,8 +12,11 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Spinner;
 
+import com.kpblog.tt.adapter.CustomerPurchaseListViewAdapter;
+import com.kpblog.tt.adapter.TransactionListViewAdapter;
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.CustomerPurchase;
 import com.kpblog.tt.util.Constants;
@@ -37,6 +40,7 @@ public class Fragment_Transactions extends Fragment {
     private String mParam1;
     private String mParam2;
     long searchBtnLastClicked = 0;
+    ListView listview;
 
     private OnFragmentInteractionListener mListener;
 
@@ -98,6 +102,12 @@ public class Fragment_Transactions extends Fragment {
                 }
             }
         });
+
+        listview = (ListView) getView().findViewById(R.id.listview);
+        // Inflate customerHeader view
+        ViewGroup headerView = (ViewGroup)getLayoutInflater().inflate(R.layout.transaction_header, listview,false);
+        // Add customerHeader view to the ListView
+        listview.addHeaderView(headerView);
     }
 
     private void validateInputAndSearchTransactions() {
@@ -109,16 +119,19 @@ public class Fragment_Transactions extends Fragment {
         EditText daysAgo = (EditText) getView().findViewById(R.id.daysAgo);
         String daysAgoStr = daysAgo.getText().toString();
         int daysAgoInt = 0;
-        boolean isValidInput = false;
+        boolean isValidInput = true, allTime = false;
         if (!daysAgoStr.isEmpty()){
             if (!daysAgoStr.matches(Constants.AT_LEAST_ONE_DIGIT_REGEXP)) {
                 daysAgoLayout.setError(getString(R.string.numericOnlyInput));
+                isValidInput = false;
             }
             else {
                 daysAgoLayout.setErrorEnabled(false);
                 daysAgoInt = Integer.parseInt(daysAgoStr);
-                isValidInput = true;
             }
+        }
+        else {
+            allTime = true;
         }
 
         if (isValidInput){
@@ -130,8 +143,26 @@ public class Fragment_Transactions extends Fragment {
                 note = getString(R.string.discount_claim_text);
             }
 
+            String orderByUiColumn = ((Spinner) getView().findViewById(R.id.orderByDropdown)).getSelectedItem().toString();
+
+            //set purchase date to be default sort
+            String orderByDbColumn = DatabaseHandler.KEY_PURCHASE_DATE;
+            if (orderByUiColumn.equals(getString(R.string.orderByQuantity))){
+                orderByDbColumn = DatabaseHandler.KEY_QUANTITY;
+            }
+
+            String ascDescSort = ((Spinner) getView().findViewById(R.id.ascDescDropdown)).getSelectedItem().toString();
+
             DatabaseHandler handler = new DatabaseHandler(getContext());
-            CustomerPurchase[] cp = handler.getAllCustomerPurchaseByTypeAndTime(note, daysAgoInt);
+            CustomerPurchase[] cp = handler.getAllCustomerPurchaseByTypeAndTime(note, daysAgoInt, allTime, orderByDbColumn, ascDescSort);
+
+            // Create an adapter to bind data to the ListView
+            TransactionListViewAdapter adapter = new TransactionListViewAdapter(getContext(), R.layout.transaction_row_layout, R.id.transactionTime, cp);
+
+            // Bind data to the ListView
+            listview.setAdapter(adapter);
+
+            ((EditText) getView().findViewById(R.id.result)).setText(String.valueOf(cp.length));
         }
 
     }

@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import com.kpblog.tt.R;
 import com.kpblog.tt.model.Customer;
+import com.kpblog.tt.util.Util;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -58,22 +59,10 @@ public class CustomerListViewAdapter extends ArrayAdapter<Customer> {
         holder.lastVisitDate.setText(sdf.format(customer.getLastVisitDate()));
 
         holder.drinkCredit.setText(String.valueOf(customer.getTotalCredit()));
-        holder.customerId.setText(formatPhoneNumber(customer));
+        holder.customerId.setText(Util.formatPhoneNumber(customer.getCustomerId()));
         holder.lastTextedDate.setText(customer.getLastContactedDate().getTime() == 0? "" : sdf.format(customer.getLastContactedDate()));
         return rowView;
     }
 
-    /**
-     * xxx-xxx-xxxx
-     * @param customer
-     * @return
-     */
-    private String formatPhoneNumber(Customer customer) {
-        final String customerId = customer.getCustomerId();
-        String areaCode = customerId.substring(0, 3);
-        String line = customerId.substring(3, 6);
-        String number = customerId.substring(6,10);
 
-        return areaCode + "-" + line + "-" + number;
-    }
 }

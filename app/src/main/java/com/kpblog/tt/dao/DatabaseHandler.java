@@ -40,9 +40,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public static final String KEY_LAST_CONTACTED_DATE = "lastContactedDate";
 
     private static final String TABLE_CUSTOMER_PURCHASE = "customerPurchase";
-    private static final String KEY_QUANTITY = "quantity";
+    public static final String KEY_QUANTITY = "quantity";
     private static final String KEY_RECEIPT_NUM = "receiptNum";
-    private static final String KEY_PURCHASE_DATE = "purchaseDate";
+    public static final String KEY_PURCHASE_DATE = "purchaseDate";
     private static final String KEY_NOTES = "notes";
 
     private static final String TABLE_CUSTOMER_CLAIM_CODE = "customerClaimCode";
@@ -311,7 +311,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return cpList.toArray(new CustomerPurchase[0]);
     }
 
-    public CustomerPurchase[] getAllCustomerPurchaseByTypeAndTime(String note, int daysAgo) {
+    public CustomerPurchase[] getAllCustomerPurchaseByTypeAndTime(String note, int daysAgo, boolean allTime,
+                                                                  String orderByCol, String sortAscDesc) {
         List<CustomerPurchase> cpList = new ArrayList<CustomerPurchase>();
 
         Calendar today = Calendar.getInstance();
@@ -321,6 +322,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         long transactionStart = todayInMillis - (daysAgo * Constants.DAYS_TO_MILLIS);
 
         String selectCondition = String.format("(%s >= %d) AND ", KEY_PURCHASE_DATE, transactionStart);
+        if (allTime){
+            //disregard the time restriction
+            selectCondition = "";
+        }
 
         if (note.isEmpty()){
             //purchase
@@ -338,9 +343,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         }
 
         // Select All Query
-        String selectQueryFormat = "SELECT %s, %s, %s, %s, %s FROM %s WHERE %s ORDER BY %s DESC";
+        String selectQueryFormat = "SELECT %s, %s, %s, %s, %s FROM %s WHERE %s ORDER BY %s %s";
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery(String.format(selectQueryFormat, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE, KEY_NOTES, TABLE_CUSTOMER_PURCHASE, selectCondition, KEY_PURCHASE_DATE), null);
+        final String queryStr = String.format(selectQueryFormat, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE, KEY_NOTES, TABLE_CUSTOMER_PURCHASE, selectCondition, orderByCol, sortAscDesc);
+        Cursor cursor = db.rawQuery(queryStr, null);
         processCustomerPurchaseCursor(cpList, cursor);
 
         db.close();
