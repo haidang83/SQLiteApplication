@@ -17,7 +17,6 @@ import com.kpblog.tt.util.Util;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -312,6 +311,43 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return cpList.toArray(new CustomerPurchase[0]);
     }
 
+    public CustomerPurchase[] getAllCustomerPurchaseByTypeAndTime(String note, int daysAgo) {
+        List<CustomerPurchase> cpList = new ArrayList<CustomerPurchase>();
+
+        Calendar today = Calendar.getInstance();
+        today.set(Calendar.HOUR_OF_DAY, 0);
+        today.set(Calendar.MINUTE, 0);
+        long todayInMillis = today.getTimeInMillis();
+        long transactionStart = todayInMillis - (daysAgo * Constants.DAYS_TO_MILLIS);
+
+        String selectCondition = String.format("(%s >= %d) AND ", KEY_PURCHASE_DATE, transactionStart);
+
+        if (note.isEmpty()){
+            //purchase
+            String purchaseCondition = String.format("(%s is NULL OR %s='')", KEY_NOTES, KEY_NOTES);
+            selectCondition = selectCondition + purchaseCondition;
+        }
+        else if (note.contains("drink")){
+            //claimed free drink
+            String drinkClaimCondition = String.format("(%s like '%s')", KEY_NOTES, "%drink%");
+            selectCondition = selectCondition + drinkClaimCondition;
+        }
+        else if (note.contains("discount")){
+            String discountClaimCondition = String.format("(%s like '%s')", KEY_NOTES, "%discount%");
+            selectCondition = selectCondition + discountClaimCondition;
+        }
+
+        // Select All Query
+        String selectQueryFormat = "SELECT %s, %s, %s, %s, %s FROM %s WHERE %s ORDER BY %s DESC";
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(String.format(selectQueryFormat, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE, KEY_NOTES, TABLE_CUSTOMER_PURCHASE, selectCondition, KEY_PURCHASE_DATE), null);
+        processCustomerPurchaseCursor(cpList, cursor);
+
+        db.close();
+        // return contact list
+        return cpList.toArray(new CustomerPurchase[0]);
+    }
+
     private void processCustomerPurchaseCursor(List<CustomerPurchase> cpList, Cursor cursor) {
         // Getting the address list which we already into our database
         if (cursor.moveToFirst()) {
@@ -483,11 +519,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return isSuccess;
     }
 
-    public List<Customer> searchCustomerByLastVisitAndText(boolean isLastVisitSelected,
-                                                           int lastVisitOrDrinkCreditMin,
+    public List<Customer> searchCustomerByLastVisitAndText(int lastVisitOrDrinkCreditMin,
                                                            int lastVisitOrDrinkCreditMax,
                                                            int lastTextMinDayInt,
                                                            int lastTextMaxDayInt,
+                                                           int drinkCreditMinInt, int drinkCreditMaxInt,
                                                            String sortByDbColumn,
                                                            String sortOrder) {
 
@@ -495,8 +531,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = null;
         try {
 
-            String selectQuery = getSelectQuery(isLastVisitSelected, lastVisitOrDrinkCreditMin, lastVisitOrDrinkCreditMax,
-                                    lastTextMinDayInt, lastTextMaxDayInt, sortByDbColumn, sortOrder);
+            String selectQuery = getSelectQuery(lastVisitOrDrinkCreditMin, lastVisitOrDrinkCreditMax,
+                                    lastTextMinDayInt, lastTextMaxDayInt, drinkCreditMinInt, drinkCreditMaxInt, sortByDbColumn, sortOrder);
 
             db = getReadableDatabase();
 
@@ -522,20 +558,20 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     @NonNull
-    private String getSelectQuery(boolean isLastVisitSelected, int lastVisitOrDrinkCreditMin,
-                                  int lastVisitOrDrinkCreditMax, int lastTextMinDayInt, int lastTextMaxDayInt,
-                                  String sortByDbColumn, String sortOrder) {
+    private String getSelectQuery(int lastVisitMin,
+                                  int lastVisitMax, int lastTextMinDayInt, int lastTextMaxDayInt,
+                                  int drinkCreditMinInt, int drinkCreditMaxInt, String sortByDbColumn, String sortOrder) {
 
         Calendar today = new GregorianCalendar();
         long todayInMillis = today.getTimeInMillis();
 
-        long lastVisitEndDate = todayInMillis - (lastVisitOrDrinkCreditMin * Constants.DAYS_TO_MILLIS);
+        long lastVisitEndDate = todayInMillis - (lastVisitMin * Constants.DAYS_TO_MILLIS);
 
         long lastVisitStartDate = 0, lastTextStartDate = 0;
 
-        if (lastVisitOrDrinkCreditMax > 0) {
+        if (lastVisitMax > 0) {
             //if lastVisitMaxDay is specified, then calculate it from today. Otherwise just use 0 for epoch start
-            lastVisitStartDate = todayInMillis - (lastVisitOrDrinkCreditMax * Constants.DAYS_TO_MILLIS);
+            lastVisitStartDate = todayInMillis - (lastVisitMax * Constants.DAYS_TO_MILLIS);
         }
 
         long lastTextEndDate = todayInMillis - (lastTextMinDayInt * Constants.DAYS_TO_MILLIS);
@@ -556,15 +592,18 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         String lastVisitDateCondition = String.format("(%s >= %d AND %s <= %d)", KEY_LAST_VISIT_DATE, lastVisitStartDate, KEY_LAST_VISIT_DATE, lastVisitEndDate);
 
-        String totalDrinkCreditCondition = String.format("(%s >= %d AND %s <= %d)", KEY_TOTALCREDIT, lastVisitOrDrinkCreditMin, KEY_TOTALCREDIT, lastVisitOrDrinkCreditMax);
-        if (!isLastVisitSelected && lastVisitOrDrinkCreditMax == 0){
+        String totalDrinkCreditCondition = String.format("(%s >= %d AND %s <= %d)", KEY_TOTALCREDIT, drinkCreditMinInt, KEY_TOTALCREDIT, drinkCreditMaxInt);
+        if (drinkCreditMaxInt == 0){
             //query for drink credit, but max credit not specified, then just skip the max condition
-            totalDrinkCreditCondition = String.format("(%s >= %d)", KEY_TOTALCREDIT, lastVisitOrDrinkCreditMin);
+            totalDrinkCreditCondition = String.format("(%s >= %d)", KEY_TOTALCREDIT, lastVisitMin);
         }
 
-        String selectCondition = isLastVisitSelected? lastVisitDateCondition : totalDrinkCreditCondition;
+        String selectCondition = lastContactDateCondition + " AND " + lastVisitDateCondition;
+        if (drinkCreditMinInt != 0 || drinkCreditMaxInt != 0){
+            selectCondition += " AND " + totalDrinkCreditCondition;
+        }
 
-        return selectClauseFormat + " WHERE " + lastContactDateCondition + " AND " + selectCondition + " ORDER BY " + sortByDbColumn + " " + sortOrder;
+        return selectClauseFormat + " WHERE " + selectCondition + " ORDER BY " + sortByDbColumn + " " + sortOrder;
     }
 
 }

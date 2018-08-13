@@ -12,36 +12,34 @@
         android:layout_width="match_parent"
         android:orientation="vertical"
         android:layout_marginLeft="3dp"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_height="0dp"
             android:orientation="horizontal"
+            android:layout_gravity="bottom"
             android:id="@+id/daysSinceLastVisitLayout">
 
-            <!--https://stackoverflow.com/questions/39677978/use-string-array-to-populate-spinner-->
-            <Spinner
-                android:id="@+id/lastVisitOrTotalCreditDropdown"
+            <EditText
+                android:text="@string/daysNotVisitedText"
+                android:enabled="false"
                 android:layout_weight="6"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginRight="0dp"
-                android:paddingRight="0dp"
-                android:layout_marginLeft="-5dp"
-                android:layout_gravity="start"
-                android:theme="@style/SpinnerItemTextAppearance"
-                android:entries="@array/lastVisitOrTotalCreditDropDownList"
+                android:textStyle="bold"
+                android:textAllCaps="true"
                 android:gravity="bottom"
-                android:spinnerMode="dropdown"/>
+                android:textColor="@color/grey"
+                android:layout_height="match_parent" />
 
             <android.support.design.widget.TextInputLayout
-                android:id="@+id/lastVisitOrDrinkCreditMinLayout"
+                android:id="@+id/lastVisitMinLayout"
                 android:layout_weight="1.5"
                 android:layout_width="0dp"
                 android:layout_height="match_parent">
                 <EditText
-                    android:id="@+id/lastVisitOrDrinkCreditMin"
+                    android:id="@+id/lastVisitMin"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:inputType="phone"
@@ -60,13 +58,13 @@
                 android:layout_height="match_parent" />
 
             <android.support.design.widget.TextInputLayout
-                android:id="@+id/lastVisitOrDrinkCreditMaxLayout"
+                android:id="@+id/lastVisitMaxLayout"
                 android:layout_weight="1.5"
                 android:layout_width="0dp"
                 android:layout_height="match_parent">
 
                 <EditText
-                    android:id="@+id/lastVisitOrDrinkCreditMax"
+                    android:id="@+id/lastVisitMax"
                     android:hint="Max"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -76,9 +74,11 @@
             </android.support.design.widget.TextInputLayout>
         </LinearLayout>
 
+
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_height="0dp"
             android:orientation="horizontal"
             android:id="@+id/daysSinceLastTextLayout">
 
@@ -133,10 +133,71 @@
             </android.support.design.widget.TextInputLayout>
         </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_weight="1"
+            android:layout_height="0dp"
+            android:orientation="horizontal"
+            android:layout_gravity="bottom"
+            android:id="@+id/drinkCreditLayout">
+
+            <EditText
+                android:text="@string/totalDrinkCreditText"
+                android:enabled="false"
+                android:layout_weight="6"
+                android:layout_width="0dp"
+                android:textStyle="bold"
+                android:textAllCaps="true"
+                android:gravity="bottom"
+                android:textColor="@color/grey"
+                android:layout_height="match_parent" />
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/drinkCreditMinLayout"
+                android:layout_weight="1.5"
+                android:layout_width="0dp"
+                android:layout_height="match_parent">
+                <EditText
+                    android:id="@+id/drinkCreditMin"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:inputType="phone"
+                    android:hint="Min"
+                    android:imeOptions="actionNext">
+                </EditText>
+            </android.support.design.widget.TextInputLayout>
+
+            <EditText
+                android:enabled="false"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:text="@string/to"
+                android:layout_height="match_parent" />
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/drinkCreditMaxLayout"
+                android:layout_weight="1.5"
+                android:layout_width="0dp"
+                android:layout_height="match_parent">
+
+                <EditText
+                    android:id="@+id/drinkCreditMax"
+                    android:hint="Max"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:inputType="phone"
+                    android:imeOptions="actionNext">
+                </EditText>
+            </android.support.design.widget.TextInputLayout>
+        </LinearLayout>
+
         <LinearLayout android:id="@+id/orderByPanel"
             android:layout_width="match_parent"
             android:orientation="horizontal"
-            android:layout_height="wrap_content">
+            android:layout_weight="1"
+            android:layout_height="0dp">
 
             <Spinner
                 android:id="@+id/orderByDropdown"
@@ -145,9 +206,10 @@
                 android:layout_height="match_parent"
                 android:layout_marginRight="0dp"
                 android:paddingRight="0dp"
-                android:layout_marginLeft="3dp"
+                android:layout_marginLeft="-5dp"
                 android:layout_gravity="start"
                 android:theme="@style/SpinnerItemTextAppearance"
+                android:entries="@array/orderByDropDownList"
                 android:gravity="bottom"
                 android:spinnerMode="dropdown"/>
 
@@ -174,15 +236,19 @@
                 android:layout_marginRight="3dp"
                 style="@style/buttonStyle"
                 android:textColor="@android:color/white"
-                android:layout_height="wrap_content" />
+                android:layout_height="match_parent" />
         </LinearLayout>
 
-
-        <ListView
-            android:id="@+id/listview"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-        </ListView>
+            android:layout_height="0dp"
+            android:layout_weight="7">
+            <ListView
+                android:id="@+id/listview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+            </ListView>
+        </LinearLayout>
 
     </LinearLayout>
 

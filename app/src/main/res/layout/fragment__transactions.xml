@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFF"
+    android:clickable="true"
+    android:id="@+id/transactionFragment"
+    tools:context="com.kpblog.tt.Fragment_Transactions">
+
+    <LinearLayout
+        android:id="@+id/insertLayout"
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:layout_marginLeft="3dp"
+        android:layout_marginTop="10dp"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:id="@+id/transactionCriteriaLayout">
+
+            <!--https://stackoverflow.com/questions/39677978/use-string-array-to-populate-spinner-->
+            <Spinner
+                android:id="@+id/transactionTypeDropdown"
+                android:layout_weight="5.5"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginRight="0dp"
+                android:paddingRight="0dp"
+                android:layout_marginLeft="-5dp"
+                android:layout_gravity="start"
+                android:theme="@style/SpinnerItemTextAppearance"
+                android:entries="@array/transactionTypes"
+                android:gravity="bottom"
+                android:spinnerMode="dropdown"/>
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/daysAgoLayout"
+                android:layout_weight="3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content">
+                <EditText
+                    android:id="@+id/daysAgo"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:inputType="phone"
+                    android:hint="Since Days Ago"
+                    android:imeOptions="actionNext">
+                </EditText>
+            </android.support.design.widget.TextInputLayout>
+
+            <Button
+                android:id="@+id/searchBtn"
+                android:layout_width="0dip"
+                android:layout_weight="1.7"
+                android:text="@string/search"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="3dp"
+                style="@style/buttonStyle"
+                android:textColor="@android:color/white"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <ListView
+            android:id="@+id/listview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        </ListView>
+
+    </LinearLayout>
+
+</FrameLayout>

@@ -19,6 +19,7 @@
     <string name="tab_admin">Admin</string>
     <string name="tab_dashboard">Dashboard</string>
     <string name="tab_customer">Customer</string>
+    <string name="tab_transactions">Transactions</string>
     <string name="freeDrink">Free Drinks</string>
     <string name="claimCode">4-Digit Claim Code</string>
     <string name="getCode">Get Code</string>
@@ -32,7 +33,8 @@
     <string name="purchase_conf_msg_notFree">Thank you for your purchase at Tra Temptation. Credit earned today: %d, total credit: %d. Buy %d more and get 1 standard drink free!</string>
     <string name="purchase_conf_msg_free">Thank you for your purchase at Tra Temptation. Credit earned today: %d, total credit: %d. Please use this code to claim your free standard drink: %s</string>
     <string name="cashier_toast_msg_sent">Drinks updated and confirmation sent</string>
-    <string name="freeDrink_claim">Claimed free drink</string>
+    <string name="freeDrink_claim">free drink</string>
+    <string name="discount_claim_text">discount</string>
     <string name="freeDrink_notice">You have earned 1 free drink at Tra Temptation. Please use this code to claim: %s</string>
     <string name="successfulClaim_text">Thank you for claiming your free drink. Your total credit resets to %d</string>
     <string name="singlePurchaseLimitAlert">%s, drinkPurchased: %d, receiptNum: %d, time: %s</string>
@@ -70,7 +72,7 @@
     <string name="to">--</string>
     <string name="daysSinceLastText">DAYS NOT TEXTED</string>
     <string name="daysNotVisitedText">DAYS NOT VISITED</string>
-    <string name="totalDrinkCreditText">TOTAL DRINK CREDIT</string>
+    <string name="totalDrinkCreditText">DRINK CREDITS</string>
     <string-array name="lastVisitOrTotalCreditDropDownList">
         <item>@string/daysNotVisitedText</item>
         <item>@string/totalDrinkCreditText</item>
@@ -83,6 +85,17 @@
         <item>@string/desc</item>
     </string-array>
     <string-array name="orderByDropDownList">
+        <item>@string/daysNotVisitedText</item>
+        <item>@string/totalDrinkCreditText</item>
         <item>@string/daysSinceLastText</item>
     </string-array>
+    <string name="purchaseType">Purchase</string>
+    <string name="drinkClaimType">Drink Claim</string>
+    <string name="discountClaimType">Discount Claim</string>
+    <string-array name="transactionTypes">
+        <item>@string/drinkClaimType</item>
+        <item>@string/discountClaimType</item>
+        <item>@string/purchaseType</item>
+    </string-array>
+    <string name="numericOnlyInput">Numeric Only</string>
 </resources>
