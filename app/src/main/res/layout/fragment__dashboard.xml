@@ -38,6 +38,7 @@
                 android:id="@+id/lastVisitMinLayout"
                 android:layout_weight="1.5"
                 android:layout_width="0dp"
+                app:hintEnabled="true"
                 android:layout_height="match_parent">
                 <EditText
                     android:id="@+id/lastVisitMin"
@@ -62,6 +63,7 @@
                 android:id="@+id/lastVisitMaxLayout"
                 android:layout_weight="1.5"
                 android:layout_width="0dp"
+                app:hintEnabled="true"
                 android:layout_height="match_parent">
 
                 <EditText
@@ -99,6 +101,7 @@
                 android:id="@+id/lastTextMinLayout"
                 android:layout_weight="1.5"
                 android:layout_width="0dp"
+                app:hintEnabled="true"
                 android:layout_height="match_parent">
                 <EditText
                     android:id="@+id/lastTextMinimumDay"
@@ -123,6 +126,7 @@
                 android:id="@+id/lastTextMaxLayout"
                 android:layout_weight="1.5"
                 android:layout_width="0dp"
+                app:hintEnabled="true"
                 android:layout_height="match_parent">
                 <EditText
                     android:id="@+id/lastTextMaximumDay"
@@ -159,6 +163,7 @@
                 android:id="@+id/drinkCreditMinLayout"
                 android:layout_weight="1.5"
                 android:layout_width="0dp"
+                app:hintEnabled="true"
                 android:layout_height="match_parent">
                 <EditText
                     android:id="@+id/drinkCreditMin"
@@ -183,6 +188,7 @@
                 android:id="@+id/drinkCreditMaxLayout"
                 android:layout_weight="1.5"
                 android:layout_width="0dp"
+                app:hintEnabled="true"
                 android:layout_height="match_parent">
 
                 <EditText
@@ -222,7 +228,7 @@
                 android:entries="@array/ascDescDropDownList"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_marginRight="0dp"
+                android:layout_marginRight="-5dp"
                 android:paddingRight="0dp"
                 android:layout_marginLeft="0dp"
                 android:layout_gravity="start"
@@ -230,16 +236,60 @@
                 android:gravity="bottom"
                 android:spinnerMode="dropdown"/>
 
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="0dp"
+                android:layout_weight="2.2"
+                app:hintEnabled="true"
+                android:layout_height="match_parent">
+
+                <EditText
+                    android:id="@+id/result"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textColor="@color/grey"
+                    android:hint="#customer"
+                    android:enabled="false">
+                </EditText>
+
+            </android.support.design.widget.TextInputLayout>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_weight="0.7"
+            android:orientation="horizontal"
+            android:layout_height="0dp">
+
+            <Button
+                android:id="@+id/clearBtn"
+                android:layout_width="0dip"
+                android:layout_weight="1"
+                android:text="@string/clearBtn"
+                android:layout_marginLeft="0dp"
+                style="@style/buttonStyle"
+                android:textColor="@android:color/white"
+                android:layout_height="match_parent" />
+
             <Button
                 android:id="@+id/searchBtn"
                 android:layout_width="0dip"
-                android:layout_weight="1.7"
+                android:layout_weight="1"
                 android:text="@string/search"
-                android:layout_marginLeft="5dp"
+                android:layout_marginLeft="30dp"
+                style="@style/buttonStyle"
+                android:textColor="@android:color/white"
+                android:layout_height="match_parent" />
+
+            <Button
+                android:id="@+id/sendText"
+                android:layout_width="0dip"
+                android:layout_weight="1"
+                android:text="send text"
+                android:layout_marginLeft="30dp"
                 android:layout_marginRight="3dp"
                 style="@style/buttonStyle"
                 android:textColor="@android:color/white"
                 android:layout_height="match_parent" />
+
         </LinearLayout>
 
     <!--<LinearLayout android:id="@+id/buttonPanel"
@@ -263,7 +313,7 @@
             android:layout_width="match_parent"
             android:layout_marginTop="3dp"
             android:layout_height="0dp"
-            android:layout_weight="7">
+            android:layout_weight="6">
             <ListView
                 android:id="@+id/listview"
                 android:layout_width="match_parent"

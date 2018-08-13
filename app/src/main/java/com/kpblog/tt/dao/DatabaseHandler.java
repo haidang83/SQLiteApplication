@@ -601,7 +601,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         String totalDrinkCreditCondition = String.format("(%s >= %d AND %s <= %d)", KEY_TOTALCREDIT, drinkCreditMinInt, KEY_TOTALCREDIT, drinkCreditMaxInt);
         if (drinkCreditMaxInt == 0){
             //query for drink credit, but max credit not specified, then just skip the max condition
-            totalDrinkCreditCondition = String.format("(%s >= %d)", KEY_TOTALCREDIT, lastVisitMin);
+            totalDrinkCreditCondition = String.format("(%s >= %d)", KEY_TOTALCREDIT, drinkCreditMinInt);
         }
 
         String selectCondition = lastContactDateCondition + " AND " + lastVisitDateCondition;

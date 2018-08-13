@@ -128,11 +128,29 @@ public class Fragment_Dashboard extends Fragment {
             }
         });
 
+        Button clearBtn = (Button) getView().findViewById(R.id.clearBtn);
+        clearBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                clearInputs();
+            }
+        });
+
         listView = (ListView) getView().findViewById(R.id.listview);
         // Inflate customerHeader view
         ViewGroup headerView = (ViewGroup)getLayoutInflater().inflate(R.layout.dashboard_header, listView,false);
         // Add customerHeader view to the ListView
         listView.addHeaderView(headerView);
+    }
+
+    private void clearInputs() {
+        lastVisitMin.setText("");
+        lastVisitMax.setText("");
+        lastTextMinDay.setText("");
+        lastTextMaxDay.setText("");
+        ((EditText) getView().findViewById(R.id.drinkCreditMin)).setText("");
+        ((EditText) getView().findViewById(R.id.drinkCreditMax)).setText("");
+        ((EditText) getView().findViewById(R.id.result)).setText("");
     }
 
     /**
@@ -279,6 +297,8 @@ public class Fragment_Dashboard extends Fragment {
 
             // Bind data to the ListView
             listView.setAdapter(adapter);
+
+            ((EditText) getView().findViewById(R.id.result)).setText(String.valueOf(customers.length));
         }
     }
 
