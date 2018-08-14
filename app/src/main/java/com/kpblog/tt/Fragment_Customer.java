@@ -10,6 +10,7 @@ import android.telephony.PhoneNumberFormattingTextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -116,6 +117,10 @@ public class Fragment_Customer extends Fragment {
             @Override
             public void onClick(View view) {
                 if (SystemClock.elapsedRealtime() - searchBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
+                    //hide soft keyboard
+                    InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(getView().getWindowToken(), 0);
+
                     searchBtnLastClicked = SystemClock.elapsedRealtime();
                     final String unformattedPhoneNumber = Util.getUnformattedPhoneNumber(phone.getText().toString());
                     

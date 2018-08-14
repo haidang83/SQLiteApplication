@@ -42,4 +42,12 @@
         <item name="android:layout_height">wrap_content</item>
     </style>
 
+    <style name="headerPadding">
+        <item name="android:padding">5sp</item>
+    </style>
+    <style name="rowPadding">
+        <item name="android:paddingBottom">3sp</item>
+        <item name="android:paddingTop">3sp</item>
+    </style>
+
 </resources>

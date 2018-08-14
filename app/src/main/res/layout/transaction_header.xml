@@ -7,10 +7,10 @@
         android:layout_height="wrap_content"
         android:layout_marginRight="3dp">
         <TextView
-            android:layout_weight="5.5"
+            android:layout_weight="6"
             android:layout_width="0dp"
             android:layout_column="0"
-            android:padding="10sp"
+            android:theme="@style/headerPadding"
             android:gravity="start"
             android:text="Time"
             android:textStyle="bold"
@@ -19,11 +19,10 @@
         </TextView>
 
         <TextView
-            android:layout_weight="4"
+            android:layout_weight="5"
             android:layout_width="0dp"
             android:layout_column="1"
-            android:paddingBottom="10sp"
-            android:paddingTop="10sp"
+            android:theme="@style/headerPadding"
             android:paddingLeft="3sp"
             android:gravity="start"
             android:text="Customer"
@@ -33,10 +32,10 @@
         </TextView>
 
         <TextView
-            android:layout_weight="2.5"
+            android:layout_weight="3"
             android:layout_width="0dp"
             android:layout_column="2"
-            android:padding="10sp"
+            android:theme="@style/headerPadding"
             android:gravity="start"
             android:text="Amt"
             android:textStyle="bold"
@@ -47,8 +46,7 @@
             android:layout_weight="2.5"
             android:layout_width="0dp"
             android:layout_column="3"
-            android:paddingBottom="10sp"
-            android:paddingTop="10sp"
+            android:theme="@style/headerPadding"
             android:paddingLeft="3sp"
             android:gravity="start"
             android:text="Rec#"
