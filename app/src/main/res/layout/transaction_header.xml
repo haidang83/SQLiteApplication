@@ -7,7 +7,7 @@
         android:layout_height="wrap_content"
         android:layout_marginRight="3dp">
         <TextView
-            android:layout_weight="6"
+            android:layout_weight="7"
             android:layout_width="0dp"
             android:layout_column="0"
             android:theme="@style/headerPadding"
@@ -19,7 +19,7 @@
         </TextView>
 
         <TextView
-            android:layout_weight="5"
+            android:layout_weight="6"
             android:layout_width="0dp"
             android:layout_column="1"
             android:theme="@style/headerPadding"
