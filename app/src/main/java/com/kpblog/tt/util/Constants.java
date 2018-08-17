@@ -17,6 +17,7 @@ public class Constants {
     public static final int SINGLE_PURCHASE_QUANTITY_LIMIT = 5;
 
     public static final String SHARED_PREF_ADMIN_CODE_KEY = "adminCode";
+    public static final String DAILY_CODE_SHARED_PREF_KEY = "dailyCode";
 
     public static final String EXPORTED_FOLDER_NAME = "exportedDb";
     public static final String YYYY_MM_HH_MM_SS_FORMAT = "yyyy-MM-dd HH:mm:ss";

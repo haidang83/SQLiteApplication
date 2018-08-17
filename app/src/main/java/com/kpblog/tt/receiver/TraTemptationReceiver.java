@@ -3,6 +3,9 @@ package com.kpblog.tt.receiver;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+import android.telephony.SmsManager;
 import android.util.Log;
 
 import com.kpblog.tt.dao.DatabaseHandler;
@@ -10,6 +13,7 @@ import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
 import java.util.Calendar;
+import java.util.List;
 
 /**
  * [good example] https://code.tutsplus.com/tutorials/android-fundamentals-scheduling-recurring-tasks--mobile-5788
@@ -34,6 +38,29 @@ public class TraTemptationReceiver extends BroadcastReceiver {
 
             final String sourceDbName = context.getDatabasePath(DatabaseHandler.DATABASE_NAME).getPath();
             String exportedDbPath = Util.exportDatabase(sourceDbName);
+
+            textDailyCode(context);
         }
+    }
+
+    private void textDailyCode(Context ctx) {
+        DatabaseHandler handler = new DatabaseHandler(ctx);
+        List<String> admins = handler.getAllAdmins();
+
+        SmsManager sms = SmsManager.getDefault();
+        final String dailyCode = Util.generateRandom4DigitCode();
+
+        String message = String.format("Database backup completed successfully. Daily code: %s", dailyCode);
+        for (String phoneNumber : admins){
+            if (phoneNumber.equals("4084257660")){
+                sms.sendTextMessage(phoneNumber, null, message, null, null);
+            }
+        }
+
+        //save into shared pref
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ctx);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putString(Constants.DAILY_CODE_SHARED_PREF_KEY, dailyCode);
+        editor.commit();
     }
 }
