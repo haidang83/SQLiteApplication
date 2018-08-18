@@ -38,6 +38,8 @@ import com.kpblog.tt.util.AsteriskPasswordTransformationMethod;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
+import org.w3c.dom.Text;
+
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -58,7 +60,8 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
-    private EditText phone, todayCredit, previousCredit, missingCredit, receiptNum, cashierCode, note;
+    private EditText phone, referrerPhone, todayCredit, previousCredit, missingCredit, receiptNum, cashierCode, note;
+    private TextInputLayout referrerLayout;
     private Button confirmBtn, cancelBtn;
     private CheckBox optIn;
     private DatabaseHandler handler;
@@ -117,8 +120,11 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     private long confirmBtnLastClicked = 0;
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState){
+        final PhoneNumberFormattingTextWatcher phoneNumWatcher = new PhoneNumberFormattingTextWatcher();
+
         phone = (EditText)(getView().findViewById(R.id.phone));
-        phone.addTextChangedListener(new PhoneNumberFormattingTextWatcher());
+        phone.addTextChangedListener(phoneNumWatcher);
+        phone.setOnEditorActionListener(this);
         /*phone.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean hasFocus) {
@@ -130,7 +136,19 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
                 }
             }
         });*/
-        phone.setOnEditorActionListener(this);
+
+        referrerLayout = (TextInputLayout) getView().findViewById(R.id.referrerLayout);
+        referrerPhone = (EditText) getView().findViewById(R.id.referrerPhone);
+        referrerPhone.addTextChangedListener(phoneNumWatcher);
+        referrerPhone.setOnEditorActionListener(this);
+        referrerPhone.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean hasFocus) {
+                if (hasFocus){
+                    getCustomerInfoFromDatabaseAndUpdateScreen();
+                }
+            }
+        });
 
         previousCredit = (EditText) getView().findViewById(R.id.previousCredit);
         previousCredit.setText(String.valueOf(0));
@@ -214,6 +232,28 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         list = handler.getAllAddress();
         addressAdapter = new AddressAdapter(this);
         listView.setAdapter(addressAdapter);*/
+    }
+
+    /**
+     * if new user, then referrer box is enable.
+     * else, populate the referrer info and disable the input
+     */
+    private void loadReferrerInfo(Customer c) {
+        if (c == null){
+            referrerLayout.setVisibility(View.VISIBLE);
+            referrerPhone.setEnabled(true);
+        }
+        else {
+            final String referrerId = c.getReferrerId();
+            if (referrerId != null && !referrerId.isEmpty()){
+                referrerPhone.setText(referrerId);
+                referrerPhone.setEnabled(false);
+                referrerLayout.setVisibility(View.VISIBLE);
+            }
+            else {
+                referrerLayout.setVisibility(View.INVISIBLE);
+            }
+        }
     }
 
 
@@ -359,6 +399,10 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         TextInputLayout phoneLayout = (TextInputLayout) getView().findViewById(R.id.phoneLayout);
         phoneLayout.setErrorEnabled(false);
 
+        referrerPhone.setText("");
+        referrerPhone.setEnabled(true);
+        ((TextInputLayout) getView().findViewById(R.id.receiptLayout)).setErrorEnabled(false);
+
         previousCredit.setText("0");
 
         TextInputLayout todayCreditLayout = (TextInputLayout) getView().findViewById(R.id.todayCreditlayout);
@@ -383,22 +427,6 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         optIn.setVisibility(View.VISIBLE);
 
         phone.requestFocus();
-
-        /*android.support.v4.app.FragmentTransaction ftr = getFragmentManager().beginTransaction();
-        ftr.detach(Fragment_RegisterOrUpdate.this).attach(Fragment_RegisterOrUpdate.this).commit();*/
-
-        /*Fragment_RegisterOrUpdate fragment = (Fragment_RegisterOrUpdate)
-                getFragmentManager().findFragmentById(R.id.your_fragment_container_id);
-
-        getFragmentManager().beginTransaction()
-                .detach(fragment)
-                .attach(fragment)
-                .commit();*/
-
-        /*go back to home screen
-        Intent myIntent = new Intent(MainActivity.this, MainActivity.class);
-        myIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        MainActivity.this.startActivity(myIntent);*/
     }
 
     private void updateMissingCredit() {
@@ -454,7 +482,12 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
             //when user is done entering phone number
             if (getCustomerInfoFromDatabaseAndUpdateScreen()){
                 //don't request the focus if the phone number entry isnt valid
-                requestFocusOnTodayCredit();
+                if (referrerPhone.isEnabled() && referrerLayout.getVisibility() == View.VISIBLE){
+                    referrerPhone.requestFocus();
+                }
+                else {
+                    requestFocusOnTodayCredit();
+                }
             }
             handled = true;
         }
@@ -535,6 +568,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
 
         if (customer != null){
             //existing customer, update the screen with customer info
+
             int todayCredit = getTodayCredit();
             int previousCreditValue = customer.getTotalCredit();
             if (customer.isOptIn()){
@@ -574,8 +608,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         }
 
 
-        /*list = handler.getAllAddress();
-        addressAdapter.notifyDataSetChanged();*/
+        loadReferrerInfo(customer);
 
         return true;
     }

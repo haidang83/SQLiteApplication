@@ -6,7 +6,7 @@ public class Customer {
     private Date optInDate, lastVisitDate, optOutDate, lastContactedDate;
     private boolean optIn, testUser;
     private int totalCredit;
-    private String customerId;
+    private String customerId, referrerId;
 
     public int getTotalCredit() {
         return totalCredit;
@@ -72,9 +72,17 @@ public class Customer {
         this.lastContactedDate = lastContactedDate;
     }
 
+    public String getReferrerId() {
+        return referrerId;
+    }
+
+    public void setReferrerId(String referrerId) {
+        this.referrerId = referrerId;
+    }
+
     @Override
     public String toString() {
-        String customerFormat = "%s, %d, %s, %s, in=%s, test=%s, out=%s, lastContacted=%s";
-        return String.format(customerFormat, this.customerId, this.totalCredit, this.lastVisitDate, this.optIn, this.optInDate, this.isTestUser(), this.optOutDate, this.lastContactedDate);
+        String customerFormat = "%s, %d, %s, %s, in=%s, test=%s, out=%s, lastContacted=%s, referrer=%s";
+        return String.format(customerFormat, this.customerId, this.totalCredit, this.lastVisitDate, this.optIn, this.optInDate, this.isTestUser(), this.optOutDate, this.lastContactedDate, this.referrerId);
     }
 }
