@@ -66,8 +66,6 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     private AddressAdapter addressAdapter;
     public List<Customer> list;
 
-    boolean destroyed = false;
-
     // TODO: Rename and change types of parameters
     private String customerId = "";
     private String mParam2;
@@ -121,18 +119,17 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     public void onViewCreated(View view, Bundle savedInstanceState){
         phone = (EditText)(getView().findViewById(R.id.phone));
         phone.addTextChangedListener(new PhoneNumberFormattingTextWatcher());
-        phone.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+        /*phone.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean hasFocus) {
-                String id = view.getResources().getResourceEntryName(view.getId());
-                if (!destroyed && !hasFocus){
+                if (!hasFocus){
                     if (getCustomerInfoFromDatabaseAndUpdateScreen()){
                         //requestFocusOnTodayCredit();
                         //don't request focus here because if the user presses a different input field, then there'd be 2 fields with focus
                     }
                 }
             }
-        });
+        });*/
         phone.setOnEditorActionListener(this);
 
         previousCredit = (EditText) getView().findViewById(R.id.previousCredit);
@@ -151,6 +148,9 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
                         //((EditText) getView().findViewById(R.id.receiptNumber)).requestFocus();
                         //don't request focus here because if the user press a different input field, then there'll be 2 fields with focus
                     }
+                }
+                else {
+                    getCustomerInfoFromDatabaseAndUpdateScreen();
                 }
             }
         });
@@ -230,7 +230,6 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
-
         if (isVisibleToUser){
             requestFocusOnPhone();
         }
@@ -260,11 +259,6 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         mListener = null;
     }
 
-    @Override
-    public void onDestroy() {
-        destroyed = true;
-        super.onDestroy();
-    }
 
     /**
      * This interface must be implemented by activities that contain this
