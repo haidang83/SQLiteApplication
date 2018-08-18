@@ -1,4 +1,5 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -26,6 +27,7 @@
                 android:layout_weight="1"
                 android:focusableInTouchMode="true"
                 android:layout_width="0dp"
+                app:hintTextAppearance="@style/FloatingLabel"
                 android:layout_height="wrap_content">
 
                 <EditText
@@ -33,7 +35,7 @@
                     android:id="@+id/phone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/phoneNumber"
+                    android:hint="@string/yourPhoneNumber"
                     android:inputType="phone"
                     android:imeOptions="actionNext">
                 </EditText>
@@ -51,6 +53,7 @@
                 android:layout_weight="1"
                 android:focusableInTouchMode="true"
                 android:layout_width="0dp"
+                app:hintTextAppearance="@style/FloatingLabel"
                 android:layout_height="wrap_content">
 
                 <EditText
@@ -58,9 +61,9 @@
                     android:id="@+id/referrerPhone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Referrer Phone Num"
+                    android:hint="@string/referrerPhone"
                     android:inputType="phone"
-                    android:imeOptions="actionNext">
+                    android:imeOptions="actionDone">
                 </EditText>
             </android.support.design.widget.TextInputLayout>
 
@@ -126,6 +129,7 @@
                     android:layout_weight="1"
                     android:layout_width="0dp"
                     android:focusableInTouchMode="true"
+                    app:hintTextAppearance="@style/FloatingLabel"
                     android:layout_height="wrap_content">
 
                     <EditText
@@ -177,6 +181,7 @@
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:focusableInTouchMode="true"
+                    app:hintTextAppearance="@style/FloatingLabel"
                     android:layout_height="wrap_content">
 
                     <EditText
@@ -201,6 +206,7 @@
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:focusableInTouchMode="true"
+                    app:hintTextAppearance="@style/FloatingLabel"
                     android:layout_height="wrap_content">
 
                     <EditText

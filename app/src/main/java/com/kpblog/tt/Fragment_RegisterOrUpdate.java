@@ -401,7 +401,8 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
 
         referrerPhone.setText("");
         referrerPhone.setEnabled(true);
-        ((TextInputLayout) getView().findViewById(R.id.receiptLayout)).setErrorEnabled(false);
+        referrerLayout.setErrorEnabled(false);
+        referrerLayout.setVisibility(View.VISIBLE);
 
         previousCredit.setText("0");
 
@@ -477,6 +478,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         String todayCreditId = todayCredit.getResources().getResourceEntryName(todayCredit.getId());
         String receiptNumId = receiptNum.getResources().getResourceEntryName(receiptNum.getId());
         String cashierCodeId = cashierCode.getResources().getResourceEntryName(cashierCode.getId());
+        String referrerId = referrerPhone.getResources().getResourceEntryName(referrerPhone.getId());
 
         if (id.equals(phoneId)) {
             //when user is done entering phone number
@@ -490,6 +492,11 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
                 }
             }
             handled = true;
+        }
+        else if (id.equals(referrerId)){
+            if (validateReferrerId()){
+                requestFocusOnTodayCredit();
+            }
         }
         else if(id.equals(todayCreditId)){
             //when user is done entering today's drink
@@ -508,6 +515,29 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
             isCashierCodeValid();
         }
         return handled;
+    }
+
+    /**
+     * if referrerId given: validate valid phone number and customer exists in db
+     * @return
+     */
+    private boolean validateReferrerId() {
+        boolean isValid = true;
+        String referrerIdStr = referrerPhone.getText().toString();
+        if (referrerIdStr != null && !referrerIdStr.isEmpty()){
+            String unformattedReferrerId = Util.getUnformattedPhoneNumber(referrerIdStr);
+            if (unformattedReferrerId.matches(Constants.AT_LEAST_ONE_DIGIT_REGEXP) &&
+                    handler.getCustomerById(unformattedReferrerId) != null){
+                isValid = true;
+                referrerLayout.setErrorEnabled(false);
+            }
+            else {
+                isValid = false;
+                referrerLayout.setError(getString(R.string.invalidReferrerId));
+            }
+        }
+
+        return isValid;
     }
 
     private boolean isCashierCodeValid() {

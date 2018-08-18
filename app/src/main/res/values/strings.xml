@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">Tra Temptation</string>
-    <string name="phoneNumber">Your Phone Num</string>
+    <string name="phoneNumber">Phone Num</string>
+    <string name="yourPhoneNumber">Your Phone Num</string>
+    <string name="referrerPhone">[Opt] Referrer Phone</string>
+    <string name="invalidReferrerId">Invalid Referrer Phone Num</string>
     <string name="missingCredit">Drinks to Buy Before Free</string>
     <string name="todayCredit">Drinks Purchase Today</string>
     <string name="previousCredit">Previous Credit</string>
