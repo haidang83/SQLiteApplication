@@ -2,16 +2,21 @@ package com.kpblog.tt;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.telephony.PhoneNumberFormattingTextWatcher;
 import android.telephony.SmsManager;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -29,6 +34,7 @@ import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
 import com.kpblog.tt.model.CustomerClaimCode;
 import com.kpblog.tt.model.CustomerPurchase;
+import com.kpblog.tt.util.AsteriskPasswordTransformationMethod;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
@@ -52,13 +58,15 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
-    private EditText phone, todayCredit, previousCredit, missingCredit, receiptNum;
+    private EditText phone, todayCredit, previousCredit, missingCredit, receiptNum, cashierCode, note;
     private Button confirmBtn, cancelBtn;
     private CheckBox optIn;
     private DatabaseHandler handler;
     private ListView listView;
     private AddressAdapter addressAdapter;
     public List<Customer> list;
+
+    boolean destroyed = false;
 
     // TODO: Rename and change types of parameters
     private String customerId = "";
@@ -116,7 +124,8 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         phone.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean hasFocus) {
-                if (!hasFocus){
+                String id = view.getResources().getResourceEntryName(view.getId());
+                if (!destroyed && !hasFocus){
                     if (getCustomerInfoFromDatabaseAndUpdateScreen()){
                         //requestFocusOnTodayCredit();
                         //don't request focus here because if the user presses a different input field, then there'd be 2 fields with focus
@@ -130,6 +139,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         previousCredit.setText(String.valueOf(0));
 
         todayCredit = (EditText) getView().findViewById(R.id.todayCredit);
+        todayCredit.setTransformationMethod(null);//because we use numberPassword as input, so don't want to mask the input
         todayCredit.setText(String.valueOf(1));
         todayCredit.setOnEditorActionListener(this);
         todayCredit.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -145,11 +155,18 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
             }
         });
 
+        note = (EditText) getView().findViewById(R.id.note);
+
         missingCredit = (EditText) getView().findViewById(R.id.missingCredit);
         missingCredit.setText(String.valueOf(Constants.FREE_DRINK_THRESHOLD - getTodayCredit()));
 
         receiptNum = (EditText) getView().findViewById(R.id.receiptNumber);
         receiptNum.setOnEditorActionListener(this);
+        receiptNum.setTransformationMethod(null);
+
+        cashierCode = (EditText) getView().findViewById(R.id.cashierCode);
+        cashierCode.setTransformationMethod(new AsteriskPasswordTransformationMethod());
+        cashierCode.setOnEditorActionListener(this);
 
         optIn = (CheckBox) getView().findViewById(R.id.checkbox_optIn);
         optIn.setOnClickListener(new View.OnClickListener() {
@@ -199,6 +216,26 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         listView.setAdapter(addressAdapter);*/
     }
 
+
+    private void requestFocusOnPhone() {
+        final View view = getView();
+        if (view != null){
+            EditText phone = (EditText) view.findViewById(R.id.phone);
+            if (phone != null){
+                phone.requestFocus(phone.getText().length());
+            }
+        }
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+
+        if (isVisibleToUser){
+            requestFocusOnPhone();
+        }
+    }
+
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
@@ -221,6 +258,12 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void onDestroy() {
+        destroyed = true;
+        super.onDestroy();
     }
 
     /**
@@ -328,9 +371,17 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         todayCreditLayout.setErrorEnabled(false);
         todayCredit.setText(String.valueOf(1));
 
+        note.setText("");
+        TextInputLayout noteLayout = (TextInputLayout) getView().findViewById(R.id.noteLayout);
+        noteLayout.setVisibility(View.INVISIBLE);
+
         receiptNum.setText("");
         TextInputLayout receiptLayout = (TextInputLayout) getView().findViewById(R.id.receiptLayout);
         receiptLayout.setErrorEnabled(false);
+
+        cashierCode.setText("");
+        TextInputLayout cashierCodeLayout = (TextInputLayout) getView().findViewById(R.id.cashierCodeLayout);
+        cashierCodeLayout.setErrorEnabled(false);
 
         missingCredit.setText(String.valueOf(Constants.FREE_DRINK_THRESHOLD - getTodayCredit()));
 
@@ -373,7 +424,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         else {
             //qualifies for free drink
             missingCreditView.setText(R.string.freeDrinkAchieved);
-            ((TextInputLayout) getView().findViewById(R.id.missingCreditlayout)).setHintEnabled(false);
+            //((TextInputLayout) getView().findViewById(R.id.missingCreditlayout)).setHintEnabled(false);
         }
     }
 
@@ -403,6 +454,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         String phoneId = phone.getResources().getResourceEntryName(phone.getId());
         String todayCreditId = todayCredit.getResources().getResourceEntryName(todayCredit.getId());
         String receiptNumId = receiptNum.getResources().getResourceEntryName(receiptNum.getId());
+        String cashierCodeId = cashierCode.getResources().getResourceEntryName(cashierCode.getId());
 
         if (id.equals(phoneId)) {
             //when user is done entering phone number
@@ -416,14 +468,39 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
             //when user is done entering today's drink
             if (isTodayCreditValid()){
                 updateMissingCredit();
-                ((EditText) getView().findViewById(R.id.receiptNumber)).requestFocus();
+                receiptNum.requestFocus();
             }
         }
         else if (id.equals(receiptNumId)){
-            isReceiptNumberValid();
+            if (isReceiptNumberValid()){
+                cashierCode.requestFocus();
+            }
         }
 
+        else if (id.equals(cashierCodeId)){
+            isCashierCodeValid();
+        }
         return handled;
+    }
+
+    private boolean isCashierCodeValid() {
+        boolean isValid = false;
+        String codeStr = cashierCode.getText().toString();
+
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String expectedCode = sp.getString(Constants.SHARED_PREF_DAILY_CODE_KEY, null);
+
+        TextInputLayout cashierLayout = (TextInputLayout) getView().findViewById(R.id.cashierCodeLayout);
+
+        if (!codeStr.isEmpty() && codeStr.equals(expectedCode)){
+            isValid = true;
+            cashierLayout.setErrorEnabled(false);
+        }
+        else {
+            cashierLayout.setError(getString(R.string.claimCode_err_msg));
+        }
+
+        return isValid;
     }
 
     private void requestFocusOnTodayCredit() {
@@ -510,12 +587,6 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     }
 
 
-    private void setFocusOnPhone() {
-        //clearCurrentFocus();
-        phone.requestFocus();
-    }
-
-
     public void deleteCustomer(Customer customer){
         handler.deleteCustomer(customer);
     }
@@ -523,7 +594,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     private boolean isAllInputValid(){
         final String phone = Util.getUnformattedPhoneNumber(this.phone.getText().toString());
         return Util.isPhoneNumberValid((TextInputLayout) getView().findViewById(R.id.phoneLayout), getString(R.string.phone_err_msg), phone)
-                && isTodayCreditValid() && isReceiptNumberValid();
+                && isTodayCreditValid() && isReceiptNumberValid() && isCashierCodeValid();
     }
 
     /**

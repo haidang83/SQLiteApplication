@@ -134,7 +134,7 @@ public class Util {
 
     public static Calendar getNightlyDbBackupTime() {
         Calendar alarmTime = Calendar.getInstance();
-        alarmTime.set(Calendar.HOUR_OF_DAY, 23);
+        alarmTime.set(Calendar.HOUR_OF_DAY, 9);
         alarmTime.set(Calendar.MINUTE, 30);
         alarmTime.set(Calendar.SECOND, 0);
 
@@ -170,8 +170,8 @@ public class Util {
     /**
      * create this method because the PhoneUtils returns a different format (xxx) xxx-xxxx
      * xxx-xxx-xxxx
-     * @param customer
-     * @return
+     * @param customerId
+     * @return formatted customerId
      */
     public static String formatPhoneNumber(String customerId) {
         String areaCode = customerId.substring(0, 3);

@@ -4,7 +4,7 @@
     <string name="missingCredit">Drinks to Buy Before Free</string>
     <string name="todayCredit">Drinks Purchase Today</string>
     <string name="previousCredit">Previous Credit</string>
-    <string name="freeDrinkAchieved">Your next drink is FREE</string>
+    <string name="freeDrinkAchieved">Next drink is FREE</string>
     <string name="optIn">Please text me promotion info (We will not share your phone number with anyone)</string>
     <string name="btnConfirm">Confirm</string>
     <string name="cancelBtn">Cancel</string>
@@ -13,7 +13,7 @@
     <string name="todayCredit_err_msg">Please enter a number less than 10</string>
     <string name="welcomeText">Welcome to Tra Temptation\'s reward program</string>
     <string name="receiptNum">Receipt Number</string>
-    <string name="receipt_err_msg">Please enter a valid receipt number</string>
+    <string name="receipt_err_msg">Invalid receipt number</string>
     <string name="tab_registration">Sign-Up/Check-in</string>
     <string name="tab_claim">Claim</string>
     <string name="tab_admin">Admin</string>
@@ -21,12 +21,12 @@
     <string name="tab_customer">Customer</string>
     <string name="tab_transactions">Transactions</string>
     <string name="freeDrink">Free Drinks</string>
-    <string name="claimCode">4-Digit Claim Code</string>
+    <string name="claimCode">Claim Code</string>
     <string name="getCode">Get Code</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="btnClaim">Claim</string>
     <string name="getCodeMsg">Please use this code to claim your free drink: %s</string>
-    <string name="claimCode_err_msg">The code entered is invalid</string>
+    <string name="claimCode_err_msg">Invalid code</string>
     <string name="claimSuccess_msg">Success! Claim code is valid</string>
     <string name="claimSuccess_msg_textSent">Success! Claim code is valid. Confirmation sent</string>
     <string name="update_success_msg">Successfully updated drink credit</string>

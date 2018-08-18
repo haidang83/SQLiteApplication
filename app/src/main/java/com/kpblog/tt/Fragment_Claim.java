@@ -3,6 +3,8 @@ package com.kpblog.tt;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -25,6 +27,7 @@ import com.kpblog.tt.model.Customer;
 import com.kpblog.tt.model.CustomerClaimCode;
 import com.kpblog.tt.model.CustomerPurchase;
 import com.kpblog.tt.util.Constants;
+import com.kpblog.tt.util.MyEditText;
 import com.kpblog.tt.util.Util;
 
 import java.util.Date;
@@ -47,7 +50,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
     private String customerId = "";
     private String mParam2;
 
-    private EditText phone, claimCode, freeDrink;
+    private EditText phone, claimCode, freeDrink, receiptNum;
     private Button claimBtn, clearBtn, getCodeBtn;
     private DatabaseHandler handler;
 
@@ -135,7 +138,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
                 //to prevent double click
                 if (SystemClock.elapsedRealtime() - claimBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
                     claimBtnLastClicked = SystemClock.elapsedRealtime();
-                    if (validateClaimCode()){
+                    if (validateClaimCode() && validateReceiptNum()){
                         updateSuccessfulClaim();
                     }
                 }
@@ -150,8 +153,13 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
             }
         });
 
-        claimCode = (EditText) (getView().findViewById(R.id.claimCode));
+        claimCode = (MyEditText) (getView().findViewById(R.id.claimCode));
+        claimCode.setTransformationMethod(null);
         claimCode.setOnEditorActionListener(this);
+
+        receiptNum = (EditText) getView().findViewById(R.id.receiptNumber);
+        receiptNum.setTransformationMethod(null);
+        receiptNum.setOnEditorActionListener(this);
 
         if (Util.getUnformattedPhoneNumber(customerId).length() == 10){
             //this is to handle the case where this fragment's data is passed from the other fragment
@@ -166,16 +174,18 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         //update the total credit
         Customer c = handler.getCustomerById(customerId);
         int totalCredit = c.getTotalCredit();
-        totalCredit = totalCredit % Constants.FREE_DRINK_THRESHOLD;
-        handler.updateTotalCreditForCustomerId(customerId, totalCredit);
+        int claimAmt = totalCredit / Constants.FREE_DRINK_THRESHOLD;
+        int remainingCredit = totalCredit % Constants.FREE_DRINK_THRESHOLD;
+        handler.updateTotalCreditForCustomerId(customerId, remainingCredit);
 
-        recordClaimIntoCustomerPurchase(customerId);
+        String receiptNumStr = receiptNum.getText().toString();
+        recordClaimIntoCustomerPurchase(customerId, claimAmt, receiptNumStr);
         handler.deleteClaimCodeForCustomerId(customerId);
         claimBtn.setEnabled(false);
 
         if (c.isOptIn()){
             //send claim confirmation text
-            String msg = String.format(getString(R.string.successfulClaim_text), totalCredit);
+            String msg = String.format(getString(R.string.successfulClaim_text), remainingCredit);
             sendText(customerId, msg, null);
         }
         else {
@@ -197,8 +207,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         phoneLayout.setErrorEnabled(false);
 
         claimCode.setText("");
-        TextInputLayout claimCodeLayout = (TextInputLayout) (getView().findViewById(R.id.claimCodeLayout));
-        claimCodeLayout.setErrorEnabled(false);
+        claimCode.setError(null, null);
 
         freeDrink.setText("0");
 
@@ -207,11 +216,12 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
 
     }
 
-    private void recordClaimIntoCustomerPurchase(String customerId) {
+    private void recordClaimIntoCustomerPurchase(String customerId, int claimAmt, String receiptNum) {
         CustomerPurchase cp = new CustomerPurchase();
 
         cp.setCustomerId(customerId);
-        cp.setQuantity(0);
+        cp.setQuantity(claimAmt);
+        cp.setReceiptNum(Integer.parseInt(receiptNum));
         cp.setNotes(getString(R.string.freeDrink_claim));
         cp.setPurchaseDate(new java.util.Date());
 
@@ -228,14 +238,18 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
             isSuccess = code.equals(dbCode);
         }
 
-        TextInputLayout claimCodeLayout = (TextInputLayout) getView().findViewById(R.id.claimCodeLayout);
         if (isSuccess){
-            claimCodeLayout.setErrorEnabled(false);
+            Drawable myIcon = ContextCompat.getDrawable(getContext(), R.drawable.ic_done_green_24dp);
+            myIcon.setBounds(0, 0, myIcon.getIntrinsicWidth(), myIcon.getIntrinsicHeight());
+            claimCode.setError(null, myIcon);
             getCodeBtn.setEnabled(false);
         }
         else {
+            Drawable errorIcon = ContextCompat.getDrawable(getContext(), R.drawable.ic_error_red_24dp);
+            errorIcon.setBounds(new Rect(0, 0, errorIcon.getIntrinsicWidth(), errorIcon.getIntrinsicHeight()));
+            claimCode.setError(null, errorIcon);
             getCodeBtn.setEnabled(true);
-            claimCodeLayout.setError(getString(R.string.claimCode_err_msg));
+            //claimCodeLayout.setError(getString(R.string.claimCode_err_msg));
         }
         return isSuccess;
     }
@@ -410,6 +424,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         String id = textView.getResources().getResourceEntryName(textView.getId());
         String phoneId = phone.getResources().getResourceEntryName(phone.getId());
         String claimCodeId = claimCode.getResources().getResourceEntryName(claimCode.getId());
+        String receiptNumId = receiptNum.getResources().getResourceEntryName(receiptNum.getId());
 
         if (id.equals(phoneId)) {
             //when user is done entering phone number
@@ -422,8 +437,27 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         else if (id.equals(claimCodeId)){
             validateClaimCode();
         }
+        else if (id.equals(receiptNumId)){
+            validateReceiptNum();
+        }
 
         return false;
+    }
+
+    private boolean validateReceiptNum() {
+        TextInputLayout receiptNumLayout = (TextInputLayout) getView().findViewById(R.id.receiptLayout);
+        String receiptNumStr = receiptNum.getText().toString();
+        boolean isValid = false;
+
+        if (!receiptNumStr.isEmpty() && receiptNumStr.matches(Constants.AT_LEAST_ONE_DIGIT_REGEXP)){
+            isValid = true;
+            receiptNumLayout.setErrorEnabled(false);
+        }
+        else {
+            receiptNumLayout.setError(getString(R.string.receipt_err_msg));
+        }
+
+        return isValid;
     }
 
     private void requestFocusOnClaimCode() {

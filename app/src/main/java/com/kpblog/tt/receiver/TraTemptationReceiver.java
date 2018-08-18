@@ -60,7 +60,7 @@ public class TraTemptationReceiver extends BroadcastReceiver {
         //save into shared pref
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ctx);
         SharedPreferences.Editor editor = sp.edit();
-        editor.putString(Constants.DAILY_CODE_SHARED_PREF_KEY, dailyCode);
+        editor.putString(Constants.SHARED_PREF_DAILY_CODE_KEY, dailyCode);
         editor.commit();
     }
 }
