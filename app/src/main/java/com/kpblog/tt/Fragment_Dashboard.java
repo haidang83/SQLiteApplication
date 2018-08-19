@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.support.design.widget.TabLayout;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -44,7 +45,7 @@ public class Fragment_Dashboard extends Fragment {
                     lastTextMaxLayout;
     ListView listView;
     Button search;
-    long searchBtnLastClicked = 0;
+    long searchBtnLastClicked = 0, sendTextBtnLastClicked = 0;
     Spinner orderByDropdown, ascDescDropdown;
 
     // TODO: Rename and change types of parameters
@@ -122,8 +123,30 @@ public class Fragment_Dashboard extends Fragment {
 
                     searchBtnLastClicked = SystemClock.elapsedRealtime();
 
-                    validateInputAndSearchCustomers();
+                    Customer[] customers = validateInputAndSearchCustomers();
+                    if (customers != null){
+                        // Create an adapter to bind data to the ListView
+                        CustomerListViewAdapter adapter = new CustomerListViewAdapter(getContext(), R.layout.dashboard_row_layout, R.id.phone, customers);
+                        // Bind data to the ListView
+                        listView.setAdapter(adapter);
+                        ((EditText) getView().findViewById(R.id.result)).setText(String.valueOf(customers.length));
+                    }
 
+                }
+            }
+        });
+
+        Button sendTextBtn = (Button) getView().findViewById(R.id.sendTextBtn);
+        sendTextBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (SystemClock.elapsedRealtime() - sendTextBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
+                    sendTextBtnLastClicked = SystemClock.elapsedRealtime();
+                    Customer[] customers = validateInputAndSearchCustomers();
+                    Fragment_Text text = Fragment_Text.newInstance(customers, null);
+                    getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.textFragment,text).commit();
+                    TabLayout tabs = (TabLayout)((MainActivity)getActivity()).findViewById(R.id.tabs);
+                    tabs.getTabAt(5).select();
                 }
             }
         });
@@ -135,6 +158,8 @@ public class Fragment_Dashboard extends Fragment {
                 clearInputs();
             }
         });
+
+
 
         listView = (ListView) getView().findViewById(R.id.listview);
         // Inflate customerHeader view
@@ -164,8 +189,9 @@ public class Fragment_Dashboard extends Fragment {
         orderByDropdown.setAdapter(orderByDropdownAdapter);
     }
 
-    private void validateInputAndSearchCustomers() {
+    private Customer[] validateInputAndSearchCustomers() {
         boolean validInput = true;
+        Customer[] customers = null;
 
         int lastVisitMinInt = 0, lastVisitMaxInt = 0, lastTextMinDayInt = 0, lastTextMaxDayInt = 0;
 
@@ -287,19 +313,13 @@ public class Fragment_Dashboard extends Fragment {
                 sortOrder = sortOrder.equals(asc)? desc : asc;
             }
 
-            Customer[] customers = searchCustomers(lastVisitMinInt, lastVisitMaxInt,
+            customers = searchCustomers(lastVisitMinInt, lastVisitMaxInt,
                                 lastTextMinDayInt, lastTextMaxDayInt,
                                 drinkCreditMinInt, drinkCreditMaxInt,
                                 sortByDbColumn, sortOrder);
-
-            // Create an adapter to bind data to the ListView
-            CustomerListViewAdapter adapter = new CustomerListViewAdapter(getContext(), R.layout.dashboard_row_layout, R.id.phone, customers);
-
-            // Bind data to the ListView
-            listView.setAdapter(adapter);
-
-            ((EditText) getView().findViewById(R.id.result)).setText(String.valueOf(customers.length));
         }
+
+        return customers;
     }
 
     private Customer[] searchCustomers(int lastVisitMinDayInt, int lastVisitMaxDayInt,

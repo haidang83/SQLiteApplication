@@ -547,9 +547,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                     Customer c = new Customer();
                     c.setCustomerId(cursor.getString(0));
                     c.setLastVisitDate(new Date(cursor.getLong(1)));
-                    c.setPurchaseCredit(cursor.getInt(2));
+                    c.setPurchaseCredit(cursor.getDouble(2));
                     c.setLastContactedDate(new Date(cursor.getLong(3)));
-                    c.setReferralCredit(cursor.getInt(4));
+                    c.setReferralCredit(cursor.getDouble(4));
 
                     customerList.add(c);
                 } while (cursor.moveToNext());

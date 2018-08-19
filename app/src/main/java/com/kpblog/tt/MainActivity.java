@@ -49,7 +49,8 @@ public class MainActivity extends AppCompatActivity implements  Fragment_Custome
                                                                 Fragment_RegisterOrUpdate.OnFragmentInteractionListener,
                                                                 Fragment_Admin.OnFragmentInteractionListener,
                                                                 Fragment_Dashboard.OnFragmentInteractionListener,
-                                                                Fragment_Transactions.OnFragmentInteractionListener{
+                                                                Fragment_Transactions.OnFragmentInteractionListener,
+                                                                Fragment_Text.OnFragmentInteractionListener{
 
     public static final int FREE_DRINK_THRESHOLD = 10;
     public static final int TODAY_CREDIT_LIMIT = 10; //number of drinks that can be purchased at 1 time (to avoid typo)
@@ -125,6 +126,7 @@ public class MainActivity extends AppCompatActivity implements  Fragment_Custome
         adapter.addFragment(new Fragment_Customer(), getString(R.string.tab_customer));
         adapter.addFragment(new Fragment_Admin(), getString(R.string.tab_admin));
         adapter.addFragment(new Fragment_Dashboard(), getString(R.string.tab_dashboard));
+        adapter.addFragment(new Fragment_Text(), getString(R.string.tab_text));
         adapter.addFragment(new Fragment_Transactions(), getString(R.string.tab_transactions));
         viewPager.setAdapter(adapter);
     }

@@ -9,7 +9,7 @@
     tools:context="com.kpblog.tt.Fragment_Admin">
 
     <LinearLayout
-        android:id="@+id/insertLayout"
+        android:id="@+id/fragmentLayout"
         android:layout_width="match_parent"
         android:layout_marginTop="10dp"
         android:orientation="vertical"

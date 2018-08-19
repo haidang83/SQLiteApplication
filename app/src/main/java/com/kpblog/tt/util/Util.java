@@ -11,6 +11,7 @@ import android.support.design.widget.TextInputLayout;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.SmsManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
@@ -214,5 +215,21 @@ public class Util {
 
     public static int getMissingCreditRoundedUp(double totalCredit) {
         return (int) Math.ceil(Constants.FREE_DRINK_THRESHOLD - totalCredit);
+    }
+
+    public static void sendAdminCodeAndSaveToSharedPref(String targetPhoneNum, Context ctx, String messageFormat) {
+        String code = Util.generateRandom4DigitCode();
+        String msg = String.format(messageFormat, code);
+        Util.textSingleRecipient(targetPhoneNum, msg);
+
+        //save into shared pref
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ctx);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putString(Constants.SHARED_PREF_ADMIN_CODE_KEY, code);
+        editor.commit();
+    }
+
+    public static void displayToast(Context ctx, String msg) {
+        Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show();
     }
 }

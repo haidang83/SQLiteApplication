@@ -1,8 +1,9 @@
 package com.kpblog.tt.model;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class Customer {
+public class Customer implements Serializable{
     private Date optInDate, lastVisitDate, optOutDate, lastContactedDate;
     private boolean optIn, testUser;
     private double purchaseCredit;

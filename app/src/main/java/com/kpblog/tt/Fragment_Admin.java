@@ -31,7 +31,6 @@ import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
 import java.io.File;
-import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -119,7 +118,7 @@ public class Fragment_Admin extends Fragment {
             @Override
             public void onClick(View view) {
                 if (SystemClock.elapsedRealtime() - getCodeBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
-                    sendCode();
+                    Util.sendAdminCodeAndSaveToSharedPref(adminDropdown.getSelectedItem().toString(), getActivity(), getString(R.string.adminCodeTextMsg));
                     getCodeBtnLastClicked = SystemClock.elapsedRealtime();
                 }
             }
@@ -485,18 +484,6 @@ public class Fragment_Admin extends Fragment {
         else {
             adminCodeLayout.setError(getString(R.string.claimCode_err_msg));
         }
-    }
-
-    private void sendCode() {
-        String code = Util.generateRandom4DigitCode();
-        String msg = String.format(getString(R.string.adminCodeTextMsg), code);
-        requestPermissionAndSendText(adminDropdown.getSelectedItem().toString(), msg);
-
-        //save into shared pref
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        SharedPreferences.Editor editor = sp.edit();
-        editor.putString(Constants.SHARED_PREF_ADMIN_CODE_KEY, code);
-        editor.commit();
     }
 
     String textMsg;

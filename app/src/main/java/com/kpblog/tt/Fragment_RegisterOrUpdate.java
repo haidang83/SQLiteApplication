@@ -595,8 +595,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
 
             updateMissingCredit();
 
-            /* don't need this, if we do this, then need to handle:
-            1. prevent looping between register tab and claim tab
+            /* don't need this, if we do this, then need to prevent looping between register tab and claim tab
             if (previousCreditValue >= Constants.FREE_DRINK_THRESHOLD){
                 //take user to claim tab
                 String phoneNum = Util.getUnformattedPhoneNumber(this.phone.getText().toString());
