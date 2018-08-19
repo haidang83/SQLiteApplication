@@ -599,10 +599,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         String lastVisitDateCondition = String.format("(%s >= %d AND %s <= %d)", KEY_LAST_VISIT_DATE, lastVisitStartDate, KEY_LAST_VISIT_DATE, lastVisitEndDate);
 
-        String totalDrinkCreditCondition = String.format("(%s >= %f AND %s <= %f)", KEY_PURCHASE_CREDIT, drinkCreditMinDouble, KEY_PURCHASE_CREDIT, drinkCreditMaxDouble);
+        String totalDrinkCreditCondition = String.format("(%s >= %f AND %s <= %f)", KEY_TOTAL_CREDIT, drinkCreditMinDouble, KEY_TOTAL_CREDIT, drinkCreditMaxDouble);
         if (drinkCreditMaxDouble == 0){
             //query for drink credit, but max credit not specified, then just skip the max condition
-            totalDrinkCreditCondition = String.format("(%s >= %f)", KEY_PURCHASE_CREDIT, drinkCreditMinDouble);
+            totalDrinkCreditCondition = String.format("(%s >= %f)", KEY_TOTAL_CREDIT, drinkCreditMinDouble);
         }
 
         String selectCondition = lastContactDateCondition + " AND " + lastVisitDateCondition;
