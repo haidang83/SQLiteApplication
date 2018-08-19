@@ -4,11 +4,15 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.support.design.widget.TextInputLayout;
 import android.telephony.PhoneNumberUtils;
+import android.telephony.SmsManager;
 import android.util.Log;
 
+import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
 import com.kpblog.tt.receiver.TraTemptationReceiver;
 
@@ -20,6 +24,7 @@ import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 
 public class Util {
@@ -179,5 +184,26 @@ public class Util {
         String number = customerId.substring(6,10);
 
         return areaCode + "-" + line + "-" + number;
+    }
+
+    public static void textDailyCode(Context ctx) {
+        DatabaseHandler handler = new DatabaseHandler(ctx);
+        List<String> admins = handler.getAllAdmins();
+
+        SmsManager sms = SmsManager.getDefault();
+        final String dailyCode = Util.generateRandom4DigitCode();
+
+        String message = String.format("Cashier code: %s", dailyCode);
+        for (String phoneNumber : admins){
+            if (phoneNumber.equals("4084257660")){
+                sms.sendTextMessage(phoneNumber, null, message, null, null);
+            }
+        }
+
+        //save into shared pref
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ctx);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putString(Constants.SHARED_PREF_DAILY_CODE_KEY, dailyCode);
+        editor.commit();
     }
 }

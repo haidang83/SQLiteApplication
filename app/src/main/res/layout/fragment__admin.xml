@@ -127,7 +127,7 @@
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/addRemoveAdminUserFrame"
+                android:id="@+id/addRemoveAdminTestUserFrame"
                 android:layout_marginTop="30dp"
                 android:layout_width="match_parent"
                 android:orientation="vertical"
@@ -201,6 +201,33 @@
                         style="@style/buttonStyle"
                         android:textColor="@android:color/white"/>
                 </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/getCashierCodeButtonFrame"
+                android:layout_width="match_parent"
+                android:orientation="horizontal"
+                android:layout_marginTop="20dp"
+                android:layout_height="wrap_content">
+
+                <Button android:id="@+id/getCashierCodeBtn"
+                    android:layout_weight="1"
+                    android:layout_width="0dip"
+                    android:layout_marginLeft="2dp"
+                    android:layout_height="wrap_content"
+                    android:text="Get Cashier Code"
+                    style="@style/buttonStyle"
+                    android:textColor="@android:color/white"/>
+
+                <Button android:id="@+id/blankBtn"
+                    android:layout_weight="1"
+                    android:layout_width="0dip"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="5dp"
+                    android:layout_height="wrap_content"
+                    android:text="blank"
+                    style="@style/buttonStyle"
+                    android:textColor="@android:color/white"/>
             </LinearLayout>
 
         </LinearLayout>

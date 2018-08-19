@@ -674,6 +674,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
             if (customer == null){
                 customer = new Customer();
                 customer.setCustomerId(unformattedPhoneNumber);
+                customer.setReferrerId(Util.getUnformattedPhoneNumber(referrerPhone.getText().toString()));
                 isNewCustomer = true;
             }
 
@@ -687,7 +688,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
                 customer.setOptOutDate(null);
             }
             final int todayCredit = getTodayCredit();
-            customer.setTotalCredit(customer.getTotalCredit() + todayCredit);
+            customer.setPurchaseCredit(customer.getPurchaseCredit() + todayCredit);
             customer.setLastVisitDate(today);
 
             handler.registerOrUpdateCustomer(customer, isNewCustomer);

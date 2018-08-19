@@ -103,6 +103,7 @@ public class Fragment_Admin extends Fragment {
 
     long getCodeBtnLastClicked, lockUnlockBtnLastClicked, exportBtnLastClicked, importBtnLastClicked = 0;
     long addAdminBtnLastClicked, removeAdminBtnLastClicked, addTestUserBtnLastClicked, removeTestUserBtnLastClicked = 0;
+    long getCashierCodeBtnLastClicked = 0;
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState){
         handler = new DatabaseHandler(getContext());
@@ -226,6 +227,18 @@ public class Fragment_Admin extends Fragment {
                     if (Util.isPhoneNumberValid(phoneLayout, getString(R.string.phone_err_msg), unformattedPhoneNumber)){
                         removeTestUser(unformattedPhoneNumber);
                     }
+                }
+            }
+        });
+
+        Button getCashierCodeBtn = (Button) getView().findViewById(R.id.getCashierCodeBtn);
+        getCashierCodeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (SystemClock.elapsedRealtime() - getCashierCodeBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
+                    getCashierCodeBtnLastClicked = SystemClock.elapsedRealtime();
+                    Util.textDailyCode(getContext());
+                    displayToast(getString(R.string.dailyCashierCodeSent));
                 }
             }
         });

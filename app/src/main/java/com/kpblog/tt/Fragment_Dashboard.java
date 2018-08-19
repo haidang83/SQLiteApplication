@@ -271,7 +271,7 @@ public class Fragment_Dashboard extends Fragment {
             String sortByColumnUI = orderByDropdown.getSelectedItem().toString();
             String sortByDbColumn = DatabaseHandler.KEY_LAST_VISIT_DATE;
             if (sortByColumnUI.equals(getString(R.string.totalDrinkCreditText))){
-                sortByDbColumn = DatabaseHandler.KEY_TOTALCREDIT;
+                sortByDbColumn = DatabaseHandler.KEY_TOTAL_CREDIT;
             }
             else if (sortByColumnUI.equals(getString(R.string.daysSinceLastText))){
                 sortByDbColumn = DatabaseHandler.KEY_LAST_CONTACTED_DATE;

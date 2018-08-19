@@ -72,6 +72,7 @@
     <string name="testUserAddFail">FAILED to add test user</string>
     <string name="testUserRemoveSuccess">Test user removed successfully</string>
     <string name="testUserRemoveFail">FAILED to remove test user</string>
+    <string name="dailyCashierCodeSent">Cashier Code Sent</string>
     <string name="to">--</string>
     <string name="daysSinceLastText">DAYS NOT TEXTED</string>
     <string name="daysNotVisitedText">DAYS NOT VISITED</string>

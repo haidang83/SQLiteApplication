@@ -39,28 +39,9 @@ public class TraTemptationReceiver extends BroadcastReceiver {
             final String sourceDbName = context.getDatabasePath(DatabaseHandler.DATABASE_NAME).getPath();
             String exportedDbPath = Util.exportDatabase(sourceDbName);
 
-            textDailyCode(context);
+            Util.textDailyCode(context);
         }
     }
 
-    private void textDailyCode(Context ctx) {
-        DatabaseHandler handler = new DatabaseHandler(ctx);
-        List<String> admins = handler.getAllAdmins();
 
-        SmsManager sms = SmsManager.getDefault();
-        final String dailyCode = Util.generateRandom4DigitCode();
-
-        String message = String.format("Database backup completed successfully. Daily code: %s", dailyCode);
-        for (String phoneNumber : admins){
-            if (phoneNumber.equals("4084257660")){
-                sms.sendTextMessage(phoneNumber, null, message, null, null);
-            }
-        }
-
-        //save into shared pref
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ctx);
-        SharedPreferences.Editor editor = sp.edit();
-        editor.putString(Constants.SHARED_PREF_DAILY_CODE_KEY, dailyCode);
-        editor.commit();
-    }
 }
