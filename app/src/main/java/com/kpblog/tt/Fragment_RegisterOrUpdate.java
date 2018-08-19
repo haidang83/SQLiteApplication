@@ -732,7 +732,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
             double immediateReferralCredit = 0;
             if (isNewCustomer){
                 //1st purchase: credit immediate referral with 1st purchase referral credit
-                immediateReferralCredit = Constants.FIRST_PURCHASE_IMMEDIATE_REFERRAL_CREDIT;
+                immediateReferralCredit = Constants.FIRST_PURCHASE_IMMEDIATE_REFERRAL_CREDIT + (Constants.IMMEDIATE_REFERRAL_CREDIT_RATE * todayPurchaseAmount);
             }
             else {
                 //subsequent purchase: credit immediate referral with immediateReferralRate * todayPurchaseAmount
@@ -760,7 +760,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
                 else if (isNewCustomer){
                     //referral first purchase, but not enough for free drink yet, text to thank
                     double missingCredit = Constants.FREE_DRINK_THRESHOLD - totalCreditAfterReferral;
-                    String msg = String.format(getString(R.string.firstReferralPurchaseMissingCredit), Constants.FIRST_PURCHASE_IMMEDIATE_REFERRAL_CREDIT, totalCreditAfterReferral, missingCredit);
+                    String msg = String.format(getString(R.string.firstReferralPurchaseMissingCredit), immediateReferralCredit , totalCreditAfterReferral, missingCredit);
                     Util.textSingleRecipient(immediateReferrerId, msg);
                 }
             }

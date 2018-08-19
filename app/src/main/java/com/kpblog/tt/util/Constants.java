@@ -9,6 +9,7 @@ public class Constants {
     public static final int FREE_DRINK_THRESHOLD = 10;
     public static final int TODAY_CREDIT_LIMIT = 10; //number of drinks that can be purchased at 1 time (to avoid typo)
     public static final String AT_LEAST_ONE_DIGIT_REGEXP = "[0-9]+";
+    public static final String NUMBER_OR_DECIMAL_REGEXP = "[0-9]+([.][0-9]{1})?";
     public static final String FOUR_DIGIT_REGEXP = "[0-9]{4}";
     public static final String TEN_DIGIT_REGEXP = "[0-9]{10}";
 
@@ -28,7 +29,7 @@ public class Constants {
 
     public static long DAYS_TO_MILLIS = 24 * 60 * 60 * 1000;
 
-    public static int FIRST_PURCHASE_IMMEDIATE_REFERRAL_CREDIT = 2;
+    public static int FIRST_PURCHASE_IMMEDIATE_REFERRAL_CREDIT = 1;
     public static double IMMEDIATE_REFERRAL_CREDIT_RATE = 0.5;
     public static double SECOND_LEVEL_REFERRAL_CREDIT_RATE = 0.25;
 

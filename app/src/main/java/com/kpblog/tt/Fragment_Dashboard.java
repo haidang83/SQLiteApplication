@@ -235,11 +235,11 @@ public class Fragment_Dashboard extends Fragment {
         String drinkCreditMaxStr = ((EditText) getView().findViewById(R.id.drinkCreditMax)).getText().toString();
         TextInputLayout drinkCreditMinLayout = (TextInputLayout) getView().findViewById(R.id.drinkCreditMinLayout);
         TextInputLayout drinkCreditMaxLayout = (TextInputLayout) getView().findViewById(R.id.drinkCreditMaxLayout);
-        int drinkCreditMinInt = 0, drinkCreditMaxInt = 0;
+        double drinkCreditMinDouble = 0, drinkCreditMaxDouble = 0;
         if (!drinkCreditMinStr.isEmpty()){
-            if (drinkCreditMinStr.matches(Constants.AT_LEAST_ONE_DIGIT_REGEXP)){
+            if (drinkCreditMinStr.matches(Constants.NUMBER_OR_DECIMAL_REGEXP)){
                 drinkCreditMinLayout.setErrorEnabled(false);
-                drinkCreditMinInt = Integer.parseInt(drinkCreditMinStr);
+                drinkCreditMinDouble = Double.parseDouble(drinkCreditMinStr);
             }
             else {
                 drinkCreditMinLayout.setError("*");
@@ -248,9 +248,9 @@ public class Fragment_Dashboard extends Fragment {
         }
 
         if (!drinkCreditMaxStr.isEmpty()){
-            if (drinkCreditMaxStr.matches(Constants.AT_LEAST_ONE_DIGIT_REGEXP)){
+            if (drinkCreditMaxStr.matches(Constants.NUMBER_OR_DECIMAL_REGEXP)){
                 drinkCreditMaxLayout.setErrorEnabled(false);
-                drinkCreditMaxInt = Integer.parseInt(drinkCreditMaxStr);
+                drinkCreditMaxDouble = Double.parseDouble(drinkCreditMaxStr);
             }
             else {
                 drinkCreditMaxLayout.setError("*");
@@ -315,7 +315,7 @@ public class Fragment_Dashboard extends Fragment {
 
             customers = searchCustomers(lastVisitMinInt, lastVisitMaxInt,
                                 lastTextMinDayInt, lastTextMaxDayInt,
-                                drinkCreditMinInt, drinkCreditMaxInt,
+                                drinkCreditMinDouble, drinkCreditMaxDouble,
                                 sortByDbColumn, sortOrder);
         }
 
@@ -324,12 +324,12 @@ public class Fragment_Dashboard extends Fragment {
 
     private Customer[] searchCustomers(int lastVisitMinDayInt, int lastVisitMaxDayInt,
                                        int lastTextMinDayInt, int lastTextMaxDayInt,
-                                       int drinkCreditMinInt, int drinkCreditMaxInt,
+                                       double drinkCreditMinDouble, double drinkCreditMaxDouble,
                                        String sortByDbColumn, String sortOrder) {
 
         List<Customer> customerList = handler.searchCustomerByLastVisitAndText(lastVisitMinDayInt,
                                                 lastVisitMaxDayInt, lastTextMinDayInt, lastTextMaxDayInt,
-                                                drinkCreditMinInt, drinkCreditMaxInt, sortByDbColumn, sortOrder);
+                                                drinkCreditMinDouble, drinkCreditMaxDouble, sortByDbColumn, sortOrder);
         return customerList.toArray(new Customer[0]);
     }
 

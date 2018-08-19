@@ -528,7 +528,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                                                            int lastVisitOrDrinkCreditMax,
                                                            int lastTextMinDayInt,
                                                            int lastTextMaxDayInt,
-                                                           int drinkCreditMinInt, int drinkCreditMaxInt,
+                                                           double drinkCreditMinDouble, double drinkCreditMaxDouble,
                                                            String sortByDbColumn,
                                                            String sortOrder) {
 
@@ -537,7 +537,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         try {
 
             String selectQuery = getSelectQuery(lastVisitOrDrinkCreditMin, lastVisitOrDrinkCreditMax,
-                                    lastTextMinDayInt, lastTextMaxDayInt, drinkCreditMinInt, drinkCreditMaxInt, sortByDbColumn, sortOrder);
+                                    lastTextMinDayInt, lastTextMaxDayInt, drinkCreditMinDouble, drinkCreditMaxDouble, sortByDbColumn, sortOrder);
 
             db = getReadableDatabase();
 
@@ -566,7 +566,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     @NonNull
     private String getSelectQuery(int lastVisitMin,
                                   int lastVisitMax, int lastTextMinDayInt, int lastTextMaxDayInt,
-                                  int drinkCreditMinInt, int drinkCreditMaxInt, String sortByDbColumn, String sortOrder) {
+                                  double drinkCreditMinDouble, double drinkCreditMaxDouble, String sortByDbColumn, String sortOrder) {
 
         Calendar today = new GregorianCalendar();
         long todayInMillis = today.getTimeInMillis();
@@ -599,14 +599,14 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         String lastVisitDateCondition = String.format("(%s >= %d AND %s <= %d)", KEY_LAST_VISIT_DATE, lastVisitStartDate, KEY_LAST_VISIT_DATE, lastVisitEndDate);
 
-        String totalDrinkCreditCondition = String.format("(%s >= %d AND %s <= %d)", KEY_PURCHASE_CREDIT, drinkCreditMinInt, KEY_PURCHASE_CREDIT, drinkCreditMaxInt);
-        if (drinkCreditMaxInt == 0){
+        String totalDrinkCreditCondition = String.format("(%s >= %f AND %s <= %f)", KEY_PURCHASE_CREDIT, drinkCreditMinDouble, KEY_PURCHASE_CREDIT, drinkCreditMaxDouble);
+        if (drinkCreditMaxDouble == 0){
             //query for drink credit, but max credit not specified, then just skip the max condition
-            totalDrinkCreditCondition = String.format("(%s >= %d)", KEY_PURCHASE_CREDIT, drinkCreditMinInt);
+            totalDrinkCreditCondition = String.format("(%s >= %f)", KEY_PURCHASE_CREDIT, drinkCreditMinDouble);
         }
 
         String selectCondition = lastContactDateCondition + " AND " + lastVisitDateCondition;
-        if (drinkCreditMinInt != 0 || drinkCreditMaxInt != 0){
+        if (drinkCreditMinDouble != 0 || drinkCreditMaxDouble != 0){
             selectCondition += " AND " + totalDrinkCreditCondition;
         }
 
