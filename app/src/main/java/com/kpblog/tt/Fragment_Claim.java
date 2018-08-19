@@ -343,11 +343,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
     }
 
     private void insertOrUpdateClaimCodeDb(String phoneNumber, String codeStr) {
-        CustomerClaimCode cc = new CustomerClaimCode();
-        cc.setCustomerId(phoneNumber);
-        cc.setClaimCode(codeStr);
-        cc.setIssuedDate(new Date());
-
+        CustomerClaimCode cc = new CustomerClaimCode(phoneNumber, codeStr, new Date());
         handler.insertOrUpdateCustomerClaimCode(cc);
     }
 

@@ -7,8 +7,21 @@ import java.util.Date;
 
 public class CustomerPurchase {
     private Date purchaseDate;
-    private int quantity, receiptNum;
+    private int receiptNum;
+    private double quantity;
     private String customerId, notes;
+
+    public CustomerPurchase(){
+
+    }
+
+    public CustomerPurchase(Date purchaseDate, String customerId, double quantity, int receiptNum, String notes){
+        this.purchaseDate = purchaseDate;
+        this.customerId = customerId;
+        this.quantity = quantity;
+        this.receiptNum = receiptNum;
+        this.notes = notes;
+    }
 
     public Date getPurchaseDate() {
         return purchaseDate;
@@ -18,11 +31,11 @@ public class CustomerPurchase {
         this.purchaseDate = purchaseDate;
     }
 
-    public int getQuantity() {
+    public double getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
+    public void setQuantity(double quantity) {
         this.quantity = quantity;
     }
 

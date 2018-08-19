@@ -136,11 +136,10 @@ public class Fragment_Transactions extends Fragment {
 
         if (isValidInput){
             String note = "";
+            boolean drinkClaimTransaction = false;
             if (transactionType.equals(getString(R.string.drinkClaimType))){
                 note = getString(R.string.freeDrink_claim);
-            }
-            else if (transactionType.equals(getString(R.string.discountClaimType))){
-                note = getString(R.string.discount_claim_text);
+                drinkClaimTransaction = true;
             }
 
             String orderByUiColumn = ((Spinner) getView().findViewById(R.id.orderByDropdown)).getSelectedItem().toString();
@@ -154,7 +153,7 @@ public class Fragment_Transactions extends Fragment {
             String ascDescSort = ((Spinner) getView().findViewById(R.id.ascDescDropdown)).getSelectedItem().toString();
 
             DatabaseHandler handler = new DatabaseHandler(getContext());
-            CustomerPurchase[] cp = handler.getAllCustomerPurchaseByTypeAndTime(note, daysAgoInt, allTime, orderByDbColumn, ascDescSort);
+            CustomerPurchase[] cp = handler.getAllCustomerPurchaseByTypeAndTime(note, daysAgoInt, allTime, orderByDbColumn, ascDescSort, drinkClaimTransaction);
 
             // Create an adapter to bind data to the ListView
             TransactionListViewAdapter adapter = new TransactionListViewAdapter(getContext(), R.layout.transaction_row_layout, R.id.transactionTime, cp);

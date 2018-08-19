@@ -13,7 +13,6 @@ import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.telephony.PhoneNumberFormattingTextWatcher;
-import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -120,17 +119,6 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         phone = (EditText)(getView().findViewById(R.id.phone));
         phone.addTextChangedListener(phoneNumWatcher);
         phone.setOnEditorActionListener(this);
-        /*phone.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View view, boolean hasFocus) {
-                if (!hasFocus){
-                    if (getCustomerInfoFromDatabaseAndUpdateScreen()){
-                        //requestFocusOnTodayCredit();
-                        //don't request focus here because if the user presses a different input field, then there'd be 2 fields with focus
-                    }
-                }
-            }
-        });*/
 
         referrerLayout = (TextInputLayout) getView().findViewById(R.id.referrerLayout);
         referrerPhone = (EditText) getView().findViewById(R.id.referrerPhone);
@@ -217,16 +205,10 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         Log.d("CustomerPurchase: ", cpList.toString());*/
 
         if (Util.getUnformattedPhoneNumber(customerId).length() ==10){
-            //handle on reload of the tab, if there's a valid phone number there, reload the info
+            //handle on reload of the tab from claim tab after successful claim, if there's a valid phone number, reload the info
             phone.setText(customerId);
             getCustomerInfoFromDatabaseAndUpdateScreen();
         }
-
-        //uncomment to see the db entries on screen
-        /*listView = (ListView) getView().findViewById(R.id.addressListView);
-        list = handler.getAllAddress();
-        addressAdapter = new AddressAdapter(this);
-        listView.setAdapter(addressAdapter);*/
     }
 
     /**
@@ -386,10 +368,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     }
 
     private void sendSms(List<String> phoneNumbers, String message){
-        SmsManager sms = SmsManager.getDefault();
-        for (String phoneNum : phoneNumbers){
-            sms.sendTextMessage(phoneNum, null, message, null, null);
-        }
+        Util.textMultipleRecipients(phoneNumbers, message);
         gotoHomeScreen();
     }
 
@@ -616,6 +595,8 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
 
             updateMissingCredit();
 
+            /* don't need this, if we do this, then need to handle:
+            1. prevent looping between register tab and claim tab
             if (previousCreditValue >= Constants.FREE_DRINK_THRESHOLD){
                 //take user to claim tab
                 String phoneNum = Util.getUnformattedPhoneNumber(this.phone.getText().toString());
@@ -623,7 +604,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
                 getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.claimFragment,claim).commit();
                 TabLayout tabs = (TabLayout)((MainActivity)getActivity()).findViewById(R.id.tabs);
                 tabs.getTabAt(1).select();
-            }
+            }*/
         }
         else {
             //new customer
@@ -693,9 +674,10 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
             customer.setLastVisitDate(today);
 
             handler.registerOrUpdateCustomer(customer, isNewCustomer);
-            insertCustomerPurchase(customer.getCustomerId(), todayCredit);
+            int receiptNumInt = Integer.parseInt(receiptNum.getText().toString());
+            insertCustomerPurchase(customer.getCustomerId(), todayCredit, today, receiptNumInt);
 
-            creditReferrer(customer, isNewCustomer, todayCredit);
+            creditReferrer(customer, isNewCustomer, todayCredit, today, receiptNumInt);
 
             if (todayCredit > Constants.SINGLE_PURCHASE_QUANTITY_LIMIT){
                 final int receiptNum = Integer.parseInt(this.receiptNum.getText().toString());
@@ -738,7 +720,8 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         return success;
     }
 
-    private void creditReferrer(Customer customer, boolean isNewCustomer, int todayPurchaseAmount) {
+    private void creditReferrer(Customer customer, boolean isNewCustomer, int todayPurchaseAmount,
+                                Date purchaseDate, int receiptNum) {
         final String immediateReferrerId = customer.getReferrerId();
         if (!immediateReferrerId.isEmpty()){
             /**
@@ -746,21 +729,60 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
              * else give normal credit
              */
             Customer immediateReferrer = handler.getCustomerById(immediateReferrerId);
+            boolean immediateReferrerEnoughCredit = false;
+            double immediateReferralCredit = 0;
             if (isNewCustomer){
                 //1st purchase: credit immediate referral with 1st purchase referral credit
-                handler.updateReferrerCredit(immediateReferrerId, Constants.FIRST_PURCHASE_IMMEDIATE_REFERRAL_CREDIT);
+                immediateReferralCredit = Constants.FIRST_PURCHASE_IMMEDIATE_REFERRAL_CREDIT;
             }
             else {
                 //subsequent purchase: credit immediate referral with immediateReferralRate * todayPurchaseAmount
-                handler.updateReferrerCredit(immediateReferrerId, Constants.IMMEDIATE_REFERRAL_CREDIT_RATE * todayPurchaseAmount);
+                immediateReferralCredit = Constants.IMMEDIATE_REFERRAL_CREDIT_RATE * todayPurchaseAmount;
+            }
 
+            handler.addReferralCreditForCustomerId(immediateReferrerId, immediateReferralCredit);
+            CustomerPurchase cp = new CustomerPurchase(purchaseDate, immediateReferrerId, immediateReferralCredit, receiptNum, customer.getCustomerId());
+            handler.insertCustomerPurchase(cp);
+            if (immediateReferrer.isOptIn()){
+                /**
+                 * if qualifies for free drink, text code.
+                 * else if referral first purchase, text to thank
+                 */
+                final double totalCreditAfterReferral = immediateReferrer.getTotalCredit() + immediateReferralCredit;
+                if (totalCreditAfterReferral >= Constants.FREE_DRINK_THRESHOLD){
+                    String claimCode = Util.generateRandom4DigitCode();
+                    String msg = String.format(getString(R.string.freeDrinkAfterReferralCredit), totalCreditAfterReferral, claimCode);
+                    Util.textSingleRecipient(immediateReferrerId, msg);
+
+                    //insert claim code
+                    CustomerClaimCode cc = new CustomerClaimCode(immediateReferrerId, claimCode, new java.util.Date());
+                    handler.insertOrUpdateCustomerClaimCode(cc);
+                }
+                else if (isNewCustomer){
+                    //referral first purchase, but not enough for free drink yet, text to thank
+                    double missingCredit = Constants.FREE_DRINK_THRESHOLD - totalCreditAfterReferral;
+                    String msg = String.format(getString(R.string.firstReferralPurchaseMissingCredit), Constants.FIRST_PURCHASE_IMMEDIATE_REFERRAL_CREDIT, totalCreditAfterReferral, missingCredit);
+                    Util.textSingleRecipient(immediateReferrerId, msg);
+                }
             }
 
             //for second level, we don't distinguish between 1st or subsequent purchase
-            String secondLevelReferrer = immediateReferrer.getReferrerId();
-            if (secondLevelReferrer != null && !secondLevelReferrer.isEmpty()){
-                handler.updateReferrerCredit(secondLevelReferrer, Constants.SECOND_LEVEL_REFERRAL_CREDIT_RATE * todayPurchaseAmount);
-            }
+            /*String secondLevelReferrerId = immediateReferrer.getReferrerId();
+            if (secondLevelReferrerId != null && !secondLevelReferrerId.isEmpty()){
+                Customer secondLevelReferrer = handler.getCustomerById(secondLevelReferrerId);
+                final double secondLevelreferralCreditEarned = Constants.SECOND_LEVEL_REFERRAL_CREDIT_RATE * todayPurchaseAmount;
+                handler.addReferralCreditForCustomerId(secondLevelReferrerId, secondLevelreferralCreditEarned);
+
+                if (secondLevelReferrer.isOptIn()){
+                    double totalCreditAfterReferral = secondLevelReferrer.getTotalCredit() + secondLevelreferralCreditEarned;
+                    if (totalCreditAfterReferral >= Constants.FREE_DRINK_THRESHOLD){
+                        String claimCode = Util.generateRandom4DigitCode();
+                        String msg = String.format(getString(R.string.freeDrinkAfterReferralCredit), totalCreditAfterReferral, claimCode);
+                        Util.textSingleRecipient(secondLevelReferrerId, msg);
+                        //insert claim code
+                    }
+                }
+            }*/
         }
     }
 
@@ -772,21 +794,17 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     }
 
     private void insertOrUpdateClaimCodeDb(String phoneNumber, String codeStr) {
-        CustomerClaimCode cc = new CustomerClaimCode();
-        cc.setCustomerId(phoneNumber);
-        cc.setClaimCode(codeStr);
-        cc.setIssuedDate(new java.util.Date());
-
+        CustomerClaimCode cc = new CustomerClaimCode(phoneNumber, codeStr, new java.util.Date());
         handler.insertOrUpdateCustomerClaimCode(cc);
     }
 
-    private void insertCustomerPurchase(String customerId, int todayCredit) {
+    private void insertCustomerPurchase(String customerId, int todayCredit, Date purchaseTime, int receiptNumInt) {
         CustomerPurchase cp = new CustomerPurchase();
 
         cp.setCustomerId(customerId);
         cp.setQuantity(todayCredit);
-        cp.setPurchaseDate(new java.util.Date());
-        cp.setReceiptNum(Integer.parseInt(receiptNum.getText().toString()));
+        cp.setPurchaseDate(purchaseTime);
+        cp.setReceiptNum(receiptNumInt);
 
         handler.insertCustomerPurchase(cp);
     }

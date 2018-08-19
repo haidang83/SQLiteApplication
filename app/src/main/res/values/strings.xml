@@ -33,7 +33,7 @@
     <string name="claimSuccess_msg">Success! Claim code is valid</string>
     <string name="claimSuccess_msg_textSent">Success! Claim code is valid. Confirmation sent</string>
     <string name="update_success_msg">Successfully updated drink credit</string>
-    <string name="purchase_conf_msg_notFree">Thank you for your purchase at Tra Temptation. Credit earned today: %d, total credit: %.1f. Needs %.1f more and get 1 standard drink free!</string>
+    <string name="purchase_conf_msg_notFree">Thank you for your purchase at Tra Temptation. Credit earned today: %d, total credit: %.1f. Need %.1f more and get 1 standard drink free!</string>
     <string name="purchase_conf_msg_free">Thank you for your purchase at Tra Temptation. Credit earned today: %d, total credit: %.1f. Please use this code to claim your free standard drink: %s</string>
     <string name="cashier_toast_msg_sent">Drinks updated and confirmation sent</string>
     <string name="freeDrink_claim">free drink</string>
@@ -107,4 +107,6 @@
         <item>@string/orderByTime</item>
         <item>@string/orderByQuantity</item>
     </string-array>
+    <string name="freeDrinkAfterReferralCredit">Your referral just made a purchase at Tra Temptation! You have %.1f total credit. Please use this code to claim your free standard drink: %s</string>
+    <string name="firstReferralPurchaseMissingCredit">Thank you for making referrals to Tra Temptation! You just earned %d referral credits. Your total credit is %.1f, and need %.1f more for a free drink</string>
 </resources>

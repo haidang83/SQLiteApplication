@@ -74,7 +74,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_TABLE, TABLE_CUSTOMER, KEY_CUSTOMER_ID, KEY_PURCHASE_CREDIT, KEY_REFERRAL_CREDIT, KEY_LAST_VISIT_DATE, KEY_IS_OPT_IN, KEY_OPT_IN_DATE, KEY_OPT_OUT_DATE, KEY_IS_TEST_USER, KEY_LAST_CONTACTED_DATE, KEY_REFERRER_ID));
 
         //this table keeps track of all the customer purchases, each row represents a purchase, so there can be multiple rows per each customer
-        String CREATE_CUSTOMER_PURCHASE_TABLE = "CREATE TABLE %s (%s TEXT, %s INTEGER, %s INTEGER, %s INTEGER, %s TEXT)";
+        String CREATE_CUSTOMER_PURCHASE_TABLE = "CREATE TABLE %s (%s TEXT, %s REAL, %s INTEGER, %s INTEGER, %s TEXT)";
         sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_PURCHASE_TABLE, TABLE_CUSTOMER_PURCHASE, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE, KEY_NOTES));
 
         //this table has the outstanding claim code for the customer, only at most 1 outstanding code per customer
@@ -325,7 +325,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     public CustomerPurchase[] getAllCustomerPurchaseByTypeAndTime(String note, int daysAgo, boolean allTime,
-                                                                  String orderByCol, String sortAscDesc) {
+                                                                  String orderByCol, String sortAscDesc, boolean drinkClaim) {
         List<CustomerPurchase> cpList = new ArrayList<CustomerPurchase>();
 
         Calendar today = Calendar.getInstance();
@@ -340,19 +340,15 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             selectCondition = "";
         }
 
-        if (note.isEmpty()){
+        if (!drinkClaim){
             //purchase
-            String purchaseCondition = String.format("(%s is NULL OR %s='')", KEY_NOTES, KEY_NOTES);
+            String purchaseCondition = String.format("(%s is NULL OR %s='' OR %s NOT like '%s')", KEY_NOTES, KEY_NOTES, KEY_NOTES, "%drink%");
             selectCondition = selectCondition + purchaseCondition;
         }
-        else if (note.contains("drink")){
+        else {
             //claimed free drink
             String drinkClaimCondition = String.format("(%s like '%s')", KEY_NOTES, "%drink%");
             selectCondition = selectCondition + drinkClaimCondition;
-        }
-        else if (note.contains("discount")){
-            String discountClaimCondition = String.format("(%s like '%s')", KEY_NOTES, "%discount%");
-            selectCondition = selectCondition + discountClaimCondition;
         }
 
         // Select All Query
@@ -373,7 +369,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             do {
                 CustomerPurchase cp = new CustomerPurchase();
                 cp.setCustomerId(cursor.getString(0));
-                cp.setQuantity(cursor.getInt(1));
+                cp.setQuantity(cursor.getDouble(1));
                 cp.setReceiptNum(cursor.getInt(2));
                 cp.setPurchaseDate(new Date(cursor.getLong(3)));
                 cp.setNotes(cursor.getString(4));
@@ -617,7 +613,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return selectClauseFormat + " WHERE " + selectCondition + " ORDER BY " + sortByDbColumn + " " + sortOrder;
     }
 
-    public void updateReferrerCredit(String referrerId, double additionalReferralCredit) {
+    public void addReferralCreditForCustomerId(String referrerId, double additionalReferralCredit) {
         SQLiteDatabase db = null;
         try {
             db = getWritableDatabase();

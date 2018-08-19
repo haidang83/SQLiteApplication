@@ -7,6 +7,12 @@ public class CustomerClaimCode {
     private String customerId, claimCode;
     private Date issuedDate;
 
+    public CustomerClaimCode(String customerId, String claimCode, Date issuedDate){
+        this.customerId = customerId;
+        this.claimCode = claimCode;
+        this.issuedDate = issuedDate;
+    }
+
     public String getCustomerId() {
         return customerId;
     }

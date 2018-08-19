@@ -188,23 +188,28 @@ public class Util {
 
     public static void textDailyCode(Context ctx) {
         DatabaseHandler handler = new DatabaseHandler(ctx);
-        List<String> admins = handler.getAllAdmins();
-
-        SmsManager sms = SmsManager.getDefault();
+        List<String> phonesToText = handler.getAllAdmins();
         final String dailyCode = Util.generateRandom4DigitCode();
-
         String message = String.format("Cashier code: %s", dailyCode);
-        for (String phoneNumber : admins){
-            if (phoneNumber.equals("4084257660")){
-                sms.sendTextMessage(phoneNumber, null, message, null, null);
-            }
-        }
+
+        textMultipleRecipients(phonesToText, message);
 
         //save into shared pref
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ctx);
         SharedPreferences.Editor editor = sp.edit();
         editor.putString(Constants.SHARED_PREF_DAILY_CODE_KEY, dailyCode);
         editor.commit();
+    }
+
+    public static void textMultipleRecipients(List<String> recipients, String message) {
+        for (String phone : recipients){
+            textSingleRecipient(phone, message);
+        }
+    }
+
+    public static void textSingleRecipient(String phone, String msg) {
+        SmsManager sms = SmsManager.getDefault();
+        sms.sendTextMessage(phone, null, msg, null, null);
     }
 
     public static int getMissingCreditRoundedUp(double totalCredit) {
