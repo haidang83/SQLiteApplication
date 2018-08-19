@@ -5,10 +5,11 @@ import java.sql.Date;
 public class Customer {
     private Date optInDate, lastVisitDate, optOutDate, lastContactedDate;
     private boolean optIn, testUser;
-    private int referralCredit, purchaseCredit;
+    private double purchaseCredit;
+    private double referralCredit;
     private String customerId, referrerId;
 
-    public int getTotalCredit() {
+    public double getTotalCredit() {
         return getPurchaseCredit() + getReferralCredit();
     }
 
@@ -76,25 +77,25 @@ public class Customer {
         this.referrerId = referrerId;
     }
 
-    public int getReferralCredit() {
+    public double getReferralCredit() {
         return referralCredit;
     }
 
-    public void setReferralCredit(int referralCredit) {
+    public void setReferralCredit(double referralCredit) {
         this.referralCredit = referralCredit;
     }
 
-    public int getPurchaseCredit() {
+    public double getPurchaseCredit() {
         return purchaseCredit;
     }
 
-    public void setPurchaseCredit(int purchaseCredit) {
+    public void setPurchaseCredit(double purchaseCredit) {
         this.purchaseCredit = purchaseCredit;
     }
 
     @Override
     public String toString() {
-        String customerFormat = "%s, %d, %s, %s, in=%s, test=%s, out=%s, lastContacted=%s, referrer=%s";
+        String customerFormat = "%s, %f, %s, %s, in=%s, test=%s, out=%s, lastContacted=%s, referrer=%s";
         return String.format(customerFormat, this.customerId, getTotalCredit(), this.lastVisitDate, this.optIn, this.optInDate, this.isTestUser(), this.optOutDate, this.lastContactedDate, this.referrerId);
     }
 }

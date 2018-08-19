@@ -14,9 +14,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.telephony.PhoneNumberFormattingTextWatcher;
 import android.telephony.SmsManager;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -37,8 +34,6 @@ import com.kpblog.tt.model.CustomerPurchase;
 import com.kpblog.tt.util.AsteriskPasswordTransformationMethod;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
-
-import org.w3c.dom.Text;
 
 import java.sql.Date;
 import java.text.SimpleDateFormat;
@@ -241,12 +236,17 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     private void loadReferrerInfo(Customer c) {
         if (c == null){
             referrerLayout.setVisibility(View.VISIBLE);
+            if (!referrerPhone.isEnabled()){
+                //if it was disabled before, clear out the text before enable it
+                //we dont want to clear out the text that the user just entered
+                referrerPhone.setText("");
+            }
             referrerPhone.setEnabled(true);
         }
         else {
             final String referrerId = c.getReferrerId();
             if (referrerId != null && !referrerId.isEmpty()){
-                referrerPhone.setText(referrerId);
+                referrerPhone.setText(Util.formatPhoneNumber(referrerId));
                 referrerPhone.setEnabled(false);
                 referrerLayout.setVisibility(View.VISIBLE);
             }
@@ -433,12 +433,12 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     private void updateMissingCredit() {
         //done with editing
         EditText missingCreditView = (EditText) getView().findViewById(R.id.missingCredit);
-        int previousCreditValue = getPreviousCredit();
+        double previousCreditValue = getPreviousCredit();
 
         int todayCredit = getTodayCredit();
-        int totalCredit = previousCreditValue + todayCredit;
+        double totalCredit = previousCreditValue + todayCredit;
         missingCreditView = (EditText) getView().findViewById(R.id.missingCredit);
-        final int missingCredit = Constants.FREE_DRINK_THRESHOLD - totalCredit;
+        final double missingCredit = Constants.FREE_DRINK_THRESHOLD - totalCredit;
 
         if (missingCredit > 0){
             ((TextInputLayout) getView().findViewById(R.id.missingCreditlayout)).setHintEnabled(true);
@@ -451,11 +451,12 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         }
     }
 
-    private int getPreviousCredit() {
-        int previousCreditValue = 0;
+
+    private double getPreviousCredit() {
+        double previousCreditValue = 0;
         final String previousCreditStr = previousCredit.getText().toString();
         if (!previousCreditStr.isEmpty()){
-            previousCreditValue = Integer.parseInt(previousCreditStr);
+            previousCreditValue = Double.parseDouble(previousCreditStr);
         }
         return previousCreditValue;
     }
@@ -600,7 +601,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
             //existing customer, update the screen with customer info
 
             int todayCredit = getTodayCredit();
-            int previousCreditValue = customer.getTotalCredit();
+            double previousCreditValue = customer.getTotalCredit();
             if (customer.isOptIn()){
                 //hide the checkbox if customer already opted in
                 ((CheckBox) getView().findViewById(R.id.checkbox_optIn)).setVisibility(View.INVISIBLE);
@@ -692,8 +693,10 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
             customer.setLastVisitDate(today);
 
             handler.registerOrUpdateCustomer(customer, isNewCustomer);
-
             insertCustomerPurchase(customer.getCustomerId(), todayCredit);
+
+            creditReferrer(customer, isNewCustomer, todayCredit);
+
             if (todayCredit > Constants.SINGLE_PURCHASE_QUANTITY_LIMIT){
                 final int receiptNum = Integer.parseInt(this.receiptNum.getText().toString());
                 sendAlertTextToAdmin(customer, todayCredit, receiptNum);
@@ -701,7 +704,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
 
             if (customer.isOptIn()){
                 //send confirmation, based on total credit
-                int totalCredit = customer.getTotalCredit();
+                double totalCredit = customer.getTotalCredit();
 
                 List<String> phoneNumbers = new ArrayList<String>();
                 phoneNumbers.add(customer.getCustomerId());
@@ -715,7 +718,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
                 }
                 else {
                     //send updated credit
-                    int missingCredit = Constants.FREE_DRINK_THRESHOLD - totalCredit;
+                    double missingCredit = Constants.FREE_DRINK_THRESHOLD - totalCredit;
                     String msg = String.format(getString(R.string.purchase_conf_msg_notFree), todayCredit, totalCredit, missingCredit);
                     requestPermissionAndSendText(phoneNumbers, msg);
                 }
@@ -733,6 +736,32 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         }
 
         return success;
+    }
+
+    private void creditReferrer(Customer customer, boolean isNewCustomer, int todayPurchaseAmount) {
+        final String immediateReferrerId = customer.getReferrerId();
+        if (!immediateReferrerId.isEmpty()){
+            /**
+             * if new customer, give referrer 1st purchase credit,
+             * else give normal credit
+             */
+            Customer immediateReferrer = handler.getCustomerById(immediateReferrerId);
+            if (isNewCustomer){
+                //1st purchase: credit immediate referral with 1st purchase referral credit
+                handler.updateReferrerCredit(immediateReferrerId, Constants.FIRST_PURCHASE_IMMEDIATE_REFERRAL_CREDIT);
+            }
+            else {
+                //subsequent purchase: credit immediate referral with immediateReferralRate * todayPurchaseAmount
+                handler.updateReferrerCredit(immediateReferrerId, Constants.IMMEDIATE_REFERRAL_CREDIT_RATE * todayPurchaseAmount);
+
+            }
+
+            //for second level, we don't distinguish between 1st or subsequent purchase
+            String secondLevelReferrer = immediateReferrer.getReferrerId();
+            if (secondLevelReferrer != null && !secondLevelReferrer.isEmpty()){
+                handler.updateReferrerCredit(secondLevelReferrer, Constants.SECOND_LEVEL_REFERRAL_CREDIT_RATE * todayPurchaseAmount);
+            }
+        }
     }
 
     private void sendAlertTextToAdmin(Customer customer, int todayCredit, int receiptNum) {

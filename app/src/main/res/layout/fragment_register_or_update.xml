@@ -103,6 +103,7 @@
                 android:layout_width="match_parent"
                 android:focusableInTouchMode="true"
                 android:layout_marginTop="15dp"
+                app:hintTextAppearance="@style/FloatingLabel"
                 android:layout_height="wrap_content">
 
                 <EditText
@@ -137,7 +138,7 @@
                         android:digits="0123456789"
                         android:inputType="numberPassword"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:hint="@string/todayCredit"
                         android:imeOptions="actionDone" />
                 </android.support.design.widget.TextInputLayout>
@@ -154,6 +155,7 @@
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:focusableInTouchMode="true"
+                    app:hintTextAppearance="@style/FloatingLabel"
                     android:layout_height="wrap_content">
 
                     <EditText
@@ -161,8 +163,7 @@
                         android:inputType="none"
                         android:enabled="false"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textColor="#5c5959"
+                        android:layout_height="match_parent"
                         android:gravity="bottom"
                         android:hint="@string/missingCredit" />
                 </android.support.design.widget.TextInputLayout>

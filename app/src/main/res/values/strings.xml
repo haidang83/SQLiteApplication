@@ -4,7 +4,7 @@
     <string name="yourPhoneNumber">Your Phone Num</string>
     <string name="referrerPhone">[Opt] Referrer Phone</string>
     <string name="invalidReferrerId">Invalid Referrer Phone Num</string>
-    <string name="missingCredit">Drinks to Buy Before Free</string>
+    <string name="missingCredit">Credits Before Free</string>
     <string name="todayCredit">Drinks Purchase Today</string>
     <string name="previousCredit">Previous Credit</string>
     <string name="freeDrinkAchieved">Next drink is FREE</string>
@@ -33,13 +33,13 @@
     <string name="claimSuccess_msg">Success! Claim code is valid</string>
     <string name="claimSuccess_msg_textSent">Success! Claim code is valid. Confirmation sent</string>
     <string name="update_success_msg">Successfully updated drink credit</string>
-    <string name="purchase_conf_msg_notFree">Thank you for your purchase at Tra Temptation. Credit earned today: %d, total credit: %d. Buy %d more and get 1 standard drink free!</string>
-    <string name="purchase_conf_msg_free">Thank you for your purchase at Tra Temptation. Credit earned today: %d, total credit: %d. Please use this code to claim your free standard drink: %s</string>
+    <string name="purchase_conf_msg_notFree">Thank you for your purchase at Tra Temptation. Credit earned today: %d, total credit: %.1f. Needs %.1f more and get 1 standard drink free!</string>
+    <string name="purchase_conf_msg_free">Thank you for your purchase at Tra Temptation. Credit earned today: %d, total credit: %.1f. Please use this code to claim your free standard drink: %s</string>
     <string name="cashier_toast_msg_sent">Drinks updated and confirmation sent</string>
     <string name="freeDrink_claim">free drink</string>
     <string name="discount_claim_text">discount</string>
     <string name="freeDrink_notice">You have earned 1 free drink at Tra Temptation. Please use this code to claim: %s</string>
-    <string name="successfulClaim_text">Thank you for claiming your free drink. Your total credit resets to %d</string>
+    <string name="successfulClaim_text">Thank you for claiming your free drink. Your total credit resets to %.1f</string>
     <string name="singlePurchaseLimitAlert">%s, drinkPurchased: %d, receiptNum: %d, time: %s</string>
     <string name="unlock">Unlock</string>
     <string name="lock">Lock</string>

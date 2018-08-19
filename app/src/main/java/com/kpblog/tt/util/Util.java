@@ -206,4 +206,8 @@ public class Util {
         editor.putString(Constants.SHARED_PREF_DAILY_CODE_KEY, dailyCode);
         editor.commit();
     }
+
+    public static int getMissingCreditRoundedUp(double totalCredit) {
+        return (int) Math.ceil(Constants.FREE_DRINK_THRESHOLD - totalCredit);
+    }
 }

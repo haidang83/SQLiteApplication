@@ -28,6 +28,10 @@ public class Constants {
 
     public static long DAYS_TO_MILLIS = 24 * 60 * 60 * 1000;
 
+    public static int FIRST_PURCHASE_IMMEDIATE_REFERRAL_CREDIT = 2;
+    public static double IMMEDIATE_REFERRAL_CREDIT_RATE = 0.5;
+    public static double SECOND_LEVEL_REFERRAL_CREDIT_RATE = 0.25;
+
     public static String[] PERMISSIONS_STORAGE_SMS = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,

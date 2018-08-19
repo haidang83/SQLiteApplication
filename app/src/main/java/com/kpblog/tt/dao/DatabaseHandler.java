@@ -70,7 +70,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         //using INTEGER for DATE columns (unix time, seconds since epoch)
-        String CREATE_CUSTOMER_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s TEXT)";
+        String CREATE_CUSTOMER_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY, %s REAL, %s REAL, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s TEXT)";
         sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_TABLE, TABLE_CUSTOMER, KEY_CUSTOMER_ID, KEY_PURCHASE_CREDIT, KEY_REFERRAL_CREDIT, KEY_LAST_VISIT_DATE, KEY_IS_OPT_IN, KEY_OPT_IN_DATE, KEY_OPT_OUT_DATE, KEY_IS_TEST_USER, KEY_LAST_CONTACTED_DATE, KEY_REFERRER_ID));
 
         //this table keeps track of all the customer purchases, each row represents a purchase, so there can be multiple rows per each customer
@@ -164,7 +164,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         if (cursor != null && cursor.moveToFirst()){
             customer = new Customer();
             customer.setCustomerId(cursor.getString(0));
-            customer.setPurchaseCredit(cursor.getInt(1));
+            customer.setPurchaseCredit(cursor.getDouble(1));
 
             setCustomerIsOptInFromDB(cursor, customer);
             customer.setOptInDate(new Date(cursor.getLong(3)));
@@ -178,7 +178,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             customer.setLastContactedDate(new Date(cursor.getLong(7)));
 
             customer.setReferrerId(cursor.getString(8));
-            customer.setReferralCredit(cursor.getInt(9));
+            customer.setReferralCredit(cursor.getDouble(9));
         }
 
         db.close();
@@ -209,14 +209,14 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             do {
                 Customer customer = new Customer();
                 customer.setCustomerId(cursor.getString(0));
-                customer.setPurchaseCredit(cursor.getInt(1));
+                customer.setPurchaseCredit(cursor.getDouble(1));
                 customer.setLastVisitDate(new Date(cursor.getLong(3)));
 
                 setCustomerIsOptInFromDB(cursor, customer);
                 customer.setOptInDate(new Date(cursor.getLong(4)));
                 customer.setOptOutDate(new Date(cursor.getLong(5)));
                 customer.setTestUser(cursor.getInt(6) == 1);
-                customer.setReferralCredit(cursor.getInt(7));
+                customer.setReferralCredit(cursor.getDouble(7));
 
                 // Adding contact to list
                 customerList.add(customer);
@@ -434,29 +434,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return code;
     }
 
-    public int getTotalCreditForCustomerId(String customerId) {
-        int totalCredit = 0;
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        // Select All Query
-        Cursor cursor = db.query(TABLE_CUSTOMER, new String[] {KEY_PURCHASE_CREDIT}, KEY_CUSTOMER_ID + "=?", new String[] { customerId },
-                null, null, null, null);
-
-        // Getting the address list which we already into our database
-        if (cursor != null && cursor.moveToFirst()) {
-            totalCredit = cursor.getInt(0);
-        }
-
-        db.close();
-        return totalCredit;
-    }
 
     /**
      * after successful claim, puts all remaining credit into purchase, zero out referral
      * @param customerId
      * @param totalCredit
      */
-    public void updateTotalCreditForCustomerId(String customerId, int totalCredit) {
+    public void updateTotalCreditForCustomerId(String customerId, double totalCredit) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(KEY_PURCHASE_CREDIT, totalCredit);
@@ -612,7 +596,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
          WHERE (lastContactDate IS NULL OR (lastContactDate >= lastTextStartDate AND lastContactDate <= lastTextEndDate))
          AND (lastVisitDate >= lastVisitStartDate and lastVisitDate =< lastVisitEndDate)
          */
-        String selectClauseFormat = String.format("SELECT %s, %s, %s, %s, (%s + %s) as %s FROM %s ", KEY_CUSTOMER_ID, KEY_LAST_VISIT_DATE, KEY_PURCHASE_CREDIT, KEY_LAST_CONTACTED_DATE,
+        String selectClauseFormat = String.format("SELECT %s, %s, %s, %s, %s, (%s + %s) as %s FROM %s ", KEY_CUSTOMER_ID, KEY_LAST_VISIT_DATE, KEY_PURCHASE_CREDIT, KEY_LAST_CONTACTED_DATE,
                                 KEY_REFERRAL_CREDIT, KEY_PURCHASE_CREDIT, KEY_REFERRAL_CREDIT, KEY_TOTAL_CREDIT, TABLE_CUSTOMER);
 
         String lastContactDateCondition = String.format("(%s is NULL OR (%s >= %d AND %s <= %d))", KEY_LAST_CONTACTED_DATE, KEY_LAST_CONTACTED_DATE, lastTextStartDate, KEY_LAST_CONTACTED_DATE, lastTextEndDate);
@@ -633,4 +617,16 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return selectClauseFormat + " WHERE " + selectCondition + " ORDER BY " + sortByDbColumn + " " + sortOrder;
     }
 
+    public void updateReferrerCredit(String referrerId, double additionalReferralCredit) {
+        SQLiteDatabase db = null;
+        try {
+            db = getWritableDatabase();
+            String update = String.format("UPDATE %s SET %s = %s + %f WHERE %s = %s ", TABLE_CUSTOMER, KEY_REFERRAL_CREDIT, KEY_REFERRAL_CREDIT, additionalReferralCredit, KEY_CUSTOMER_ID, referrerId);
+            db.execSQL(update);
+        } finally {
+            if (db != null){
+                db.close();;
+            }
+        }
+    }
 }

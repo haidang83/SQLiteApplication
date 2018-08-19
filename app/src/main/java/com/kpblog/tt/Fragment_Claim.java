@@ -173,9 +173,9 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
 
         //update the total credit
         Customer c = handler.getCustomerById(customerId);
-        int totalCredit = c.getTotalCredit();
-        int claimAmt = totalCredit / Constants.FREE_DRINK_THRESHOLD;
-        int remainingCredit = totalCredit % Constants.FREE_DRINK_THRESHOLD;
+        double totalCredit = c.getTotalCredit();
+        int claimAmt = (int) (totalCredit / Constants.FREE_DRINK_THRESHOLD);
+        double remainingCredit = totalCredit % Constants.FREE_DRINK_THRESHOLD;
         handler.updateTotalCreditForCustomerId(customerId, remainingCredit);
 
         String receiptNumStr = receiptNum.getText().toString();
@@ -364,7 +364,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         Customer customer = handler.getCustomerById(unformattedPhoneNum);
         int freeDrinkNum = 0;
         if (customer != null){
-            freeDrinkNum = customer.getTotalCredit() / Constants.FREE_DRINK_THRESHOLD;
+            freeDrinkNum = (int) (customer.getTotalCredit() / Constants.FREE_DRINK_THRESHOLD);
             hasFreeDrink = (freeDrinkNum > 0? true: false);
         }
         updateFreeDrink(freeDrinkNum);
