@@ -157,7 +157,7 @@ public class Fragment_Text extends Fragment {
                     recipients.add(c.getCustomerId());
                 }
 
-                Util.textMultipleRecipients(recipients, msg);
+                Util.textMultipleRecipientsAndUpdateLastTexted(recipients, msg, handler, true);
                 Util.displayToast(getContext(),"message sent to " + recipients.size() + " recipients");
             }
         }

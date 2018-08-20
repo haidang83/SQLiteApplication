@@ -202,10 +202,21 @@ public class Util {
         editor.commit();
     }
 
-    public static void textMultipleRecipients(List<String> recipients, String message) {
+    public static void textMultipleRecipientsAndUpdateLastTexted(List<String> recipients, String message,
+                                              DatabaseHandler handler, boolean updateLastTexted) {
+        Date today = new Date();
         for (String phone : recipients){
+            //text and update database 1 by 1 so that there's some time gap between text
+            //dont want carrier to block as spam
             textSingleRecipient(phone, message);
+            if (updateLastTexted){
+                handler.updateLastTexted(phone, today.getTime());
+            }
         }
+    }
+
+    public static void textMultipleRecipients(List<String> recipients, String message){
+        textMultipleRecipientsAndUpdateLastTexted(recipients, message, null, false);
     }
 
     public static void textSingleRecipient(String phone, String msg) {

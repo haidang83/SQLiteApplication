@@ -142,7 +142,7 @@ public class Fragment_Dashboard extends Fragment {
             public void onClick(View view) {
                 if (SystemClock.elapsedRealtime() - sendTextBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
                     sendTextBtnLastClicked = SystemClock.elapsedRealtime();
-                    Customer[] customers = validateInputAndSearchCustomers();
+                    Customer[] customers = getOptInCustomerMeetingCriteria();
                     Fragment_Text text = Fragment_Text.newInstance(customers, null);
                     getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.textFragment,text).commit();
                     TabLayout tabs = (TabLayout)((MainActivity)getActivity()).findViewById(R.id.tabs);
@@ -166,6 +166,19 @@ public class Fragment_Dashboard extends Fragment {
         ViewGroup headerView = (ViewGroup)getLayoutInflater().inflate(R.layout.dashboard_header, listView,false);
         // Add customerHeader view to the ListView
         listView.addHeaderView(headerView);
+    }
+
+    private Customer[] getOptInCustomerMeetingCriteria() {
+        Customer[] customers = validateInputAndSearchCustomers();
+        List<Customer> optInCustomers = new ArrayList<Customer>();
+
+        for (Customer c : customers){
+            if (c.isOptIn()){
+                optInCustomers.add(c);
+            }
+        }
+
+        return optInCustomers.toArray(new Customer[0]);
     }
 
     private void clearInputs() {

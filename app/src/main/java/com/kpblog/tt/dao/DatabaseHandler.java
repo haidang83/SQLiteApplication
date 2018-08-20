@@ -258,6 +258,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             values.put(KEY_REFERRAL_CREDIT, c.getReferralCredit());
 
             values.put(KEY_LAST_VISIT_DATE, c.getLastVisitDate().getTime());
+            if (c.getLastContactedDate() != null){
+                values.put(KEY_LAST_CONTACTED_DATE, c.getLastContactedDate().getTime());
+            }
             values.put(KEY_IS_OPT_IN, c.isOptIn()? 1 : 0);
             values.put(KEY_IS_TEST_USER, c.isTestUser()? 1 : 0);
             values.put(KEY_REFERRER_ID, c.getReferrerId());
@@ -550,6 +553,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                     c.setPurchaseCredit(cursor.getDouble(2));
                     c.setLastContactedDate(new Date(cursor.getLong(3)));
                     c.setReferralCredit(cursor.getDouble(4));
+                    c.setOptIn(cursor.getInt(6) == 1 ? true : false);
 
                     customerList.add(c);
                 } while (cursor.moveToNext());
@@ -571,46 +575,75 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         Calendar today = new GregorianCalendar();
         long todayInMillis = today.getTimeInMillis();
 
-        long lastVisitEndDate = todayInMillis - (lastVisitMin * Constants.DAYS_TO_MILLIS);
-
-        long lastVisitStartDate = 0, lastTextStartDate = 0;
-
-        if (lastVisitMax > 0) {
-            //if lastVisitMaxDay is specified, then calculate it from today. Otherwise just use 0 for epoch start
-            lastVisitStartDate = todayInMillis - (lastVisitMax * Constants.DAYS_TO_MILLIS);
-        }
-
-        long lastTextEndDate = todayInMillis - (lastTextMinDayInt * Constants.DAYS_TO_MILLIS);
-        if (lastTextMaxDayInt > 0){
-            //lastTextMaxDay is specified, calculate it from today. Otherwise just use 0 for epoch start
-            lastTextStartDate = todayInMillis - (lastTextMaxDayInt * Constants.DAYS_TO_MILLIS);
-        }
-
         /**
          * SELECT customerId, lastVisitDate, totalCredit, lastContactDate
          FROM table_name
          WHERE (lastContactDate IS NULL OR (lastContactDate >= lastTextStartDate AND lastContactDate <= lastTextEndDate))
          AND (lastVisitDate >= lastVisitStartDate and lastVisitDate =< lastVisitEndDate)
          */
-        String selectClauseFormat = String.format("SELECT %s, %s, %s, %s, %s, (%s + %s) as %s FROM %s ", KEY_CUSTOMER_ID, KEY_LAST_VISIT_DATE, KEY_PURCHASE_CREDIT, KEY_LAST_CONTACTED_DATE,
-                                KEY_REFERRAL_CREDIT, KEY_PURCHASE_CREDIT, KEY_REFERRAL_CREDIT, KEY_TOTAL_CREDIT, TABLE_CUSTOMER);
+        String selectClauseFormat = String.format("SELECT %s, %s, %s, %s, %s, (%s + %s) as %s, %s FROM %s ", KEY_CUSTOMER_ID, KEY_LAST_VISIT_DATE, KEY_PURCHASE_CREDIT, KEY_LAST_CONTACTED_DATE,
+                                KEY_REFERRAL_CREDIT, KEY_PURCHASE_CREDIT, KEY_REFERRAL_CREDIT, KEY_TOTAL_CREDIT, KEY_IS_OPT_IN, TABLE_CUSTOMER);
 
-        String lastContactDateCondition = String.format("(%s is NULL OR (%s >= %d AND %s <= %d))", KEY_LAST_CONTACTED_DATE, KEY_LAST_CONTACTED_DATE, lastTextStartDate, KEY_LAST_CONTACTED_DATE, lastTextEndDate);
+        String selectCondition = "";
 
-        String lastVisitDateCondition = String.format("(%s >= %d AND %s <= %d)", KEY_LAST_VISIT_DATE, lastVisitStartDate, KEY_LAST_VISIT_DATE, lastVisitEndDate);
+        if (lastTextMinDayInt != 0 || lastTextMaxDayInt != 0){
+            //if either min or max text day is specified, then set up the condition and query for opt-in customer. Otherwise leave it empty
 
-        String totalDrinkCreditCondition = String.format("(%s >= %f AND %s <= %f)", KEY_TOTAL_CREDIT, drinkCreditMinDouble, KEY_TOTAL_CREDIT, drinkCreditMaxDouble);
-        if (drinkCreditMaxDouble == 0){
-            //query for drink credit, but max credit not specified, then just skip the max condition
-            totalDrinkCreditCondition = String.format("(%s >= %f)", KEY_TOTAL_CREDIT, drinkCreditMinDouble);
+            long lastTextStartDate = 0;
+            long lastTextEndDate = todayInMillis - (lastTextMinDayInt * Constants.DAYS_TO_MILLIS);
+            if (lastTextMaxDayInt > 0){
+                //lastTextMaxDay is specified, calculate it from today. Otherwise just use 0 for epoch start
+                lastTextStartDate = todayInMillis - (lastTextMaxDayInt * Constants.DAYS_TO_MILLIS);
+            }
+
+            String lastContactDateCondition = String.format("(%s >= %d AND %s <= %d)", KEY_LAST_CONTACTED_DATE, lastTextStartDate, KEY_LAST_CONTACTED_DATE, lastTextEndDate);
+            selectCondition = lastContactDateCondition;
         }
 
-        String selectCondition = lastContactDateCondition + " AND " + lastVisitDateCondition;
+        if (lastVisitMin != 0 || lastVisitMax != 0){
+            //if last visit min or max is specified, build the condition, otherwise leave empty
+
+            long lastVisitEndDate = todayInMillis - (lastVisitMin * Constants.DAYS_TO_MILLIS);
+            long lastVisitStartDate = 0;
+            if (lastVisitMax > 0) {
+                //if lastVisitMaxDay is specified, then calculate it from today. Otherwise just use 0 for epoch start
+                lastVisitStartDate = todayInMillis - (lastVisitMax * Constants.DAYS_TO_MILLIS);
+            }
+
+            String lastVisitDateCondition = String.format("(%s >= %d AND %s <= %d)", KEY_LAST_VISIT_DATE, lastVisitStartDate, KEY_LAST_VISIT_DATE, lastVisitEndDate);
+
+            if (selectCondition.isEmpty()){
+                selectCondition = lastVisitDateCondition;
+            }
+            else {
+                selectCondition += " AND " + lastVisitDateCondition;
+            }
+        }
+
         if (drinkCreditMinDouble != 0 || drinkCreditMaxDouble != 0){
-            selectCondition += " AND " + totalDrinkCreditCondition;
+            String totalDrinkCreditCondition = String.format("(%s >= %f AND %s <= %f)", KEY_TOTAL_CREDIT, drinkCreditMinDouble, KEY_TOTAL_CREDIT, drinkCreditMaxDouble);
+            if (drinkCreditMaxDouble == 0){
+                //query for drink credit, but max credit not specified, then just skip the max condition
+                totalDrinkCreditCondition = String.format("(%s >= %f)", KEY_TOTAL_CREDIT, drinkCreditMinDouble);
+            }
+
+            if (selectCondition.isEmpty()){
+                selectCondition = totalDrinkCreditCondition;
+            }
+            else {
+                selectCondition += " AND " + totalDrinkCreditCondition;
+            }
         }
 
-        return selectClauseFormat + " WHERE " + selectCondition + " ORDER BY " + sortByDbColumn + " " + sortOrder;
+        if (selectCondition.isEmpty()){
+            //no condition, retrieve all users
+            return selectClauseFormat + " ORDER BY " + sortByDbColumn + " " + sortOrder;
+        }
+        else {
+            //if any condition is specified, user meeting those criteria AND is opted in
+            selectCondition +=  String.format(" AND %s=%d", KEY_IS_OPT_IN, 1);
+            return selectClauseFormat + " WHERE " + selectCondition + " ORDER BY " + sortByDbColumn + " " + sortOrder;
+        }
     }
 
     public void addReferralCreditForCustomerId(String referrerId, double additionalReferralCredit) {
@@ -622,6 +655,19 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         } finally {
             if (db != null){
                 db.close();;
+            }
+        }
+    }
+
+    public void updateLastTexted(String customerId, long time) {
+        SQLiteDatabase db = null;
+        try {
+            db = getWritableDatabase();
+            String update = String.format("UPDATE %s SET %s = %d WHERE %s = %s", TABLE_CUSTOMER, KEY_LAST_CONTACTED_DATE, time, KEY_CUSTOMER_ID, customerId);
+            db.execSQL(update);
+        } finally {
+            if (db != null){
+                db.close();
             }
         }
     }

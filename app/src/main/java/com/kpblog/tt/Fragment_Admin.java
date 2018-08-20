@@ -119,6 +119,7 @@ public class Fragment_Admin extends Fragment {
             public void onClick(View view) {
                 if (SystemClock.elapsedRealtime() - getCodeBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
                     Util.sendAdminCodeAndSaveToSharedPref(adminDropdown.getSelectedItem().toString(), getActivity(), getString(R.string.adminCodeTextMsg));
+                    Toast.makeText(getContext(), getString(R.string.adminCodeSentToastMsg), Toast.LENGTH_LONG).show();
                     getCodeBtnLastClicked = SystemClock.elapsedRealtime();
                 }
             }

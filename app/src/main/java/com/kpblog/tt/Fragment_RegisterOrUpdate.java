@@ -667,6 +667,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
 
                 //clear out opt-out date
                 customer.setOptOutDate(null);
+                customer.setLastContactedDate(today);
             }
             final int todayCredit = getTodayCredit();
             customer.setPurchaseCredit(customer.getPurchaseCredit() + todayCredit);
