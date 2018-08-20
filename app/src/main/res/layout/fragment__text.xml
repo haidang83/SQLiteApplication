@@ -73,16 +73,52 @@
         <LinearLayout
             android:id="@+id/adminLayout"
             android:visibility="invisible"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="15dp"
             android:layout_width="match_parent"
             android:orientation="vertical"
             android:layout_height="wrap_content">
 
             <TextView
-                android:id="@+id/messageCustomerLabel"
+                android:id="@+id/recipientLabel"
                 android:layout_width="match_parent"
                 android:layout_height="30dp"
                 android:textStyle="bold"
+                android:textColor="@android:color/white"
+                android:gravity="center_vertical"
+                android:paddingLeft="5dp"
+                android:background="@color/colorPrimary"/>
+
+            <LinearLayout
+                android:id="@+id/recipientsBoxLayout"
+                android:layout_width="match_parent"
+                android:orientation="horizontal"
+                android:layout_height="wrap_content"
+                android:background="@drawable/border">
+
+                <EditText
+                    android:id="@+id/recipientsBox"
+                    android:enabled="false"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="left|top"
+                    android:padding="5dp"
+                    android:minLines="4"
+                    android:maxLines="4"
+                    android:scrollbars="vertical"
+                    android:inputType="textMultiLine"
+                    android:background="@android:color/transparent"
+                    />
+
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/messageCustomerLabel"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:text="@string/broadcastToCustomerLabel"
+                android:textStyle="bold"
+                android:layout_marginTop="20dp"
                 android:textColor="@android:color/white"
                 android:gravity="center_vertical"
                 android:paddingLeft="5dp"

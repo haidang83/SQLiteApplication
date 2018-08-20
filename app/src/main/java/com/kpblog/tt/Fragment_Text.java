@@ -125,12 +125,16 @@ public class Fragment_Text extends Fragment {
             }
         });
 
-        TextView label = (TextView) getView().findViewById(R.id.messageCustomerLabel);
         int recicientNum = 0;
         if (customers != null && customers.length > 0){
             recicientNum = customers.length;
         }
-        label.setText(String.format(getString(R.string.broadcastToCustomerLabel), recicientNum));
+
+        TextView recipientLabel = (TextView) getView().findViewById(R.id.recipientLabel);
+        recipientLabel.setText(String.format(getString(R.string.recipients), recicientNum));
+
+        EditText recipientBox = (EditText) getView().findViewById(R.id.recipientsBox);
+        recipientBox.setText(getFormattedRecipientList(customers));
 
         messageBox = (EditText) getView().findViewById(R.id.messageBox);
 
@@ -144,6 +148,22 @@ public class Fragment_Text extends Fragment {
                 }
             }
         });
+    }
+
+    private String getFormattedRecipientList(Customer[] customers) {
+        StringBuffer sb = new StringBuffer();
+
+        if (customers != null && customers.length > 0){
+            for (int i = 0; i < customers.length; i++){
+                Customer c = customers[i];
+                if (i > 0){
+                    sb.append(", ");
+                }
+                sb.append(Util.formatPhoneNumber(c.getCustomerId()));
+            }
+        }
+
+        return sb.toString();
     }
 
     private void textCustomers(String msg) {
