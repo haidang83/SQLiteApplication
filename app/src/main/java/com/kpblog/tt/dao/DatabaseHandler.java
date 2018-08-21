@@ -671,4 +671,34 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             }
         }
     }
+
+    public List<String> getTestUsers() {
+
+        List<String> testUsers = new ArrayList<String>();
+        SQLiteDatabase db = null;
+        try {
+            testUsers = getAllAdmins();
+            db = getReadableDatabase();
+
+            String query = String.format("SELECT %s FROM %s WHERE %s=%d", KEY_CUSTOMER_ID, TABLE_CUSTOMER, KEY_IS_TEST_USER, 1);
+
+            Cursor cursor = db.rawQuery(query, null);
+            if (cursor != null && cursor.moveToFirst()){
+                do {
+                    final String userId = cursor.getString(0);
+                    if (!testUsers.contains(userId)){
+                        testUsers.add(userId);
+                    }
+
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            if (db != null){
+                db.close();
+            }
+        }
+
+
+        return testUsers;
+    }
 }

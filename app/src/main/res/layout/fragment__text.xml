@@ -73,13 +73,29 @@
         <LinearLayout
             android:id="@+id/adminLayout"
             android:visibility="invisible"
-            android:layout_marginTop="15dp"
+            android:layout_marginTop="10dp"
             android:layout_width="match_parent"
             android:orientation="vertical"
             android:layout_height="wrap_content">
 
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:hintTextAppearance="@style/FloatingLabel">
+
+                <EditText
+                    android:id="@+id/testUserEditText"
+                    android:layout_marginLeft="-2dp"
+                    android:layout_marginRight="-2dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="phone"
+                    android:hint="Test Users (comma separated)" />
+            </android.support.design.widget.TextInputLayout>
+
             <TextView
                 android:id="@+id/recipientLabel"
+                android:layout_marginTop="0dp"
                 android:layout_width="match_parent"
                 android:layout_height="30dp"
                 android:textStyle="bold"
@@ -102,8 +118,8 @@
                     android:layout_height="wrap_content"
                     android:gravity="left|top"
                     android:padding="5dp"
-                    android:minLines="4"
-                    android:maxLines="4"
+                    android:minLines="3"
+                    android:maxLines="3"
                     android:scrollbars="vertical"
                     android:inputType="textMultiLine"
                     android:background="@android:color/transparent"
@@ -118,7 +134,7 @@
                 android:layout_height="30dp"
                 android:text="@string/broadcastToCustomerLabel"
                 android:textStyle="bold"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="10dp"
                 android:textColor="@android:color/white"
                 android:gravity="center_vertical"
                 android:paddingLeft="5dp"
@@ -144,38 +160,80 @@
                     android:inputType="textMultiLine"
                     android:background="@android:color/transparent"
                     />
-
-
             </LinearLayout>
 
-            <LinearLayout
-                android:id="@+id/buttonLayout"
-                android:layout_marginTop="15dp"
+            <android.support.design.widget.TextInputLayout
                 android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                app:hintTextAppearance="@style/FloatingLabel">
+
+                <EditText
+                    android:id="@+id/promotionCode"
+                    android:layout_marginLeft="-2dp"
+                    android:layout_marginRight="-2dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Promotion Code" />
+            </android.support.design.widget.TextInputLayout>
+
+            <LinearLayout android:id="@+id/textOrScheduleLayout"
+                android:layout_width="match_parent"
+                android:layout_marginTop="10dp"
                 android:orientation="horizontal"
                 android:layout_height="wrap_content">
 
-                <!--spacer-->
-                <View
+                <Spinner
+                    android:id="@+id/textActionDropdown"
+                    android:layout_weight="4"
                     android:layout_width="0dp"
-                    android:layout_weight="2"
-                    android:visibility="invisible"
-                    android:layout_height="match_parent" />
+                    android:layout_height="match_parent"
+                    android:layout_marginRight="0dp"
+                    android:paddingRight="0dp"
+                    android:layout_gravity="start"
+                    android:theme="@style/SpinnerItemTextAppearance"
+                    android:entries="@array/textActionDropdownList"
+                    android:gravity="bottom"
+                    android:spinnerMode="dropdown"/>
+
+                <Spinner
+                    android:id="@+id/userTypeDropdown"
+                    android:layout_weight="4.5"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginRight="0dp"
+                    android:paddingRight="0dp"
+                    android:layout_marginLeft="0dp"
+                    android:layout_gravity="start"
+                    android:theme="@style/SpinnerItemTextAppearance"
+                    android:entries="@array/userTypeDropdown"
+                    android:gravity="bottom"
+                    android:spinnerMode="dropdown"/>
+
+                <!--initially not visible, only shows up when "schedule" is selected-->
+                <Spinner
+                    android:id="@+id/scheduledTimeDropdown"
+                    android:visibility="gone"
+                    android:layout_weight="4.5"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginRight="0dp"
+                    android:paddingRight="0dp"
+                    android:layout_marginLeft="0dp"
+                    android:layout_gravity="start"
+                    android:theme="@style/SpinnerItemTextAppearance"
+                    android:entries="@array/hourDropdown"
+                    android:gravity="bottom"
+                    android:spinnerMode="dropdown"/>
 
                 <Button
-                    android:id="@+id/sendTextBtn"
+                    android:id="@+id/submitBtn"
                     android:layout_width="0dp"
-                    android:layout_weight="1"
+                    android:layout_height="30dp"
+                    android:layout_weight="2.5"
                     style="@style/buttonStyle"
-                    android:text="TEXT NOW"
-                    android:layout_height="wrap_content" />
-
-
-
-
+                    android:text="SUBMIT"/>
             </LinearLayout>
-
-
 
         </LinearLayout>
     </LinearLayout>

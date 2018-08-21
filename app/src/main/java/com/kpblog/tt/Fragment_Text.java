@@ -11,6 +11,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -22,8 +23,6 @@ import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,8 +50,10 @@ public class Fragment_Text extends Fragment {
     private DatabaseHandler handler;
     private EditText adminCode, messageBox;
     private Spinner adminDropdown;
-    private Button getCodeBtn, lockUnlockBtn, textNowBtn;
-    private long getCodeBtnLastClicked, lockUnlockBtnLastClicked, textNowBtnLastClicked;
+    private Button getCodeBtn, lockUnlockBtn, submitBtn;
+    private long getCodeBtnLastClicked, lockUnlockBtnLastClicked, submitBtnLastClicked;
+    private Spinner textActionDropdown, userTypeDropdown, scheduledTimeDropdown;
+    private EditText testUsers, promotionCode;
 
     public Fragment_Text() {
         // Required empty public constructor
@@ -125,29 +126,115 @@ public class Fragment_Text extends Fragment {
             }
         });
 
-        int recicientNum = 0;
+        testUsers = (EditText) getView().findViewById(R.id.testUserEditText);
+        testUsers.setText(getTestUsers());
+
+        int recipient = 0;
         if (customers != null && customers.length > 0){
-            recicientNum = customers.length;
+            recipient = customers.length;
         }
 
         TextView recipientLabel = (TextView) getView().findViewById(R.id.recipientLabel);
-        recipientLabel.setText(String.format(getString(R.string.recipients), recicientNum));
+        recipientLabel.setText(String.format(getString(R.string.recipients), recipient));
 
         EditText recipientBox = (EditText) getView().findViewById(R.id.recipientsBox);
         recipientBox.setText(getFormattedRecipientList(customers));
 
         messageBox = (EditText) getView().findViewById(R.id.messageBox);
+        promotionCode = (EditText) getView().findViewById(R.id.promotionCode);
 
-        textNowBtn = (Button) getView().findViewById(R.id.sendTextBtn);
-        textNowBtn.setOnClickListener(new View.OnClickListener() {
+        textActionDropdown = (Spinner) getView().findViewById(R.id.textActionDropdown);
+        textActionDropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String action = textActionDropdown.getSelectedItem().toString();
+                if (getString(R.string.textNow).equals(action)){
+                    userTypeDropdown.setVisibility(View.VISIBLE);
+                    scheduledTimeDropdown.setVisibility(View.GONE);
+                }
+                else {
+                    userTypeDropdown.setVisibility(View.GONE);
+                    scheduledTimeDropdown.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+            }
+        });
+
+        userTypeDropdown = (Spinner) getView().findViewById(R.id.userTypeDropdown);
+        scheduledTimeDropdown = (Spinner) getView().findViewById(R.id.scheduledTimeDropdown);
+
+        submitBtn = (Button) getView().findViewById(R.id.submitBtn);
+        submitBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (SystemClock.elapsedRealtime() - textNowBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
-                    textNowBtnLastClicked = SystemClock.elapsedRealtime();
-                    textCustomers(messageBox.getText().toString());
+                if (SystemClock.elapsedRealtime() - submitBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
+                    submitBtnLastClicked = SystemClock.elapsedRealtime();
+                    performSelectedAction();
                 }
             }
         });
+    }
+
+    private void performSelectedAction() {
+        String msg = messageBox.getText().toString();
+        if (msg.isEmpty()){
+            Util.displayToast(getContext(), "Message is empty");
+            return;
+        }
+
+        String promoCodeStr = promotionCode.getText().toString();
+        if (!promoCodeStr.isEmpty()){
+            msg = String.format(msg, promoCodeStr);
+        }
+
+        String action = textActionDropdown.getSelectedItem().toString();
+        if (getString(R.string.textNow).equals(action)){
+            String userType = userTypeDropdown.getSelectedItem().toString();
+            if (getString(R.string.realUsers).equals(userType)){
+                //text real users from customer list
+                textCustomers(msg);
+            }
+            else {
+                //text test users
+                String testUserList = testUsers.getText().toString();
+                if (testUserList.isEmpty()){
+                    Util.displayToast(getContext(), "Test user list is empty");
+                    return;
+                }
+                List<String> testPhoneNumbers = splitIntoTestPhoneNumbers(testUserList);
+                Util.textMultipleRecipientsAndUpdateLastTexted(testPhoneNumbers, msg, handler, true);
+                Util.displayToast(getContext(), String.format("Message sent to %d test users", testPhoneNumbers.size()));
+            }
+        }
+        else {
+            //schedule now
+        }
+    }
+
+    private List<String> splitIntoTestPhoneNumbers(String testUserList) {
+        List<String> phoneList = new ArrayList<String>();
+        String[] phoneNum = testUserList.split(",");
+        for (int i = 0; i < phoneNum.length; i++){
+            phoneList.add(Util.getUnformattedPhoneNumber(phoneNum[i].trim()));
+        }
+
+        return phoneList;
+    }
+
+    private String getTestUsers() {
+        StringBuffer sb = new StringBuffer();
+        List<String> testUsers = handler.getTestUsers();
+        for (int i = 0; i < testUsers.size(); i++){
+            if (i > 0){
+                sb.append(", ");
+            }
+
+            sb.append(Util.formatPhoneNumber(testUsers.get(i)));
+        }
+        return sb.toString();
     }
 
     private String getFormattedRecipientList(Customer[] customers) {
@@ -168,18 +255,14 @@ public class Fragment_Text extends Fragment {
 
     private void textCustomers(String msg) {
         if (customers != null && customers.length > 0){
-            if (msg.isEmpty()){
-                Util.displayToast(getContext(), "Message is empty");
-            }
-            else {
-                List<String> recipients = new ArrayList<String>();
-                for (Customer c : customers){
-                    recipients.add(c.getCustomerId());
-                }
 
-                Util.textMultipleRecipientsAndUpdateLastTexted(recipients, msg, handler, true);
-                Util.displayToast(getContext(),"message sent to " + recipients.size() + " recipients");
+            List<String> recipients = new ArrayList<String>();
+            for (Customer c : customers){
+                recipients.add(c.getCustomerId());
             }
+
+            Util.textMultipleRecipientsAndUpdateLastTexted(recipients, msg, handler, true);
+            Util.displayToast(getContext(),"message sent to " + recipients.size() + " recipients");
         }
         else {
             Util.displayToast(getContext(), "Customer list is empty");

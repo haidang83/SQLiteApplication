@@ -110,6 +110,32 @@
     </string-array>
     <string name="freeDrinkAfterReferralCredit">Your referral just made a purchase at Tra Temptation! You have %.1f total credit. Please use this code to claim your free standard drink: %s</string>
     <string name="firstReferralPurchaseMissingCredit">Thank you for making referrals to Tra Temptation! You just earned %.1f referral credits. Your total credit is %.1f, and need %.1f more for a free drink</string>
-    <string name="broadcastToCustomerLabel">Message</string>
-    <string name="recipients">Recipients(%d)</string>
+    <string name="broadcastToCustomerLabel">Message(use %s for promotion code place holder)</string>
+    <string name="recipients">Customers(%d)</string>
+    <string name="textNow">TEXT NOW</string>
+    <string name="schedule">SCHEDULE</string>
+    <string-array name="textActionDropdownList">
+        <item>@string/textNow</item>
+        <item>@string/schedule</item>
+    </string-array>
+    <string name="testUsers">TEST USERS</string>
+    <string name="realUsers">CUSTOMERS</string>
+    <string-array name="userTypeDropdown">
+        <item>@string/testUsers</item>
+        <item>@string/realUsers</item>
+    </string-array>
+    <string-array name="hourDropdown">
+        <item>10:00</item>
+        <item>11:00</item>
+        <item>12:00</item>
+        <item>13:00</item>
+        <item>14:00</item>
+        <item>15:00</item>
+        <item>16:00</item>
+        <item>17:00</item>
+        <item>18:00</item>
+        <item>19:00</item>
+        <item>20:00</item>
+        <item>21:00</item>
+    </string-array>
 </resources>
