@@ -63,7 +63,7 @@
                 android:layout_marginRight="3dp"
                 style="@style/buttonStyle"
                 android:textColor="@android:color/white"
-                android:layout_height="wrap_content" />
+                />
         </LinearLayout>
 
         <LinearLayout android:id="@+id/orderByPanel"

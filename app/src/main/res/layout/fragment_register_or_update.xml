@@ -248,7 +248,6 @@
             <Button android:id="@+id/cancelBtn"
                 android:layout_weight=".5"
                 android:layout_width="0dip"
-                android:layout_height="wrap_content"
                 android:text="@string/cancelBtn"
                 style="@style/buttonStyle"
                 android:textColor="@android:color/white"/>
@@ -258,7 +257,6 @@
                 android:layout_width="0dip"
                 android:layout_marginLeft="30dp"
                 android:layout_marginRight="5dp"
-                android:layout_height="wrap_content"
                 android:text="@string/btnConfirm"
                 style="@style/buttonStyle"
                 android:textColor="@android:color/white"/>

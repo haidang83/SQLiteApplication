@@ -262,7 +262,7 @@
         </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_weight="0.7"
+            android:layout_weight="0.9"
             android:orientation="horizontal"
             android:layout_height="0dp">
 
@@ -273,8 +273,7 @@
                 android:text="@string/clearBtn"
                 android:layout_marginLeft="0dp"
                 style="@style/buttonStyle"
-                android:textColor="@android:color/white"
-                android:layout_height="match_parent" />
+                android:textColor="@android:color/white"/>
 
             <Button
                 android:id="@+id/searchBtn"
@@ -283,8 +282,7 @@
                 android:text="@string/search"
                 android:layout_marginLeft="30dp"
                 style="@style/buttonStyle"
-                android:textColor="@android:color/white"
-                android:layout_height="match_parent" />
+                android:textColor="@android:color/white"/>
 
             <Button
                 android:id="@+id/sendTextBtn"
@@ -294,8 +292,7 @@
                 android:layout_marginLeft="30dp"
                 android:layout_marginRight="3dp"
                 style="@style/buttonStyle"
-                android:textColor="@android:color/white"
-                android:layout_height="match_parent" />
+                android:textColor="@android:color/white"/>
 
         </LinearLayout>
 
@@ -303,7 +300,7 @@
             android:layout_width="match_parent"
             android:layout_marginTop="3dp"
             android:layout_height="0dp"
-            android:layout_weight="5">
+            android:layout_weight="4.5">
             <ListView
                 android:id="@+id/listview"
                 android:layout_width="match_parent"

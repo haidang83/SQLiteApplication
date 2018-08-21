@@ -109,7 +109,6 @@
             <Button android:id="@+id/clearBtn"
                 android:layout_weight="1"
                 android:layout_width="0dip"
-                android:layout_height="wrap_content"
                 android:text="@string/clearBtn"
                 style="@style/buttonStyle"
                 android:textColor="@android:color/white"/>
@@ -119,7 +118,6 @@
                 android:layout_weight="1"
                 android:layout_width="0dip"
                 android:layout_marginLeft="30dp"
-                android:layout_height="wrap_content"
                 android:text="@string/getCode"
                 style="@style/buttonStyle"
                 android:textColor="@android:color/white"/>
@@ -129,7 +127,6 @@
                 android:layout_width="0dip"
                 android:layout_marginLeft="30dp"
                 android:layout_marginRight="5dp"
-                android:layout_height="wrap_content"
                 android:text="@string/btnClaim"
                 style="@style/buttonStyle"
                 android:textColor="@android:color/white"/>

@@ -44,7 +44,6 @@
                 android:layout_weight="1"
                 android:layout_width="0dip"
                 android:layout_marginLeft="10dp"
-                android:layout_height="wrap_content"
                 android:text="@string/unsubscribe"
                 style="@style/buttonStyle"
                 android:textColor="@android:color/white"/>
@@ -54,7 +53,6 @@
                 android:layout_width="0dip"
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="5dp"
-                android:layout_height="wrap_content"
                 android:text="@string/search"
                 style="@style/buttonStyle"
                 android:textColor="@android:color/white"/>

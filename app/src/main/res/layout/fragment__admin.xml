@@ -53,7 +53,6 @@
                 android:layout_weight="1.3"
                 android:layout_width="0dip"
                 android:layout_marginLeft="5dp"
-                android:layout_height="wrap_content"
                 android:text="@string/getCode"
                 style="@style/buttonStyle"
                 android:textColor="@android:color/white"/>
@@ -63,7 +62,6 @@
                 android:layout_width="0dip"
                 android:layout_marginLeft="5dp"
                 android:layout_marginRight="5dp"
-                android:layout_height="wrap_content"
                 android:text="@string/unlock"
                 style="@style/buttonStyle"
                 android:textColor="@android:color/white"/>
@@ -109,7 +107,6 @@
                         android:layout_weight="1"
                         android:layout_width="0dip"
                         android:layout_marginLeft="2dp"
-                        android:layout_height="wrap_content"
                         android:text="@string/importLabel"
                         style="@style/buttonStyle"
                         android:textColor="@android:color/white"/>
@@ -119,7 +116,6 @@
                         android:layout_width="0dip"
                         android:layout_marginLeft="10dp"
                         android:layout_marginRight="5dp"
-                        android:layout_height="wrap_content"
                         android:text="@string/exportLabel"
                         style="@style/buttonStyle"
                         android:textColor="@android:color/white"/>
@@ -159,7 +155,6 @@
                         android:layout_weight="1"
                         android:layout_width="0dip"
                         android:layout_marginLeft="2dp"
-                        android:layout_height="wrap_content"
                         android:text="@string/addAdmin"
                         style="@style/buttonStyle"
                         android:textColor="@android:color/white"/>
@@ -169,7 +164,6 @@
                         android:layout_width="0dip"
                         android:layout_marginLeft="10dp"
                         android:layout_marginRight="5dp"
-                        android:layout_height="wrap_content"
                         android:text="@string/removeAdmin"
                         style="@style/buttonStyle"
                         android:textColor="@android:color/white"/>
@@ -186,7 +180,6 @@
                         android:layout_weight="1"
                         android:layout_width="0dip"
                         android:layout_marginLeft="2dp"
-                        android:layout_height="wrap_content"
                         android:text="@string/addTestUer"
                         style="@style/buttonStyle"
                         android:textColor="@android:color/white"/>
@@ -196,7 +189,6 @@
                         android:layout_width="0dip"
                         android:layout_marginLeft="10dp"
                         android:layout_marginRight="5dp"
-                        android:layout_height="wrap_content"
                         android:text="@string/removeTestUser"
                         style="@style/buttonStyle"
                         android:textColor="@android:color/white"/>
@@ -214,7 +206,6 @@
                     android:layout_weight="1"
                     android:layout_width="0dip"
                     android:layout_marginLeft="2dp"
-                    android:layout_height="wrap_content"
                     android:text="Get Cashier Code"
                     style="@style/buttonStyle"
                     android:textColor="@android:color/white"/>
@@ -224,7 +215,6 @@
                     android:layout_width="0dip"
                     android:layout_marginLeft="10dp"
                     android:layout_marginRight="5dp"
-                    android:layout_height="wrap_content"
                     android:text="blank"
                     style="@style/buttonStyle"
                     android:textColor="@android:color/white"/>
