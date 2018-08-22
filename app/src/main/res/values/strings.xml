@@ -110,7 +110,7 @@
     </string-array>
     <string name="freeDrinkAfterReferralCredit">Your referral just made a purchase at Tra Temptation! You have %.1f total credit. Please use this code to claim your free standard drink: %s</string>
     <string name="firstReferralPurchaseMissingCredit">Thank you for making referrals to Tra Temptation! You just earned %.1f referral credits. Your total credit is %.1f, and need %.1f more for a free drink</string>
-    <string name="broadcastToCustomerLabel">Message(use %s for promotion code place holder)</string>
+    <string name="broadcastToCustomerLabel">Message(use {0} for promotion code place holder)</string>
     <string name="recipients">Customers(%d)</string>
     <string name="textNow">TEXT NOW</string>
     <string name="schedule">SCHEDULE</string>

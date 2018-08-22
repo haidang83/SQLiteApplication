@@ -1,6 +1,7 @@
 package com.kpblog.tt;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.support.design.widget.TabLayout;
@@ -9,6 +10,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -166,4 +168,23 @@ public class MainActivity extends AppCompatActivity implements  Fragment_Custome
     }
 
 
+    @Override
+    public void onBackPressed() {
+        if (getSupportFragmentManager().getBackStackEntryCount() == 0) {
+            new AlertDialog.Builder(this, R.style.AlertDialogTheme)
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setTitle("Exit App?")
+                    .setMessage("Do you want to exit the app?")
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            MainActivity.super.onBackPressed();
+                        }
+                    })
+                    .setNegativeButton("No", null)
+                    .show();
+
+        } else {
+            MainActivity.super.onBackPressed();
+        }
+    }
 }

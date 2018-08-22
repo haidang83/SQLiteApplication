@@ -24,6 +24,7 @@ import com.kpblog.tt.model.Customer;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -187,7 +188,7 @@ public class Fragment_Text extends Fragment {
 
         String promoCodeStr = promotionCode.getText().toString();
         if (!promoCodeStr.isEmpty()){
-            msg = String.format(msg, promoCodeStr);
+            msg = MessageFormat.format(msg, promoCodeStr);
         }
 
         String action = textActionDropdown.getSelectedItem().toString();
@@ -218,7 +219,9 @@ public class Fragment_Text extends Fragment {
         List<String> phoneList = new ArrayList<String>();
         String[] phoneNum = testUserList.split(",");
         for (int i = 0; i < phoneNum.length; i++){
-            phoneList.add(Util.getUnformattedPhoneNumber(phoneNum[i].trim()));
+            if (!phoneNum[i].trim().isEmpty()){
+                phoneList.add(Util.getUnformattedPhoneNumber(phoneNum[i].trim()));
+            }
         }
 
         return phoneList;
