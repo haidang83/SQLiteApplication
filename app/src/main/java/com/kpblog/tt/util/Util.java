@@ -243,4 +243,21 @@ public class Util {
     public static void displayToast(Context ctx, String msg) {
         Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show();
     }
+
+    public static boolean isCashierCodeValid(String inputCode, Context ctx, TextInputLayout cashierLayout, String errMsg) {
+        boolean isValid = false;
+
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ctx);
+        String expectedCode = sp.getString(Constants.SHARED_PREF_DAILY_CODE_KEY, null);
+
+        if (!inputCode.isEmpty() && inputCode.equals(expectedCode)){
+            isValid = true;
+            cashierLayout.setErrorEnabled(false);
+        }
+        else {
+            cashierLayout.setError(errMsg);
+        }
+
+        return isValid;
+    }
 }

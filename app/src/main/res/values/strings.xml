@@ -24,7 +24,8 @@
     <string name="tab_customer">Customer</string>
     <string name="tab_transactions">Transactions</string>
     <string name="tab_text">Text</string>
-    <string name="freeDrink">Free Drinks</string>
+    <string name="freeDrink">Free Drinks Available</string>
+    <string name="freeDrinkClaimToday">Amount Claim Today</string>
     <string name="claimCode">Claim Code</string>
     <string name="getCode">Get Code</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>

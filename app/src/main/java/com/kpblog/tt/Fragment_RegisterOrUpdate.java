@@ -34,6 +34,8 @@ import com.kpblog.tt.util.AsteriskPasswordTransformationMethod;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
+import org.w3c.dom.Text;
+
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -492,7 +494,10 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         }
 
         else if (id.equals(cashierCodeId)){
-            isCashierCodeValid();
+            String inputCashierCode = cashierCode.getText().toString();
+            TextInputLayout cashierLayout = (TextInputLayout) getView().findViewById(R.id.cashierCodeLayout);
+            String cashierCodeErrMsg = getString(R.string.claimCode_err_msg);
+            Util.isCashierCodeValid(inputCashierCode, getContext(), cashierLayout, cashierCodeErrMsg);
         }
         return handled;
     }
@@ -515,26 +520,6 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
                 isValid = false;
                 referrerLayout.setError(getString(R.string.invalidReferrerId));
             }
-        }
-
-        return isValid;
-    }
-
-    private boolean isCashierCodeValid() {
-        boolean isValid = false;
-        String codeStr = cashierCode.getText().toString();
-
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String expectedCode = sp.getString(Constants.SHARED_PREF_DAILY_CODE_KEY, null);
-
-        TextInputLayout cashierLayout = (TextInputLayout) getView().findViewById(R.id.cashierCodeLayout);
-
-        if (!codeStr.isEmpty() && codeStr.equals(expectedCode)){
-            isValid = true;
-            cashierLayout.setErrorEnabled(false);
-        }
-        else {
-            cashierLayout.setError(getString(R.string.claimCode_err_msg));
         }
 
         return isValid;
@@ -631,8 +616,13 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
 
     private boolean isAllInputValid(){
         final String phone = Util.getUnformattedPhoneNumber(this.phone.getText().toString());
+
+        String inputCashierCode = cashierCode.getText().toString();
+        TextInputLayout cashierLayout = (TextInputLayout) getView().findViewById(R.id.cashierCodeLayout);
+        String cashierCodeErrMsg = getString(R.string.claimCode_err_msg);
+
         return Util.isPhoneNumberValid((TextInputLayout) getView().findViewById(R.id.phoneLayout), getString(R.string.phone_err_msg), phone)
-                && isTodayCreditValid() && isReceiptNumberValid() && isCashierCodeValid();
+                && isTodayCreditValid() && isReceiptNumberValid() && Util.isCashierCodeValid(inputCashierCode, getContext(), cashierLayout, cashierCodeErrMsg);
     }
 
     /**

@@ -11,125 +11,180 @@
     <LinearLayout
         android:id="@+id/insertLayout"
         android:layout_width="match_parent"
-        android:layout_marginTop="10dp"
-        android:orientation="vertical"
+        android:layout_height="wrap_content"
         android:layout_marginLeft="3dp"
-        android:layout_height="wrap_content">
-
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/phoneLayout"
-            android:layout_width="match_parent"
-            app:hintTextAppearance="@style/FloatingLabel"
-            android:layout_height="wrap_content">
-
-            <EditText
-                android:id="@+id/phone"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/phoneNumber"
-                android:inputType="phone"
-                android:imeOptions="actionNext">
-            </EditText>
-        </android.support.design.widget.TextInputLayout>
-
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/freeDrinkLayout"
-            android:layout_width="match_parent"
-            android:layout_marginTop="20dp"
-            android:layout_height="wrap_content">
-
-            <EditText
-                android:id="@+id/freeDrink"
-                android:inputType="none"
-                android:enabled="false"
-                android:focusable="false"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#5c5959"
-                android:hint="@string/freeDrink"
-                />
-        </android.support.design.widget.TextInputLayout>
+        android:layout_marginTop="10dp"
+        android:orientation="vertical">
 
         <LinearLayout
-            android:id="@+id/claimCodeLayout"
+            android:id="@+id/phoneAndClaimCodeLayout"
             android:layout_width="match_parent"
-            android:layout_marginTop="20dp"
-            android:orientation="horizontal"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/phoneLayout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                app:hintTextAppearance="@style/FloatingLabel">
+
+                <EditText
+                    android:id="@+id/phone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/phoneNumber"
+                    android:imeOptions="actionDone"
+                    android:inputType="phone"></EditText>
+            </android.support.design.widget.TextInputLayout>
+
+            <!--spacer-->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.10"
+                android:visibility="invisible" />
 
             <android.support.design.widget.TextInputLayout
                 android:layout_width="0dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                app:hintTextAppearance="@style/FloatingLabel"
-                android:layout_height="wrap_content">
+                app:hintTextAppearance="@style/FloatingLabel">
 
 
                 <com.kpblog.tt.util.MyEditText
                     android:id="@+id/claimCode"
-                    android:inputType="numberPassword"
-                    android:digits="0123456789"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:digits="0123456789"
                     android:hint="@string/claimCode"
-                    android:imeOptions="actionDone" />
+                    android:imeOptions="actionDone"
+                    android:inputType="numberPassword" />
             </android.support.design.widget.TextInputLayout>
-
-            <View
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:visibility="invisible"/>
         </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/availDrinkAndClaimLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/freeDrinkLayout"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp">
+
+            <EditText
+                android:id="@+id/freeDrink"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:focusable="false"
+                android:hint="@string/freeDrink"
+                android:inputType="none"
+                android:textColor="#5c5959" />
+        </android.support.design.widget.TextInputLayout>
+
+        <!--spacer-->
+        <View
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.10"
+            android:visibility="invisible" />
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/freeDrinkClaimTodayLayout"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp">
+
+            <EditText
+                android:id="@+id/freeDrinkClaimToday"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:hint="@string/freeDrinkClaimToday"
+                android:inputType="numberPassword"
+                android:imeOptions="actionDone"
+                android:textColor="#5c5959" />
+        </android.support.design.widget.TextInputLayout>
+
+    </LinearLayout>
 
         <android.support.design.widget.TextInputLayout
             android:id="@+id/receiptLayout"
-            android:layout_width="match_parent"
             android:layout_marginTop="20dp"
-            app:hintTextAppearance="@style/FloatingLabel"
-            android:layout_height="wrap_content">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:hintTextAppearance="@style/FloatingLabel">
 
             <EditText
                 android:id="@+id/receiptNumber"
-                android:inputType="numberPassword"
-                android:digits="0123456789"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:digits="0123456789"
                 android:hint="@string/receiptNum"
-                android:imeOptions="actionDone" />
+                android:imeOptions="actionDone"
+                android:inputType="numberPassword" />
         </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/cashierCodeLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:focusableInTouchMode="true"
+            app:hintTextAppearance="@style/FloatingLabel">
+
+            <EditText
+                android:id="@+id/cashierCode"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:digits="0123456789"
+                android:hint="Cashier Code"
+                android:imeOptions="actionDone"
+                android:inputType="numberPassword" />
+        </android.support.design.widget.TextInputLayout>
+
 
         <LinearLayout
             android:id="@+id/buttonLayout"
             android:layout_width="match_parent"
-            android:layout_marginTop="20dp"
+            android:layout_height="wrap_content"
             android:layout_marginLeft="3dp"
-            android:orientation="horizontal"
-            android:layout_height="wrap_content">
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal">
 
-            <Button android:id="@+id/clearBtn"
-                android:layout_weight="1"
-                android:layout_width="0dip"
-                android:text="@string/clearBtn"
+            <Button
+                android:id="@+id/clearBtn"
                 style="@style/buttonStyle"
-                android:textColor="@android:color/white"/>
-
-            <Button android:id="@+id/getCodeBtn"
-                android:enabled="false"
+                android:layout_width="0dip"
                 android:layout_weight="1"
+                android:text="@string/clearBtn"
+                android:textColor="@android:color/white" />
+
+            <Button
+                android:id="@+id/getCodeBtn"
+                style="@style/buttonStyle"
                 android:layout_width="0dip"
                 android:layout_marginLeft="30dp"
-                android:text="@string/getCode"
-                style="@style/buttonStyle"
-                android:textColor="@android:color/white"/>
-
-            <Button android:id="@+id/claimBtn"
                 android:layout_weight="1"
+                android:enabled="false"
+                android:text="@string/getCode"
+                android:textColor="@android:color/white" />
+
+            <Button
+                android:id="@+id/claimBtn"
+                style="@style/buttonStyle"
                 android:layout_width="0dip"
                 android:layout_marginLeft="30dp"
                 android:layout_marginRight="5dp"
+                android:layout_weight="1"
                 android:text="@string/btnClaim"
-                style="@style/buttonStyle"
-                android:textColor="@android:color/white"/>
+                android:textColor="@android:color/white" />
         </LinearLayout>
 
     </LinearLayout>

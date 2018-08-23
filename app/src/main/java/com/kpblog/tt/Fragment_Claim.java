@@ -26,6 +26,7 @@ import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
 import com.kpblog.tt.model.CustomerClaimCode;
 import com.kpblog.tt.model.CustomerPurchase;
+import com.kpblog.tt.util.AsteriskPasswordTransformationMethod;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.MyEditText;
 import com.kpblog.tt.util.Util;
@@ -50,7 +51,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
     private String customerId = "";
     private String mParam2;
 
-    private EditText phone, claimCode, freeDrink, receiptNum;
+    private EditText phone, claimCode, freeDrink, receiptNum, cashierCode, freeDrinkClaimToday;
     private Button claimBtn, clearBtn, getCodeBtn;
     private DatabaseHandler handler;
 
@@ -118,6 +119,15 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         freeDrink = (EditText) (getView().findViewById(R.id.freeDrink));
         freeDrink.setText(String.valueOf(0));
 
+        freeDrinkClaimToday = (EditText) getView().findViewById(R.id.freeDrinkClaimToday);
+        freeDrinkClaimToday.setText(String.valueOf(0));
+        freeDrinkClaimToday.setTransformationMethod(null);
+        freeDrinkClaimToday.setOnEditorActionListener(this);
+
+        cashierCode = (EditText) getView().findViewById(R.id.cashierCode);
+        cashierCode.setTransformationMethod(new AsteriskPasswordTransformationMethod());
+        cashierCode.setOnEditorActionListener(this);
+
         getCodeBtn = (Button) (getView().findViewById(R.id.getCodeBtn));
         getCodeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -138,8 +148,9 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
                 //to prevent double click
                 if (SystemClock.elapsedRealtime() - claimBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
                     claimBtnLastClicked = SystemClock.elapsedRealtime();
-                    if (validateClaimCode() && validateReceiptNum()){
+                    if (validateClaimCode() && validateAmountClaimToday() && validateReceiptNum() && validateCashierCode()){
                         updateSuccessfulClaim();
+                        clearScreen();
                     }
                 }
             }
@@ -174,8 +185,8 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         //update the total credit
         Customer c = handler.getCustomerById(customerId);
         double totalCredit = c.getTotalCredit();
-        int claimAmt = (int) (totalCredit / Constants.FREE_DRINK_THRESHOLD);
-        double remainingCredit = totalCredit % Constants.FREE_DRINK_THRESHOLD;
+        int claimAmt = Integer.parseInt(freeDrinkClaimToday.getText().toString());
+        double remainingCredit = totalCredit - (claimAmt * Constants.FREE_DRINK_THRESHOLD);
         handler.updateTotalCreditForCustomerId(customerId, remainingCredit);
 
         String receiptNumStr = receiptNum.getText().toString();
@@ -210,6 +221,11 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         claimCode.setError(null, null);
 
         freeDrink.setText("0");
+        freeDrinkClaimToday.setText("0");
+        freeDrinkClaimToday.setEnabled(false);
+
+        receiptNum.setText("");
+        cashierCode.setText("");
 
         claimBtn.setEnabled(false);
         getCodeBtn.setEnabled(false);
@@ -380,6 +396,17 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
             getCodeBtn.setEnabled(true);
             claimCode.setEnabled(true);
             claimBtn.setEnabled(true);
+
+            //by default, set the amount claim today to whatever available
+            freeDrinkClaimToday.setText(String.valueOf(freeDrinkNum));
+
+            if (freeDrinkNum == 1){
+                //disable the field
+                freeDrinkClaimToday.setEnabled(false);
+            }
+            else {
+                freeDrinkClaimToday.setEnabled(true);
+            }
         }
         else {
             getCodeBtn.setEnabled(false);
@@ -421,6 +448,8 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         String phoneId = phone.getResources().getResourceEntryName(phone.getId());
         String claimCodeId = claimCode.getResources().getResourceEntryName(claimCode.getId());
         String receiptNumId = receiptNum.getResources().getResourceEntryName(receiptNum.getId());
+        String cashierCodeId = cashierCode.getResources().getResourceEntryName(cashierCode.getId());
+        String amountClaimTodayId = freeDrinkClaimToday.getResources().getResourceEntryName(freeDrinkClaimToday.getId());
 
         if (id.equals(phoneId)) {
             //when user is done entering phone number
@@ -431,13 +460,58 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
             handled = true;
         }
         else if (id.equals(claimCodeId)){
-            validateClaimCode();
+            if (validateClaimCode()){
+                //set focus to claimtoday field if enabled
+                if (freeDrinkClaimToday.isEnabled()){
+                    freeDrinkClaimToday.requestFocus();
+                    freeDrinkClaimToday.setSelection(freeDrinkClaimToday.getText().length());
+                }
+                else {
+                    //set focus to receipt number
+                    receiptNum.requestFocus();
+                }
+            }
+        }
+        else if (id.equals(amountClaimTodayId)){
+            if (validateAmountClaimToday()){
+                receiptNum.requestFocus();
+            }
         }
         else if (id.equals(receiptNumId)){
-            validateReceiptNum();
+            if (validateReceiptNum()){
+                cashierCode.requestFocus();
+            }
+        }
+        else if (id.equals(cashierCodeId)){
+            validateCashierCode();
         }
 
         return false;
+    }
+
+    private boolean validateAmountClaimToday() {
+        boolean isValid = false;
+        String amountClaimTodayStr = freeDrinkClaimToday.getText().toString();
+        if (!amountClaimTodayStr.isEmpty()){
+            int amtClaim = Integer.parseInt(amountClaimTodayStr);
+            TextInputLayout freeDrinkClaimTodayLayout = (TextInputLayout) getView().findViewById(R.id.freeDrinkClaimTodayLayout);
+            if (amtClaim == 0 || amtClaim > Integer.parseInt(freeDrink.getText().toString())){
+                freeDrinkClaimTodayLayout.setError("Invalid Amount");
+            }
+            else {
+                freeDrinkClaimTodayLayout.setErrorEnabled(false);
+                isValid = true;
+            }
+        }
+
+        return isValid;
+    }
+
+    private boolean validateCashierCode() {
+        String inputCashierCode = cashierCode.getText().toString();
+        TextInputLayout cashierLayout = (TextInputLayout) getView().findViewById(R.id.cashierCodeLayout);
+        String cashierCodeErrMsg = getString(R.string.claimCode_err_msg);
+        return Util.isCashierCodeValid(inputCashierCode, getContext(), cashierLayout, cashierCodeErrMsg);
     }
 
     private boolean validateReceiptNum() {
