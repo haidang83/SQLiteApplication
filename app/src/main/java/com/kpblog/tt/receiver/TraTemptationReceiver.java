@@ -9,6 +9,7 @@ import android.telephony.SmsManager;
 import android.util.Log;
 
 import com.kpblog.tt.dao.DatabaseHandler;
+import com.kpblog.tt.model.CustomerBroadcast;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
@@ -41,7 +42,10 @@ public class TraTemptationReceiver extends BroadcastReceiver {
 
             Util.textDailyCode(context);
         }
+        else if (Constants.SCHEDULED_TEXT_ACTION.equals(intentAction)){
+            DatabaseHandler handler = new DatabaseHandler(context);
+            Util.sendScheduledBroadcast(handler);
+        }
     }
-
 
 }

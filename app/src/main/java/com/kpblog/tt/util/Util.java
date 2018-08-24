@@ -14,6 +14,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.kpblog.tt.dao.DatabaseHandler;
+import com.kpblog.tt.model.CustomerBroadcast;
 import com.kpblog.tt.model.CustomerClaimCode;
 import com.kpblog.tt.receiver.TraTemptationReceiver;
 
@@ -277,5 +278,20 @@ public class Util {
         }
 
         return isValid;
+    }
+
+    public static void sendScheduledBroadcast(DatabaseHandler handler) {
+        List<CustomerBroadcast> cbList = handler.getAllCustomerBroadcastsBeforeTimestamp(System.currentTimeMillis());
+
+        for (int i = 0; i < cbList.size(); i++){
+            CustomerBroadcast cb = cbList.get(i);
+            Util.textPromoToMultipleRecipientsAndUpdateLastTexted(cb.getRecipientPhoneNumbers(),
+                    cb.getMessage(), handler, true, cb.getPromoName());
+
+            handler.markBroadcastIdAsSent(cb.getRecipientListId());
+        }
+
+        List<String> admins = handler.getAllAdmins();
+        Util.textMultipleRecipients(admins, "broadcast sent");
     }
 }

@@ -23,6 +23,7 @@ import android.widget.Toast;
 
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
+import com.kpblog.tt.model.CustomerBroadcast;
 import com.kpblog.tt.receiver.TraTemptationReceiver;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
@@ -100,6 +101,10 @@ public class Fragment_Text extends Fragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         handler = new DatabaseHandler(getContext());
+
+        //test code, remove when done
+        //Util.sendScheduledBroadcast(handler);
+
         adminCode = (EditText) (getView().findViewById(R.id.adminCode));
         adminCode.setTransformationMethod(null);
 
@@ -189,7 +194,7 @@ public class Fragment_Text extends Fragment {
             Util.displayToast(getContext(), "Message is empty");
             return;
         }
-
+        msg = msg.replace("%s", Constants.CLAIM_CODE_PLACE_HOLDER);
         String promoName = promotionName.getText().toString();
 
         String action = textActionDropdown.getSelectedItem().toString();
@@ -213,7 +218,6 @@ public class Fragment_Text extends Fragment {
         }
         else {
             //schedule
-            //e.g 10:00
             Calendar scheduledTime = getScheduledTime();
             String type = Constants.BROADCAST_TYPE_ON_DEMAND;
             int broadcastId = handler.insertIntoCustomerBroadcastTable(scheduledTime.getTimeInMillis(), msg, type, promoName, customers);
@@ -227,6 +231,7 @@ public class Fragment_Text extends Fragment {
 
     @NonNull
     private Calendar getScheduledTime() {
+        //e.g 10:00
         String[] scheduledTime = scheduledTimeDropdown.getSelectedItem().toString().split(":");
         int scheduleHour = Integer.parseInt(scheduledTime[0]);
         int scheduledMin = Integer.parseInt(scheduledTime[1]);

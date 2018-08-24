@@ -35,7 +35,7 @@
                     android:layout_height="wrap_content"
                     android:hint="@string/adminCode"
                     android:inputType="numberPassword"
-                    android:imeOptions="actionNext">
+                    android:imeOptions="actionDone">
                 </EditText>
             </android.support.design.widget.TextInputLayout>
 

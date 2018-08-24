@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.kpblog.tt.model.Customer;
+import com.kpblog.tt.model.CustomerBroadcast;
 import com.kpblog.tt.model.CustomerClaimCode;
 import com.kpblog.tt.model.CustomerPurchase;
 import com.kpblog.tt.util.Constants;
@@ -59,7 +60,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String TABLE_CUSTOMER_BROADCAST = "customerBroadcast";
     private static final String KEY_RECIPIENT_LIST = "recipientList";
     private static final String KEY_BROADCAST_TIME = "broadcastTime";
-    private static final String KEY_MESSAGE = "message";
+    private static final String KEY_BROADCAST_MESSAGE = "message";
     private static final String KEY_BROADCAST_TYPE = "broadcastType";
     private static final String KEY_SENT = "sent";
 
@@ -94,7 +95,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         //this table has all the broadcast schedule/sent to customers
         String CREATE_CUSTOMER_BROADCAST_TABLE = "CREATE TABLE %s (%s INTEGER PRIMARY KEY, %s INTEGER, %s TEXT, %s TEXT, %s INTEGER, %s TEXT)";
-        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_BROADCAST_TABLE, TABLE_CUSTOMER_BROADCAST, KEY_RECIPIENT_LIST, KEY_BROADCAST_TIME, KEY_MESSAGE, KEY_BROADCAST_TYPE, KEY_SENT, KEY_PROMO_NAME));
+        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_BROADCAST_TABLE, TABLE_CUSTOMER_BROADCAST, KEY_RECIPIENT_LIST, KEY_BROADCAST_TIME, KEY_BROADCAST_MESSAGE, KEY_BROADCAST_TYPE, KEY_SENT, KEY_PROMO_NAME));
 
         //this table has all the customers in a recipient list
         String CREATE_RECIPIENT_LIST_CUSTOMER_TABLE = "CREATE TABLE %s (%s INTEGER, %s TEXT)";
@@ -736,9 +737,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
             ContentValues values = new ContentValues();
             values.put(KEY_BROADCAST_TIME, timeInMillis);
-            values.put(KEY_MESSAGE, msg);
+            values.put(KEY_BROADCAST_MESSAGE, msg);
             values.put(KEY_BROADCAST_TYPE, type);
             values.put(KEY_PROMO_NAME, promoName);
+            values.put(KEY_SENT, 0);
 
             broadcastId = (int) db.insert(TABLE_CUSTOMER_BROADCAST, null, values);
             insertCustomerForRecipientList(broadcastId, customers, db);
@@ -762,6 +764,64 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             values.put(KEY_CUSTOMER_ID, c.getCustomerId());
 
             db.insert(TABLE_RECIPIENT_LIST_CUSTOMER, null, values);
+        }
+    }
+
+    public List<CustomerBroadcast> getAllCustomerBroadcastsBeforeTimestamp(long now) {
+        SQLiteDatabase db = null;
+        List<CustomerBroadcast> cbList = new ArrayList<CustomerBroadcast>();
+
+        try {
+            db = getReadableDatabase();
+            String whereClause = String.format("%s <= %d AND %s != 1", KEY_BROADCAST_TIME, now, KEY_SENT);
+            String orderBy = KEY_BROADCAST_TIME + " ASC";
+            String query = String.format("SELECT * FROM %s WHERE %s ORDER BY %s", TABLE_CUSTOMER_BROADCAST, whereClause, orderBy);
+            Cursor cursor = db.rawQuery(query, null);
+            if (cursor != null && cursor.moveToFirst()){
+                do {
+                    long timestamp = cursor.getLong(cursor.getColumnIndex(KEY_BROADCAST_TIME));
+                    int recList = cursor.getInt(cursor.getColumnIndex(KEY_RECIPIENT_LIST));
+                    String msg = cursor.getString(cursor.getColumnIndex(KEY_BROADCAST_MESSAGE));
+                    String type = cursor.getString(cursor.getColumnIndex(KEY_BROADCAST_TYPE));
+                    String promoName = cursor.getString(cursor.getColumnIndex(KEY_PROMO_NAME));
+                    CustomerBroadcast cb = new CustomerBroadcast(timestamp, recList, msg, type, promoName);
+                    cbList.add(cb);
+
+                } while (cursor.moveToNext());
+            }
+
+            //loop through cbList and get the customers' phones
+            for (CustomerBroadcast cb : cbList){
+                whereClause = String.format("%s = %d", KEY_RECIPIENT_LIST, cb.getRecipientListId());
+                cursor = db.query(TABLE_RECIPIENT_LIST_CUSTOMER, new String[] {KEY_CUSTOMER_ID}, whereClause, null, null, null, null);
+                List<String> recipientPhones = new ArrayList<String>();
+                if (cursor.moveToFirst()){
+                    do {
+                        recipientPhones.add(cursor.getString(0));
+                    } while (cursor.moveToNext());
+                }
+
+                cb.setRecipientPhoneNumbers(recipientPhones);
+            }
+        } finally {
+            if (db != null){
+                db.close();
+            }
+        }
+
+        return cbList;
+    }
+
+    public void markBroadcastIdAsSent(int recipientListId) {
+        SQLiteDatabase db = null;
+        try {
+            db = getWritableDatabase();
+            String update = String.format("UPDATE %s SET %s = %d WHERE %s = %d ", TABLE_CUSTOMER_BROADCAST, KEY_SENT, 1, KEY_RECIPIENT_LIST, recipientListId);
+            db.execSQL(update);
+        } finally {
+            if (db != null){
+                db.close();
+            }
         }
     }
 }
