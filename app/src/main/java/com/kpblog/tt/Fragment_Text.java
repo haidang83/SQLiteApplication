@@ -10,6 +10,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,7 +42,7 @@ import java.util.List;
  * Use the {@link Fragment_Text#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class Fragment_Text extends Fragment {
+public class Fragment_Text extends Fragment implements TextView.OnEditorActionListener{
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String KEY_CUSTOMER_ARRAY = "customerArray";
@@ -107,6 +108,7 @@ public class Fragment_Text extends Fragment {
 
         adminCode = (EditText) (getView().findViewById(R.id.adminCode));
         adminCode.setTransformationMethod(null);
+        adminCode.setOnEditorActionListener(this);
 
         adminDropdown = (Spinner) getView().findViewById(R.id.adminPhoneDropdown);
         String[] admins = handler.getAllAdmins().toArray(new String[0]);
@@ -226,6 +228,8 @@ public class Fragment_Text extends Fragment {
             Intent intent = new Intent(getContext(), TraTemptationReceiver.class);
             intent.setAction(Constants.SCHEDULED_TEXT_ACTION);
             Util.setAlarmForScheduledJob(getContext(), scheduledTime, intent, broadcastId);
+            Util.displayToast(getContext(), String.format("Text scheduled for %s", scheduledTimeDropdown.getSelectedItem().toString()));
+            submitBtn.setEnabled(false);
         }
     }
 
@@ -371,6 +375,17 @@ public class Fragment_Text extends Fragment {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
+    }
+
+    @Override
+    public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+        String id = textView.getResources().getResourceEntryName(textView.getId());
+        String adminCodeId = adminCode.getResources().getResourceEntryName(adminCode.getId());
+
+        if (id.equals(adminCodeId)) {
+            unlockScreen();
+        }
+        return true;
     }
 
     @Override

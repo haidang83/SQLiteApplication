@@ -16,6 +16,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.telephony.PhoneNumberFormattingTextWatcher;
 import android.telephony.SmsManager;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +24,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.kpblog.tt.dao.DatabaseHandler;
@@ -40,7 +42,7 @@ import java.io.File;
  * Use the {@link Fragment_Admin#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class Fragment_Admin extends Fragment {
+public class Fragment_Admin extends Fragment implements TextView.OnEditorActionListener{
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -108,6 +110,7 @@ public class Fragment_Admin extends Fragment {
         handler = new DatabaseHandler(getContext());
         adminCode = (EditText) (getView().findViewById(R.id.adminCode));
         adminCode.setTransformationMethod(null);
+        adminCode.setOnEditorActionListener(this);
 
         adminDropdown = (Spinner) getView().findViewById(R.id.adminPhoneDropdown);
         String[] admins = handler.getAllAdmins().toArray(new String[0]);
@@ -584,6 +587,17 @@ public class Fragment_Admin extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+        String id = textView.getResources().getResourceEntryName(textView.getId());
+        String adminCodeId = adminCode.getResources().getResourceEntryName(adminCode.getId());
+
+        if (id.equals(adminCodeId)) {
+            unlockScreen();
+        }
+        return true;
     }
 
     /**

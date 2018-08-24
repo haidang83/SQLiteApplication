@@ -731,7 +731,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
             }
 
             handler.addReferralCreditForCustomerId(immediateReferrerId, immediateReferralCredit);
-            CustomerPurchase cp = new CustomerPurchase(purchaseDate, immediateReferrerId, immediateReferralCredit, receiptNum, customer.getCustomerId());
+            CustomerPurchase cp = new CustomerPurchase(purchaseDate, immediateReferrerId, immediateReferralCredit, receiptNum, "ref: " + customer.getCustomerId());
             handler.insertCustomerPurchase(cp);
             if (immediateReferrer.isOptIn()){
                 /**
