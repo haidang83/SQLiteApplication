@@ -26,12 +26,16 @@ public class Constants {
     public static final int NIGHT_ALARM_ID = 1234;
     public static final int MORNING_ALARM_ID = 2345;
     public static final String DB_BACKUP_ACTION = "DB_BACKUP";
+    public static final String SCHEDULED_TEXT_ACTION = "SCHEDULED_TEXT";
 
     public static long DAYS_TO_MILLIS = 24 * 60 * 60 * 1000;
 
     public static int FIRST_PURCHASE_IMMEDIATE_REFERRAL_CREDIT = 1;
     public static double IMMEDIATE_REFERRAL_CREDIT_RATE = 0.5;
     public static double SECOND_LEVEL_REFERRAL_CREDIT_RATE = 0.25;
+
+    public static final String CLAIM_CODE_PLACE_HOLDER = "{0}";
+    public static final String BROADCAST_TYPE_ON_DEMAND = "ON-DEMAND";
 
     public static String[] PERMISSIONS_STORAGE_SMS = {
             Manifest.permission.READ_EXTERNAL_STORAGE,

@@ -14,7 +14,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.kpblog.tt.dao.DatabaseHandler;
-import com.kpblog.tt.model.Customer;
+import com.kpblog.tt.model.CustomerClaimCode;
 import com.kpblog.tt.receiver.TraTemptationReceiver;
 
 import java.io.File;
@@ -22,6 +22,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -173,6 +174,15 @@ public class Util {
         Log.d("Util", "db backup scheduled for " + new SimpleDateFormat(Constants.YYYY_MM_HH_MM_SS_FORMAT).format(alarmTime.getTime()));
     }
 
+    public static void setAlarmForScheduledJob(Context ctx, Calendar alarmTime, Intent intent, int id){
+
+        PendingIntent scheduleJobIntent = PendingIntent.getBroadcast(ctx, id, intent, 0);
+
+        AlarmManager alarms = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
+
+        alarms.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, alarmTime.getTimeInMillis(), scheduleJobIntent);
+    }
+
     /**
      * create this method because the PhoneUtils returns a different format (xxx) xxx-xxxx
      * xxx-xxx-xxxx
@@ -202,12 +212,20 @@ public class Util {
         editor.commit();
     }
 
-    public static void textMultipleRecipientsAndUpdateLastTexted(List<String> recipients, String message,
-                                              DatabaseHandler handler, boolean updateLastTexted) {
+    public static void textPromoToMultipleRecipientsAndUpdateLastTexted(List<String> recipients, String message,
+                                                                        DatabaseHandler handler, boolean updateLastTexted,
+                                                                        String promoName) {
         Date today = new Date();
         for (String phone : recipients){
             //text and update database 1 by 1 so that there's some time gap between text
             //dont want carrier to block as spam
+            if(message.contains(Constants.CLAIM_CODE_PLACE_HOLDER)){
+                //need to fill in the claim code and save it to customerClaim table with the promo name
+                final String claimCode = Util.generateRandom4DigitCode();
+                message = MessageFormat.format(message, claimCode);
+                CustomerClaimCode cc = new CustomerClaimCode(phone, claimCode, today, promoName);
+                handler.insertOrUpdateCustomerClaimCode(cc);
+            }
             textSingleRecipient(phone, message);
             if (updateLastTexted){
                 handler.updateLastTexted(phone, today.getTime());
@@ -216,7 +234,7 @@ public class Util {
     }
 
     public static void textMultipleRecipients(List<String> recipients, String message){
-        textMultipleRecipientsAndUpdateLastTexted(recipients, message, null, false);
+        textPromoToMultipleRecipientsAndUpdateLastTexted(recipients, message, null, false, "");
     }
 
     public static void textSingleRecipient(String phone, String msg) {

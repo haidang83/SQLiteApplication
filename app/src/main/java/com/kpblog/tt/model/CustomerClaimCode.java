@@ -4,13 +4,18 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class CustomerClaimCode {
-    private String customerId, claimCode;
+    private String customerId, claimCode, promoName;
     private Date issuedDate;
 
-    public CustomerClaimCode(String customerId, String claimCode, Date issuedDate){
+    public CustomerClaimCode(String customerId, String claimCode, Date issuedDate, String promoName){
         this.customerId = customerId;
         this.claimCode = claimCode;
         this.issuedDate = issuedDate;
+        this.promoName = promoName;
+    }
+
+    public CustomerClaimCode(String customerId, String claimCode, Date issuedDate){
+       this(customerId, claimCode, issuedDate, "");
     }
 
     public String getCustomerId() {
@@ -33,8 +38,8 @@ public class CustomerClaimCode {
         return issuedDate;
     }
 
-    public void setIssuedDate(Date issuedDate) {
-        this.issuedDate = issuedDate;
+    public String getPromoName() {
+        return promoName;
     }
 
     @Override

@@ -36,8 +36,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/adminCode"
-                    android:inputType="phone"
-                    android:digits="0123456789+"
+                    android:inputType="numberPassword"
                     android:imeOptions="actionNext">
                 </EditText>
             </android.support.design.widget.TextInputLayout>
@@ -167,12 +166,12 @@
                 app:hintTextAppearance="@style/FloatingLabel">
 
                 <EditText
-                    android:id="@+id/promotionCode"
+                    android:id="@+id/promotionName"
                     android:layout_marginLeft="-2dp"
                     android:layout_marginRight="-2dp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Promotion Code" />
+                    android:hint="Promotion Name(to show on claim tab)" />
             </android.support.design.widget.TextInputLayout>
 
             <LinearLayout android:id="@+id/textOrScheduleLayout"

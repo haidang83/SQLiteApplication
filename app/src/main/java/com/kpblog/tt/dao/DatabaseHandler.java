@@ -53,7 +53,18 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     private static final String TABLE_CUSTOMER_CLAIM_CODE = "customerClaimCode";
     private static final String KEY_CLAIM_CODE = "claimCode";
+    private static final String KEY_PROMO_NAME = "promoName";
     private static final String KEY_DATE_ISSUED = "dateIssued";
+
+    private static final String TABLE_CUSTOMER_BROADCAST = "customerBroadcast";
+    private static final String KEY_RECIPIENT_LIST = "recipientList";
+    private static final String KEY_BROADCAST_TIME = "broadcastTime";
+    private static final String KEY_MESSAGE = "message";
+    private static final String KEY_BROADCAST_TYPE = "broadcastType";
+    private static final String KEY_SENT = "sent";
+
+    private static final String TABLE_RECIPIENT_LIST_CUSTOMER = "recipientListCustomer";
+
 
     private static final String TABLE_ADMIN = "admin";
 
@@ -78,8 +89,16 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_PURCHASE_TABLE, TABLE_CUSTOMER_PURCHASE, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE, KEY_NOTES));
 
         //this table has the outstanding claim code for the customer, only at most 1 outstanding code per customer
-        String CREATE_CUSTOMER_CLAIM_CODE_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY, %s TEXT, %s INTEGER)";
-        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_CLAIM_CODE_TABLE, TABLE_CUSTOMER_CLAIM_CODE, KEY_CUSTOMER_ID, KEY_CLAIM_CODE, KEY_DATE_ISSUED));
+        String CREATE_CUSTOMER_CLAIM_CODE_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY, %s TEXT, %s INTEGER, %s TEXT)";
+        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_CLAIM_CODE_TABLE, TABLE_CUSTOMER_CLAIM_CODE, KEY_CUSTOMER_ID, KEY_CLAIM_CODE, KEY_DATE_ISSUED, KEY_PROMO_NAME));
+
+        //this table has all the broadcast schedule/sent to customers
+        String CREATE_CUSTOMER_BROADCAST_TABLE = "CREATE TABLE %s (%s INTEGER PRIMARY KEY, %s INTEGER, %s TEXT, %s TEXT, %s INTEGER, %s TEXT)";
+        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_BROADCAST_TABLE, TABLE_CUSTOMER_BROADCAST, KEY_RECIPIENT_LIST, KEY_BROADCAST_TIME, KEY_MESSAGE, KEY_BROADCAST_TYPE, KEY_SENT, KEY_PROMO_NAME));
+
+        //this table has all the customers in a recipient list
+        String CREATE_RECIPIENT_LIST_CUSTOMER_TABLE = "CREATE TABLE %s (%s INTEGER, %s TEXT)";
+        sqLiteDatabase.execSQL(String.format(CREATE_RECIPIENT_LIST_CUSTOMER_TABLE, TABLE_RECIPIENT_LIST_CUSTOMER, KEY_RECIPIENT_LIST, KEY_CUSTOMER_ID));
 
         String CREATE_ADMIN_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY)";
         sqLiteDatabase.execSQL(String.format(CREATE_ADMIN_TABLE, TABLE_ADMIN, KEY_CUSTOMER_ID));
@@ -404,6 +423,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(KEY_CUSTOMER_ID, cc.getCustomerId());
         values.put(KEY_CLAIM_CODE, cc.getClaimCode());
+        values.put(KEY_PROMO_NAME, cc.getPromoName());
 
         values.put(KEY_DATE_ISSUED, cc.getIssuedDate().getTime());
 
@@ -416,21 +436,24 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.close();
     }
 
-    public String getClaimCodeByCustomerId(String customerId) {
-        String code = "";
+    public CustomerClaimCode getClaimCodeByCustomerId(String customerId) {
+        CustomerClaimCode cc = null;
         SQLiteDatabase db = this.getReadableDatabase();
 
         // Select All Query
-        Cursor cursor = db.query(TABLE_CUSTOMER_CLAIM_CODE, new String[] {KEY_CLAIM_CODE}, KEY_CUSTOMER_ID + "=?", new String[] { customerId },
+        Cursor cursor = db.query(TABLE_CUSTOMER_CLAIM_CODE, new String[] {KEY_CLAIM_CODE, KEY_PROMO_NAME, KEY_DATE_ISSUED}, KEY_CUSTOMER_ID + "=?", new String[] { customerId },
                 null, null, null, null);
 
-        // Getting the address list which we already into our database
         if (cursor != null && cursor.moveToFirst()) {
-            code = cursor.getString(0);
+            String code = cursor.getString(0);
+            String promoName = cursor.getString(1);
+            java.util.Date dateIssued = new java.util.Date(cursor.getLong(2));
+
+            cc = new CustomerClaimCode(customerId, code, dateIssued, promoName);
         }
 
         db.close();
-        return code;
+        return cc;
     }
 
 
@@ -700,5 +723,45 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
 
         return testUsers;
+    }
+
+    public int insertIntoCustomerBroadcastTable(long timeInMillis, String msg, String type,
+                                                 String promoName, Customer[] customers) {
+
+        SQLiteDatabase db = null;
+        int broadcastId = 0;
+        try {
+            db = this.getWritableDatabase();
+            db.beginTransaction();
+
+            ContentValues values = new ContentValues();
+            values.put(KEY_BROADCAST_TIME, timeInMillis);
+            values.put(KEY_MESSAGE, msg);
+            values.put(KEY_BROADCAST_TYPE, type);
+            values.put(KEY_PROMO_NAME, promoName);
+
+            broadcastId = (int) db.insert(TABLE_CUSTOMER_BROADCAST, null, values);
+            insertCustomerForRecipientList(broadcastId, customers, db);
+
+            db.setTransactionSuccessful();
+        } finally {
+            if (db != null){
+                db.endTransaction();
+                db.close();
+            }
+        }
+
+        return broadcastId;
+    }
+
+    private void insertCustomerForRecipientList(int id, Customer[] customers, SQLiteDatabase db) {
+        for (Customer c : customers){
+
+            ContentValues values = new ContentValues();
+            values.put(KEY_RECIPIENT_LIST, id);
+            values.put(KEY_CUSTOMER_ID, c.getCustomerId());
+
+            db.insert(TABLE_RECIPIENT_LIST_CUSTOMER, null, values);
+        }
     }
 }

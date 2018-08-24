@@ -1,11 +1,13 @@
 package com.kpblog.tt;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -21,11 +23,12 @@ import android.widget.Toast;
 
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
+import com.kpblog.tt.receiver.TraTemptationReceiver;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 
@@ -54,7 +57,7 @@ public class Fragment_Text extends Fragment {
     private Button getCodeBtn, lockUnlockBtn, submitBtn;
     private long getCodeBtnLastClicked, lockUnlockBtnLastClicked, submitBtnLastClicked;
     private Spinner textActionDropdown, userTypeDropdown, scheduledTimeDropdown;
-    private EditText testUsers, promotionCode;
+    private EditText testUsers, promotionName;
 
     public Fragment_Text() {
         // Required empty public constructor
@@ -98,6 +101,7 @@ public class Fragment_Text extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         handler = new DatabaseHandler(getContext());
         adminCode = (EditText) (getView().findViewById(R.id.adminCode));
+        adminCode.setTransformationMethod(null);
 
         adminDropdown = (Spinner) getView().findViewById(R.id.adminPhoneDropdown);
         String[] admins = handler.getAllAdmins().toArray(new String[0]);
@@ -142,7 +146,7 @@ public class Fragment_Text extends Fragment {
         recipientBox.setText(getFormattedRecipientList(customers));
 
         messageBox = (EditText) getView().findViewById(R.id.messageBox);
-        promotionCode = (EditText) getView().findViewById(R.id.promotionCode);
+        promotionName = (EditText) getView().findViewById(R.id.promotionName);
 
         textActionDropdown = (Spinner) getView().findViewById(R.id.textActionDropdown);
         textActionDropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -186,17 +190,14 @@ public class Fragment_Text extends Fragment {
             return;
         }
 
-        String promoCodeStr = promotionCode.getText().toString();
-        if (!promoCodeStr.isEmpty()){
-            msg = MessageFormat.format(msg, promoCodeStr);
-        }
+        String promoName = promotionName.getText().toString();
 
         String action = textActionDropdown.getSelectedItem().toString();
         if (getString(R.string.textNow).equals(action)){
             String userType = userTypeDropdown.getSelectedItem().toString();
             if (getString(R.string.realUsers).equals(userType)){
                 //text real users from customer list
-                textCustomers(msg);
+                textCustomers(msg, promoName);
             }
             else {
                 //text test users
@@ -206,13 +207,42 @@ public class Fragment_Text extends Fragment {
                     return;
                 }
                 List<String> testPhoneNumbers = splitIntoTestPhoneNumbers(testUserList);
-                Util.textMultipleRecipientsAndUpdateLastTexted(testPhoneNumbers, msg, handler, true);
+                Util.textPromoToMultipleRecipientsAndUpdateLastTexted(testPhoneNumbers, msg, handler, true, promoName);
                 Util.displayToast(getContext(), String.format("Message sent to %d test users", testPhoneNumbers.size()));
             }
         }
         else {
-            //schedule now
+            //schedule
+            //e.g 10:00
+            Calendar scheduledTime = getScheduledTime();
+            String type = Constants.BROADCAST_TYPE_ON_DEMAND;
+            int broadcastId = handler.insertIntoCustomerBroadcastTable(scheduledTime.getTimeInMillis(), msg, type, promoName, customers);
+
+            //need to set the alarm to send the message
+            Intent intent = new Intent(getContext(), TraTemptationReceiver.class);
+            intent.setAction(Constants.SCHEDULED_TEXT_ACTION);
+            Util.setAlarmForScheduledJob(getContext(), scheduledTime, intent, broadcastId);
         }
+    }
+
+    @NonNull
+    private Calendar getScheduledTime() {
+        String[] scheduledTime = scheduledTimeDropdown.getSelectedItem().toString().split(":");
+        int scheduleHour = Integer.parseInt(scheduledTime[0]);
+        int scheduledMin = Integer.parseInt(scheduledTime[1]);
+
+        Calendar alarmTime = Calendar.getInstance();
+        alarmTime.set(Calendar.HOUR_OF_DAY, scheduleHour);
+        alarmTime.set(Calendar.MINUTE, scheduledMin);
+        alarmTime.set(Calendar.SECOND, 0);
+
+        final long now = System.currentTimeMillis();
+        if (now >= alarmTime.getTimeInMillis()){
+            //current time is already later than the alarm time, set for next day
+            alarmTime.add(Calendar.DAY_OF_MONTH, 1);
+        }
+
+        return alarmTime;
     }
 
     private List<String> splitIntoTestPhoneNumbers(String testUserList) {
@@ -256,7 +286,7 @@ public class Fragment_Text extends Fragment {
         return sb.toString();
     }
 
-    private void textCustomers(String msg) {
+    private void textCustomers(String msg, String promoName) {
         if (customers != null && customers.length > 0){
 
             List<String> recipients = new ArrayList<String>();
@@ -264,7 +294,7 @@ public class Fragment_Text extends Fragment {
                 recipients.add(c.getCustomerId());
             }
 
-            Util.textMultipleRecipientsAndUpdateLastTexted(recipients, msg, handler, true);
+            Util.textPromoToMultipleRecipientsAndUpdateLastTexted(recipients, msg, handler, true, promoName);
             Util.displayToast(getContext(),"message sent to " + recipients.size() + " recipients");
         }
         else {

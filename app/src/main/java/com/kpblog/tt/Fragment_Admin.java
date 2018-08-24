@@ -107,6 +107,7 @@ public class Fragment_Admin extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState){
         handler = new DatabaseHandler(getContext());
         adminCode = (EditText) (getView().findViewById(R.id.adminCode));
+        adminCode.setTransformationMethod(null);
 
         adminDropdown = (Spinner) getView().findViewById(R.id.adminPhoneDropdown);
         String[] admins = handler.getAllAdmins().toArray(new String[0]);

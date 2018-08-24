@@ -34,8 +34,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/adminCode"
-                    android:inputType="phone"
-                    android:digits="0123456789+"
+                    android:inputType="numberPassword"
                     android:imeOptions="actionNext">
                 </EditText>
             </android.support.design.widget.TextInputLayout>

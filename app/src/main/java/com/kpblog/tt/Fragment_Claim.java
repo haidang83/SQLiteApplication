@@ -250,8 +250,10 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         String unformattedPhoneNum = Util.getUnformattedPhoneNumber(this.phone.getText().toString());
 
         if (code != null && code.matches(Constants.FOUR_DIGIT_REGEXP)){
-            String dbCode = handler.getClaimCodeByCustomerId(unformattedPhoneNum);
-            isSuccess = code.equals(dbCode);
+            CustomerClaimCode cc = handler.getClaimCodeByCustomerId(unformattedPhoneNum);
+            if (cc != null){
+                isSuccess = code.equals(cc.getClaimCode());
+            }
         }
 
         if (isSuccess){
