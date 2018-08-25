@@ -34,6 +34,10 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="MyCheckBox" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorControlActivated">@color/colorPrimary</item>
+    </style>
+
     <style name="FloatingLabel" parent="@android:style/TextAppearance" >
         <item name="android:textColor">@color/colorPrimary</item>
         <item name="android:textSize">11sp</item>
