@@ -297,9 +297,11 @@ public class Util {
 
     public static void sendScheduledBroadcast(Context ctx, DatabaseHandler handler) {
         List<CustomerBroadcast> cbList = handler.getAllTodayCustomerBroadcastsBeforeTimestamp(System.currentTimeMillis());
-        List<String> recipientSent = new ArrayList<String>();
+        StringBuffer summary = new StringBuffer("schedule broadcast summary: ");
 
         for (int i = 0; i < cbList.size(); i++){
+            List<String> recipientSent = new ArrayList<String>();
+
             CustomerBroadcast cb = cbList.get(i);
             if (Constants.BROADCAST_TYPE_SCHEDULED_FREE_FORM.equals(cb.getType())){
                 //for free-form, can use the customer list from the db to text
@@ -325,15 +327,12 @@ public class Util {
             }
 
             handler.markBroadcastIdAsSent(cb.getRecipientListId());
+
+            summary.append(cb.getType() + "->" + recipientSent.size() + "; ");
         }
 
         List<String> admins = handler.getAllAdmins();
-        if (recipientSent.size() > 0){
-            Util.textMultipleRecipients(admins, "broadcast sent");
-        }
-        else {
-            Util.textMultipleRecipients(admins, "ran scheduled broadcast, but no recipient to send");
-        }
+        Util.textMultipleRecipients(admins, summary.toString());
     }
 
     private static List<String> broadcastInactiveOldPromoReminder(DatabaseHandler handler, CustomerBroadcast cb) {
