@@ -23,6 +23,10 @@ public class CustomerPurchase {
         this.notes = notes;
     }
 
+    public CustomerPurchase(Date purchaseDate, String customerId, double quantity, int receiptNum){
+        this(purchaseDate, customerId, quantity, receiptNum, null);
+    }
+
     public Date getPurchaseDate() {
         return purchaseDate;
     }

@@ -15,9 +15,43 @@
         android:layout_marginLeft="3dp"
         android:layout_height="match_parent">
 
+        <LinearLayout android:id="@+id/sampleQuery"
+            android:layout_width="match_parent"
+            android:orientation="horizontal"
+            android:layout_weight="1"
+            android:layout_height="0dp">
+
+            <EditText
+                android:text="@string/templateQuery"
+                android:enabled="false"
+                android:layout_weight="6"
+                android:layout_width="0dp"
+                android:textStyle="bold"
+                android:textAllCaps="true"
+                android:gravity="bottom"
+                android:textColor="@color/grey"
+                android:layout_height="match_parent" />
+
+            <Spinner
+                android:id="@+id/templateQueryType"
+                android:layout_weight="4"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginRight="0dp"
+                android:paddingRight="0dp"
+                android:layout_marginLeft="-5dp"
+                android:layout_gravity="start"
+                android:theme="@style/SpinnerItemTextAppearance"
+                android:entries="@array/queryTypeDropdown"
+                android:gravity="bottom"
+                android:spinnerMode="dropdown"/>
+
+
+        </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_weight="0.9"
+            android:layout_weight="1"
             android:layout_height="0dp"
             android:orientation="horizontal"
             android:layout_gravity="bottom"
@@ -83,7 +117,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_weight="0.9"
+            android:layout_weight="1"
             android:layout_height="0dp"
             android:orientation="horizontal"
             android:id="@+id/daysSinceLastTextLayout">
@@ -146,7 +180,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_weight="0.9"
+            android:layout_weight="1"
             android:layout_height="0dp"
             android:orientation="horizontal"
             android:layout_gravity="bottom"
@@ -211,7 +245,7 @@
         <LinearLayout android:id="@+id/orderByPanel"
             android:layout_width="match_parent"
             android:orientation="horizontal"
-            android:layout_weight="0.9"
+            android:layout_weight="1"
             android:layout_height="0dp">
 
             <Spinner
@@ -262,7 +296,7 @@
         </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_weight="0.9"
+            android:layout_weight="1"
             android:orientation="horizontal"
             android:layout_height="0dp">
 
@@ -300,7 +334,7 @@
             android:layout_width="match_parent"
             android:layout_marginTop="3dp"
             android:layout_height="0dp"
-            android:layout_weight="4.5">
+            android:layout_weight="4">
             <ListView
                 android:id="@+id/listview"
                 android:layout_width="match_parent"

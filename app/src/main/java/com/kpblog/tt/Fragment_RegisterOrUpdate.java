@@ -2,13 +2,10 @@ package com.kpblog.tt;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.preference.PreferenceManager;
-import android.support.design.widget.TabLayout;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -34,8 +31,6 @@ import com.kpblog.tt.util.AsteriskPasswordTransformationMethod;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
-import org.w3c.dom.Text;
-
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -53,11 +48,11 @@ import java.util.List;
 public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEditorActionListener{
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    private static final String CUSTOMER_ID_KEY = "param1";
+    private static final String PROMO_NAME_KEY = "param2";
 
     private EditText phone, referrerPhone, todayCredit, previousCredit, missingCredit, receiptNum, cashierCode, note;
-    private TextInputLayout referrerLayout;
+    private TextInputLayout referrerLayout, noteLayout;
     private Button confirmBtn, cancelBtn;
     private CheckBox optIn;
     private DatabaseHandler handler;
@@ -67,7 +62,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
 
     // TODO: Rename and change types of parameters
     private String customerId = "";
-    private String mParam2;
+    private String promoName;
 
     private OnFragmentInteractionListener mListener;
     private View view;
@@ -81,15 +76,15 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
      * this fragment using the provided parameters.
      *
      * @param customerId Parameter 1.
-     * @param param2 Parameter 2.
+     * @param promoName Parameter 2.
      * @return A new instance of fragment Fragment_RegisterOrUpdate.
      */
     // TODO: Rename and change types and number of parameters
-    public static Fragment_RegisterOrUpdate newInstance(String customerId, String param2) {
+    public static Fragment_RegisterOrUpdate newInstance(String customerId, String promoName) {
         Fragment_RegisterOrUpdate fragment = new Fragment_RegisterOrUpdate();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, customerId);
-        args.putString(ARG_PARAM2, param2);
+        args.putString(CUSTOMER_ID_KEY, customerId);
+        args.putString(PROMO_NAME_KEY, promoName);
         fragment.setArguments(args);
         return fragment;
     }
@@ -98,8 +93,8 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            customerId = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+            customerId = getArguments().getString(CUSTOMER_ID_KEY);
+            promoName = getArguments().getString(PROMO_NAME_KEY);
         }
 
     }
@@ -158,6 +153,7 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
             }
         });
 
+        noteLayout = (TextInputLayout) getView().findViewById(R.id.noteLayout);
         note = (EditText) getView().findViewById(R.id.note);
 
         missingCredit = (EditText) getView().findViewById(R.id.missingCredit);
@@ -209,6 +205,11 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
         if (Util.getUnformattedPhoneNumber(customerId).length() ==10){
             //handle on reload of the tab from claim tab after successful claim, if there's a valid phone number, reload the info
             phone.setText(customerId);
+
+            if (promoName != null && !promoName.isEmpty()){
+                noteLayout.setVisibility(View.VISIBLE);
+                note.setText("pro: " + promoName);
+            }
             getCustomerInfoFromDatabaseAndUpdateScreen();
         }
     }
@@ -665,7 +666,13 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
 
             handler.registerOrUpdateCustomer(customer, isNewCustomer);
             int receiptNumInt = Integer.parseInt(receiptNum.getText().toString());
-            insertCustomerPurchase(customer.getCustomerId(), todayCredit, today, receiptNumInt);
+
+            CustomerPurchase cp = new CustomerPurchase(today, customer.getCustomerId(), todayCredit, receiptNumInt);
+            if (note.getVisibility() == View.VISIBLE && !note.getText().toString().isEmpty()){
+                cp.setNotes(note.getText().toString());
+                handler.deleteClaimCodeForCustomerId(customer.getCustomerId(), true);
+            }
+            handler.insertCustomerPurchase(cp);
 
             creditReferrer(customer, isNewCustomer, todayCredit, today, receiptNumInt);
 
@@ -786,16 +793,5 @@ public class Fragment_RegisterOrUpdate extends Fragment implements TextView.OnEd
     private void insertOrUpdateClaimCodeDb(String phoneNumber, String codeStr) {
         CustomerClaimCode cc = new CustomerClaimCode(phoneNumber, codeStr, new java.util.Date());
         handler.insertOrUpdateCustomerClaimCode(cc);
-    }
-
-    private void insertCustomerPurchase(String customerId, int todayCredit, Date purchaseTime, int receiptNumInt) {
-        CustomerPurchase cp = new CustomerPurchase();
-
-        cp.setCustomerId(customerId);
-        cp.setQuantity(todayCredit);
-        cp.setPurchaseDate(purchaseTime);
-        cp.setReceiptNum(receiptNumInt);
-
-        handler.insertCustomerPurchase(cp);
     }
 }

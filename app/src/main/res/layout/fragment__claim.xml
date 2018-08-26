@@ -63,56 +63,74 @@
             </android.support.design.widget.TextInputLayout>
         </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/availDrinkAndClaimLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        <LinearLayout
+            android:id="@+id/availDrinkAndClaimLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/freeDrinkLayout"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp">
+
+                <EditText
+                    android:id="@+id/freeDrink"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:enabled="false"
+                    android:focusable="false"
+                    android:hint="@string/freeDrink"
+                    android:inputType="none"
+                    android:textColor="#5c5959" />
+            </android.support.design.widget.TextInputLayout>
+
+            <!--spacer-->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.10"
+                android:visibility="invisible" />
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/freeDrinkClaimTodayLayout"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp">
+
+                <EditText
+                    android:id="@+id/freeDrinkClaimToday"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:enabled="false"
+                    android:hint="@string/freeDrinkClaimToday"
+                    android:inputType="numberPassword"
+                    android:imeOptions="actionDone"
+                    android:textColor="#5c5959" />
+            </android.support.design.widget.TextInputLayout>
+        </LinearLayout>
+
+        <!--this only shows if there's promo-->
         <android.support.design.widget.TextInputLayout
-            android:id="@+id/freeDrinkLayout"
-            android:layout_width="0dp"
-            android:layout_weight="1"
+            android:id="@+id/availPromoLayout"
+            android:visibility="gone"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp">
 
             <EditText
-                android:id="@+id/freeDrink"
+                android:id="@+id/availPromo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:enabled="false"
                 android:focusable="false"
-                android:hint="@string/freeDrink"
+                android:hint="@string/availPromo"
                 android:inputType="none"
                 android:textColor="#5c5959" />
         </android.support.design.widget.TextInputLayout>
-
-        <!--spacer-->
-        <View
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="0.10"
-            android:visibility="invisible" />
-
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/freeDrinkClaimTodayLayout"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp">
-
-            <EditText
-                android:id="@+id/freeDrinkClaimToday"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:enabled="false"
-                android:hint="@string/freeDrinkClaimToday"
-                android:inputType="numberPassword"
-                android:imeOptions="actionDone"
-                android:textColor="#5c5959" />
-        </android.support.design.widget.TextInputLayout>
-
-    </LinearLayout>
 
         <android.support.design.widget.TextInputLayout
             android:id="@+id/receiptLayout"

@@ -30,7 +30,8 @@
     <string name="getCode">Get Code</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="btnClaim">Claim</string>
-    <string name="getCodeMsg">Please use this code to claim your free drink: %s</string>
+    <string name="getCodeMsg_freeDrink">Please use this code to claim your free drink: %s</string>
+    <string name="getCodeMsg_promo">Please use this code to claim your promotion: %s</string>
     <string name="claimCode_err_msg">Invalid code</string>
     <string name="claimSuccess_msg">Success! Claim code is valid</string>
     <string name="claimSuccess_msg_textSent">Success! Claim code is valid. Confirmation sent</string>
@@ -126,17 +127,27 @@
         <item>@string/realUsers</item>
     </string-array>
     <string-array name="hourDropdown">
-        <item>10:00</item>
-        <item>11:00</item>
-        <item>12:00</item>
-        <item>13:00</item>
-        <item>14:00</item>
-        <item>15:00</item>
-        <item>16:00</item>
-        <item>17:00</item>
-        <item>18:00</item>
-        <item>19:00</item>
-        <item>20:00</item>
-        <item>21:00</item>
+        <item>10:30</item>
+        <item>11:30</item>
+        <item>12:30</item>
+        <item>13:30</item>
+        <item>14:30</item>
+        <item>15:30</item>
+        <item>16:30</item>
+        <item>17:30</item>
+        <item>18:30</item>
+        <item>19:30</item>
+        <item>20:30</item>
+        <item>21:30</item>
     </string-array>
+    <string name="templateQuery">TEMPLATE QUERY</string>
+    <string name="queryType_inactiveUser">INACTIVE</string>
+    <string name="queryType_drinkCreditReminder">REMINDER</string>
+    <string name="queryType_none">NONE</string>
+    <string-array name="queryTypeDropdown">
+        <item>@string/queryType_none</item>
+        <item>@string/queryType_inactiveUser</item>
+        <item>@string/queryType_drinkCreditReminder</item>
+    </string-array>
+    <string name="availPromo">Available Promotion</string>
 </resources>

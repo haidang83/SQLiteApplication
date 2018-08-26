@@ -104,7 +104,7 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
         handler = new DatabaseHandler(getContext());
 
         //test code, remove when done
-        //Util.sendScheduledBroadcast(handler);
+        Util.sendScheduledBroadcast(handler);
 
         adminCode = (EditText) (getView().findViewById(R.id.adminCode));
         adminCode.setTransformationMethod(null);

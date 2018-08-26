@@ -213,25 +213,33 @@ public class Util {
         editor.commit();
     }
 
-    public static void textPromoToMultipleRecipientsAndUpdateLastTexted(List<String> recipients, String message,
+    public static boolean textPromoToMultipleRecipientsAndUpdateLastTexted(List<String> recipients, String message,
                                                                         DatabaseHandler handler, boolean updateLastTexted,
                                                                         String promoName) {
+        boolean sentToRecipient = false;
+
         Date today = new Date();
         for (String phone : recipients){
             //text and update database 1 by 1 so that there's some time gap between text
             //dont want carrier to block as spam
+
+            String messageWithCode = message;
             if(message.contains(Constants.CLAIM_CODE_PLACE_HOLDER)){
                 //need to fill in the claim code and save it to customerClaim table with the promo name
                 final String claimCode = Util.generateRandom4DigitCode();
-                message = MessageFormat.format(message, claimCode);
+                messageWithCode = MessageFormat.format(message, claimCode);
                 CustomerClaimCode cc = new CustomerClaimCode(phone, claimCode, today, promoName);
                 handler.insertOrUpdateCustomerClaimCode(cc);
             }
-            textSingleRecipient(phone, message);
+            textSingleRecipient(phone, messageWithCode);
             if (updateLastTexted){
                 handler.updateLastTexted(phone, today.getTime());
             }
+
+            sentToRecipient = true;
         }
+
+        return sentToRecipient;
     }
 
     public static void textMultipleRecipients(List<String> recipients, String message){
@@ -281,17 +289,23 @@ public class Util {
     }
 
     public static void sendScheduledBroadcast(DatabaseHandler handler) {
-        List<CustomerBroadcast> cbList = handler.getAllCustomerBroadcastsBeforeTimestamp(System.currentTimeMillis());
+        List<CustomerBroadcast> cbList = handler.getAllTodayCustomerBroadcastsBeforeTimestamp(System.currentTimeMillis());
+        boolean sentToRecipient = false;
 
         for (int i = 0; i < cbList.size(); i++){
             CustomerBroadcast cb = cbList.get(i);
-            Util.textPromoToMultipleRecipientsAndUpdateLastTexted(cb.getRecipientPhoneNumbers(),
+            sentToRecipient = Util.textPromoToMultipleRecipientsAndUpdateLastTexted(cb.getRecipientPhoneNumbers(),
                     cb.getMessage(), handler, true, cb.getPromoName());
 
             handler.markBroadcastIdAsSent(cb.getRecipientListId());
         }
 
         List<String> admins = handler.getAllAdmins();
-        Util.textMultipleRecipients(admins, "broadcast sent");
+        if (sentToRecipient){
+            Util.textMultipleRecipients(admins, "broadcast sent");
+        }
+        else {
+            Util.textMultipleRecipients(admins, "ran scheduled broadcast, but no recipient to send");
+        }
     }
 }

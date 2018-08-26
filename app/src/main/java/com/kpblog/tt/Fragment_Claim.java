@@ -1,24 +1,23 @@
 package com.kpblog.tt;
 
-import android.Manifest;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.support.design.widget.TabLayout;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.telephony.PhoneNumberFormattingTextWatcher;
-import android.telephony.SmsManager;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,7 +50,9 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
     private String customerId = "";
     private String mParam2;
 
-    private EditText phone, claimCode, freeDrink, receiptNum, cashierCode, freeDrinkClaimToday;
+    private EditText phone, claimCode, freeDrink, receiptNum, cashierCode, freeDrinkClaimToday, availPromo;
+    private TextInputLayout availPromoLayout;
+    private LinearLayout availDrinkAndClaimLayout;
     private Button claimBtn, clearBtn, getCodeBtn;
     private DatabaseHandler handler;
 
@@ -107,7 +108,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
             @Override
             public void onFocusChange(View view, boolean hasFocus) {
                 if (!hasFocus){
-                    if (updateCustomerFreeDrink()){
+                    if (updateCustomerAvailClaim()){
                         //requestFocusOnTodayCredit();
                         //don't request focus here because if the user presses a different input field, then there'd be 2 fields with focus
                     }
@@ -116,6 +117,8 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         });
         phone.setOnEditorActionListener(this);
 
+        availDrinkAndClaimLayout = (LinearLayout) getView().findViewById(R.id.availDrinkAndClaimLayout);
+
         freeDrink = (EditText) (getView().findViewById(R.id.freeDrink));
         freeDrink.setText(String.valueOf(0));
 
@@ -123,6 +126,9 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         freeDrinkClaimToday.setText(String.valueOf(0));
         freeDrinkClaimToday.setTransformationMethod(null);
         freeDrinkClaimToday.setOnEditorActionListener(this);
+
+        availPromoLayout = (TextInputLayout) getView().findViewById(R.id.availPromoLayout);
+        availPromo = (EditText) getView().findViewById(R.id.availPromo);
 
         cashierCode = (EditText) getView().findViewById(R.id.cashierCode);
         cashierCode.setTransformationMethod(new AsteriskPasswordTransformationMethod());
@@ -148,9 +154,8 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
                 //to prevent double click
                 if (SystemClock.elapsedRealtime() - claimBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
                     claimBtnLastClicked = SystemClock.elapsedRealtime();
-                    if (validateClaimCode() && validateAmountClaimToday() && validateReceiptNum() && validateCashierCode()){
+                    if (validateClaimInput()){
                         updateSuccessfulClaim();
-                        clearScreen();
                     }
                 }
             }
@@ -175,14 +180,70 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         if (Util.getUnformattedPhoneNumber(customerId).length() == 10){
             //this is to handle the case where this fragment's data is passed from the other fragment
             phone.setText(customerId);
-            updateCustomerFreeDrink();
+            updateCustomerAvailClaim();
         }
+    }
+
+    private boolean validateClaimInput() {
+        if (isPromotionAvail()){
+            return validateClaimCode();
+        }
+        else {
+            return validateClaimCode() && validateAmountClaimToday() && validateReceiptNum() && validateCashierCode();
+        }
+    }
+
+    private boolean isPromotionAvail() {
+        return availPromoLayout.getVisibility() == View.VISIBLE;
     }
 
     private void updateSuccessfulClaim() {
         String customerId = Util.getUnformattedPhoneNumber(phone.getText().toString());
 
-        //update the total credit
+        if (isPromotionAvail()){
+            //delete promo code and take to sign-on tab with promo filled out
+            handleSuccessfulPromoClaim(customerId);
+        }
+        else {
+            handleSuccessfulFreeDrinkClaim(customerId);
+            clearScreen();
+
+            //refresh the sign-on page with updated credit
+            Fragment_RegisterOrUpdate frag = Fragment_RegisterOrUpdate.newInstance(customerId, null);
+            getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.registerFragment,frag).commit();
+        }
+
+        claimBtn.setEnabled(false);
+
+
+    }
+
+    /**
+     * don't delete promo claim code until user purchase
+     * take to user signon page with note field pre-populated with promoCode
+     * @param customerId
+     */
+    private void handleSuccessfulPromoClaim(String customerId) {
+        //will delete on user successful purchase
+        //handler.deleteClaimCodeForCustomerId(customerId, true);
+
+        final String promoName = availPromo.getText().toString();
+        clearScreen();
+
+        Fragment_RegisterOrUpdate frag = Fragment_RegisterOrUpdate.newInstance(customerId, promoName);
+        getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.registerFragment,frag).commit();
+        TabLayout tabs = (TabLayout)((MainActivity)getActivity()).findViewById(R.id.tabs);
+        tabs.getTabAt(0).select();
+    }
+
+    /**
+     * reset total credit
+     * record claim into customer purchase
+     * delete claim code
+     * @param customerId
+     */
+    private void handleSuccessfulFreeDrinkClaim(String customerId) {
+        //reset total credit
         Customer c = handler.getCustomerById(customerId);
         double totalCredit = c.getTotalCredit();
         int claimAmt = Integer.parseInt(freeDrinkClaimToday.getText().toString());
@@ -191,25 +252,17 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
 
         String receiptNumStr = receiptNum.getText().toString();
         recordClaimIntoCustomerPurchase(customerId, claimAmt, receiptNumStr);
-        handler.deleteClaimCodeForCustomerId(customerId);
-        claimBtn.setEnabled(false);
+        handler.deleteClaimCodeForCustomerId(customerId, false);
 
         if (c.isOptIn()){
             //send claim confirmation text
             String msg = String.format(getString(R.string.successfulClaim_text), remainingCredit);
-            sendText(customerId, msg, null);
+            Util.textSingleRecipient(customerId, msg);
+            Util.displayToast(getContext(), msg);
         }
         else {
             Toast.makeText(getContext().getApplicationContext(), getString(R.string.claimSuccess_msg), Toast.LENGTH_LONG).show();
         }
-
-        updateInfoOnSignInTab();
-    }
-
-    private void updateInfoOnSignInTab() {
-        String phoneNum = Util.getUnformattedPhoneNumber(this.phone.getText().toString());
-        Fragment_RegisterOrUpdate frag = Fragment_RegisterOrUpdate.newInstance(phoneNum, null);
-        getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.registerFragment,frag).commit();
     }
 
     private void clearScreen() {
@@ -220,11 +273,18 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         claimCode.setText("");
         claimCode.setError(null, null);
 
+        availDrinkAndClaimLayout.setVisibility(View.VISIBLE);
         freeDrink.setText("0");
         freeDrinkClaimToday.setText("0");
         freeDrinkClaimToday.setEnabled(false);
 
+        availPromoLayout.setVisibility(View.GONE);
+        availPromo.setText("");
+
+        receiptNum.setVisibility(View.VISIBLE);
         receiptNum.setText("");
+
+        cashierCode.setVisibility(View.VISIBLE);
         cashierCode.setText("");
 
         claimBtn.setEnabled(false);
@@ -249,8 +309,9 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         String code = claimCode.getText().toString();
         String unformattedPhoneNum = Util.getUnformattedPhoneNumber(this.phone.getText().toString());
 
+        boolean getPromo = isPromotionAvail();
         if (code != null && code.matches(Constants.FOUR_DIGIT_REGEXP)){
-            CustomerClaimCode cc = handler.getClaimCodeByCustomerId(unformattedPhoneNum);
+            CustomerClaimCode cc = handler.getClaimCodeByCustomerId(unformattedPhoneNum, getPromo);
             if (cc != null){
                 isSuccess = code.equals(cc.getClaimCode());
             }
@@ -275,98 +336,39 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
     private boolean requestClaimCode(){
         boolean isSuccess = false;
         String unformattedPhoneNum = Util.getUnformattedPhoneNumber(this.phone.getText().toString());
-        Customer c = handler.getCustomerById(unformattedPhoneNum);
-        if (c != null && c.getTotalCredit() >= Constants.FREE_DRINK_THRESHOLD){
-            //generate code and send sms
-            String code = Util.generateRandom4DigitCode();
-            String msg = String.format(getString(R.string.getCodeMsg), code);
-            sendText(unformattedPhoneNum, msg, code);
+        //generate code and send sms
+        String code = Util.generateRandom4DigitCode();
+        String msg = "";
+        if (isPromotionAvail()){
+            msg = String.format(getString(R.string.getCodeMsg_promo), code);
         }
-
+        else {
+            msg = String.format(getString(R.string.getCodeMsg_freeDrink), code);
+        }
+        sendCodeAndUpdateDb(unformattedPhoneNum, msg, code, isPromotionAvail());
+        Util.displayToast(getContext(), "Code Sent");
         isSuccess = true;
         return isSuccess;
     }
 
+    private void sendCodeAndUpdateDb(String phoneNumber, String message, String codeStr, boolean isPromo){
+        Util.textSingleRecipient(phoneNumber, message);
 
-    String textMsg, targetPhoneNum, codeStr;
-    private void sendText(String phoneNum, String msg, String code) {
-        try {
-            textMsg = msg;
-            targetPhoneNum = phoneNum;
-            codeStr = code;
-            requestSmsPermission();
-        } catch (Exception ex) {
-            Toast.makeText(getContext().getApplicationContext(),ex.getMessage().toString(),
-                    Toast.LENGTH_LONG).show();
-            ex.printStackTrace();
+        String promoName = null;
+        if (isPromo){
+            promoName = availPromo.getText().toString();
         }
+        insertOrUpdateClaimCodeDb(phoneNumber, codeStr, promoName);
     }
 
-
-    private static final int MY_PERMISSIONS_REQUEST_SEND_SMS = 123;
-
-    private void requestSmsPermission() {
-
-        // check permission is given
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
-            // request permission (see result in onRequestPermissionsResult() method)
-            requestPermissions(new String[]{Manifest.permission.SEND_SMS},
-                    MY_PERMISSIONS_REQUEST_SEND_SMS);
-        } else {
-            // permission already granted run sms send
-            sendSms(targetPhoneNum, textMsg, codeStr);
-            displayToastToCashier();
-        }
-    }
-
-    private void displayToastToCashier() {
-        //2 scenarios to send sms: request code; or successful claim confirmation msg if customer opts in
-        //the successful scenario will have codeStr = null
-        if (codeStr != null && !codeStr.isEmpty()){
-            //request code flow
-            Toast.makeText(getContext().getApplicationContext(), "Code Sent", Toast.LENGTH_LONG).show();
-        }
-        else {
-            //successful claim confirmation flow
-            Toast.makeText(getContext().getApplicationContext(), getString(R.string.claimSuccess_msg_textSent), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_SEND_SMS: {
-
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted
-                    sendSms(targetPhoneNum, textMsg, codeStr);
-                    displayToastToCashier();
-                } else {
-                    // permission denied
-                    Toast.makeText(getContext().getApplicationContext(), "permission denied", Toast.LENGTH_LONG).show();
-                }
-            }
-        }
-    }
-
-    private void sendSms(String phoneNumber, String message, String codeStr){
-        SmsManager sms = SmsManager.getDefault();
-        sms.sendTextMessage(phoneNumber, null, message, null, null);
-
-        if (codeStr != null && !codeStr.isEmpty()){
-            //codeStr is only empty when we send the confirmation msg after successful claim
-            //so only update db if not empty
-            insertOrUpdateClaimCodeDb(phoneNumber, codeStr);
-        }
-    }
-
-    private void insertOrUpdateClaimCodeDb(String phoneNumber, String codeStr) {
-        CustomerClaimCode cc = new CustomerClaimCode(phoneNumber, codeStr, new Date());
+    private void insertOrUpdateClaimCodeDb(String phoneNumber, String codeStr, String promoName) {
+        CustomerClaimCode cc = new CustomerClaimCode(phoneNumber, codeStr, new Date(), promoName);
         handler.insertOrUpdateCustomerClaimCode(cc);
     }
 
-    private boolean updateCustomerFreeDrink() {
-        boolean hasFreeDrink = false;
+    private boolean updateCustomerAvailClaim() {
+        boolean freeDrinkAvail = false;
+        boolean promoAvail = false;
 
         TextInputLayout phoneLayout = (TextInputLayout) (getView().findViewById(R.id.phoneLayout));
         String unformattedPhoneNum = Util.getUnformattedPhoneNumber(this.phone.getText().toString());
@@ -379,26 +381,58 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
         int freeDrinkNum = 0;
         if (customer != null){
             freeDrinkNum = (int) (customer.getTotalCredit() / Constants.FREE_DRINK_THRESHOLD);
-            hasFreeDrink = (freeDrinkNum > 0? true: false);
-        }
-        updateFreeDrink(freeDrinkNum);
+            freeDrinkAvail = (freeDrinkNum > 0? true: false);
+            if (freeDrinkAvail) {
+                //in some rare case, customer might have both free drink & promo, so show free drink first
+                updateFreeDrink(freeDrinkNum);
+            }
+            else {
+                //check promo
+                CustomerClaimCode promoClaimCode = handler.getClaimCodeByCustomerId(unformattedPhoneNum, true);
+                if (promoClaimCode != null){
+                    availPromoLayout.setVisibility(View.VISIBLE);
+                    availPromo.setText(promoClaimCode.getPromoName());
+                    promoAvail = true;
 
-        return hasFreeDrink;
+                    //dont need the receipt number or cashier code since we'll take user to the sign-in tab to purchase
+                    availDrinkAndClaimLayout.setVisibility(View.GONE);
+                    receiptNum.setVisibility(View.GONE);
+                    cashierCode.setVisibility(View.GONE);
+                }
+            }
+        }
+
+        if (freeDrinkAvail || promoAvail){
+            //enable the getCode button
+            getCodeBtn.setEnabled(true);
+            claimCode.setText("");
+            claimCode.setEnabled(true);
+            claimBtn.setEnabled(true);
+        }
+        else {
+            getCodeBtn.setEnabled(false);
+            claimCode.setText("");
+            claimCode.setEnabled(false);
+            claimBtn.setEnabled(false);
+            freeDrink.setText("0");
+            freeDrinkClaimToday.setText("0");
+        }
+
+
+        return freeDrinkAvail || promoAvail;
 
     }
 
     private void updateFreeDrink(int freeDrinkNum) {
         EditText freeDrink = (EditText) (getView().findViewById(R.id.freeDrink));
         freeDrink.setText(String.valueOf(freeDrinkNum));
-        getCodeBtn = (Button) (getView().findViewById(R.id.getCodeBtn));
-        claimCode = (EditText) (getView().findViewById(R.id.claimCode));
+
+        availDrinkAndClaimLayout.setVisibility(View.VISIBLE);
+        receiptNum.setVisibility(View.VISIBLE);
+        cashierCode.setVisibility(View.VISIBLE);
+        availPromoLayout.setVisibility(View.GONE);
 
         if (freeDrinkNum > 0){
-            //enable the getCode button
-            getCodeBtn.setEnabled(true);
-            claimCode.setEnabled(true);
-            claimBtn.setEnabled(true);
-
             //by default, set the amount claim today to whatever available
             freeDrinkClaimToday.setText(String.valueOf(freeDrinkNum));
 
@@ -409,12 +443,6 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
             else {
                 freeDrinkClaimToday.setEnabled(true);
             }
-        }
-        else {
-            getCodeBtn.setEnabled(false);
-            claimCode.setText("");
-            claimCode.setEnabled(false);
-            claimBtn.setEnabled(false);
         }
     }
 
@@ -455,8 +483,8 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
 
         if (id.equals(phoneId)) {
             //when user is done entering phone number
-            if (updateCustomerFreeDrink()){
-                //don't request the focus if the phone number entry isnt valid
+            if (updateCustomerAvailClaim()){
+                //request focus on claim code if there's something to claim
                 requestFocusOnClaimCode();
             }
             handled = true;

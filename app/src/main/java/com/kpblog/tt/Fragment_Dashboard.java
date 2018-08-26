@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -40,13 +41,13 @@ public class Fragment_Dashboard extends Fragment {
     private static final String ARG_PARAM2 = "param2";
 
     DatabaseHandler handler;
-    EditText lastVisitMin, lastVisitMax, lastTextMinDay, lastTextMaxDay;
+    EditText lastVisitMin, lastVisitMax, lastTextMinDay, lastTextMaxDay, drinkCreditMin, drinkCreditMax;
     TextInputLayout lastVisitMinLayout, lastVisitMaxLayout, lastTextMinLayout,
                     lastTextMaxLayout;
     ListView listView;
     Button search;
     long searchBtnLastClicked = 0, sendTextBtnLastClicked = 0;
-    Spinner orderByDropdown, ascDescDropdown;
+    Spinner orderByDropdown, ascDescDropdown, templateQuery;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -96,6 +97,18 @@ public class Fragment_Dashboard extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         handler = new DatabaseHandler(getContext());
 
+        templateQuery = (Spinner) getView().findViewById(R.id.templateQueryType);
+        templateQuery.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                handleTemplateQuerySelection();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {}
+        });
+
         lastVisitMinLayout = (TextInputLayout) getView().findViewById(R.id.lastVisitMinLayout);
         lastVisitMin = (EditText) getView().findViewById(R.id.lastVisitMin);
 
@@ -108,6 +121,9 @@ public class Fragment_Dashboard extends Fragment {
         lastTextMaxLayout = (TextInputLayout) getView().findViewById(R.id.lastTextMaxLayout);
         lastTextMaxDay = (EditText) getView().findViewById(R.id.lastTextMaximumDay);
 
+        drinkCreditMin = (EditText) getView().findViewById(R.id.drinkCreditMin);
+        drinkCreditMax = (EditText) getView().findViewById(R.id.drinkCreditMax);
+
         orderByDropdown = (Spinner) getView().findViewById(R.id.orderByDropdown);
 
         ascDescDropdown = (Spinner) getView().findViewById(R.id.ascDescDropdown);
@@ -116,23 +132,7 @@ public class Fragment_Dashboard extends Fragment {
         search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (SystemClock.elapsedRealtime() - searchBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD) {
-                    //hide soft keyboard
-                    InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(getView().getWindowToken(), 0);
-
-                    searchBtnLastClicked = SystemClock.elapsedRealtime();
-
-                    Customer[] customers = validateInputAndSearchCustomers();
-                    if (customers != null){
-                        // Create an adapter to bind data to the ListView
-                        CustomerListViewAdapter adapter = new CustomerListViewAdapter(getContext(), R.layout.dashboard_row_layout, R.id.phone, customers);
-                        // Bind data to the ListView
-                        listView.setAdapter(adapter);
-                        ((EditText) getView().findViewById(R.id.result)).setText(String.valueOf(customers.length));
-                    }
-
-                }
+                handleSearchClick();
             }
         });
 
@@ -168,6 +168,60 @@ public class Fragment_Dashboard extends Fragment {
         listView.addHeaderView(headerView);
     }
 
+    private void handleTemplateQuerySelection() {
+        String queryType = templateQuery.getSelectedItem().toString();
+        if (getString(R.string.queryType_inactiveUser).equals(queryType)){
+            lastVisitMin.setText(String.valueOf(Constants.DRINK_REMINDER_LAST_VISIT_MIN));
+            lastVisitMax.setText(String.valueOf(Constants.DRINK_REMINDER_LAST_VISIT_MAX));
+            lastTextMinDay.setText(String.valueOf(Constants.DRINK_REMINDER_LAST_TEXTED_MIN));
+            lastTextMaxDay.setText(String.valueOf(Constants.DRINK_REMINDER_LAST_TEXTED_MAX));
+
+            //the same customer might fall under both scenario, so for inactive, set credit from 1-6
+            //since the reminder is for 7-10
+            drinkCreditMin.setText(String.valueOf(Constants.INACTIVE_CREDIT_MIN));
+            drinkCreditMax.setText(String.valueOf(Constants.INACTIVE_CREDIT_MAX));
+
+            //for inactive users, give out promo to those not already have it; if they have promo, remind them
+
+        }
+        else if (getString(R.string.queryType_drinkCreditReminder).equals(queryType)){
+            lastVisitMin.setText(String.valueOf(Constants.DRINK_REMINDER_LAST_VISIT_MIN));
+            lastVisitMax.setText(String.valueOf(Constants.DRINK_REMINDER_LAST_VISIT_MAX));
+            lastTextMinDay.setText(String.valueOf(Constants.DRINK_REMINDER_LAST_TEXTED_MIN));
+            lastTextMaxDay.setText(String.valueOf(Constants.DRINK_REMINDER_LAST_TEXTED_MAX));
+            drinkCreditMin.setText(String.valueOf(Constants.DRINK_REMINDER_CREDIT_MIN));
+            drinkCreditMax.setText(String.valueOf(Constants.DRINK_REMINDER_CREDIT_MAX));
+
+            orderByDropdown.setSelection(0);//days not visit
+            orderByDropdown.setSelection(1);//desc
+        }
+        else {
+            clearInputs();
+        }
+
+        handleSearchClick();
+    }
+
+    private void handleSearchClick() {
+        if (SystemClock.elapsedRealtime() - searchBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD) {
+            //hide soft keyboard
+            InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(getView().getWindowToken(), 0);
+
+            searchBtnLastClicked = SystemClock.elapsedRealtime();
+
+            Customer[] customers = validateInputAndSearchCustomers();
+            if (customers != null){
+                // Create an adapter to bind data to the ListView
+                CustomerListViewAdapter adapter = new CustomerListViewAdapter(getContext(), R.layout.dashboard_row_layout, R.id.phone, customers);
+                // Bind data to the ListView
+                listView.setAdapter(adapter);
+                ((EditText) getView().findViewById(R.id.result)).setText(String.valueOf(customers.length));
+            }
+
+        }
+    }
+
     private Customer[] getOptInCustomerMeetingCriteria() {
         Customer[] customers = validateInputAndSearchCustomers();
         List<Customer> optInCustomers = new ArrayList<Customer>();
@@ -186,8 +240,8 @@ public class Fragment_Dashboard extends Fragment {
         lastVisitMax.setText("");
         lastTextMinDay.setText("");
         lastTextMaxDay.setText("");
-        ((EditText) getView().findViewById(R.id.drinkCreditMin)).setText("");
-        ((EditText) getView().findViewById(R.id.drinkCreditMax)).setText("");
+        drinkCreditMin.setText("");
+        drinkCreditMax.setText("");
         ((EditText) getView().findViewById(R.id.result)).setText("");
     }
 
@@ -244,8 +298,8 @@ public class Fragment_Dashboard extends Fragment {
             }
         }
 
-        String drinkCreditMinStr = ((EditText) getView().findViewById(R.id.drinkCreditMin)).getText().toString();
-        String drinkCreditMaxStr = ((EditText) getView().findViewById(R.id.drinkCreditMax)).getText().toString();
+        String drinkCreditMinStr = drinkCreditMin.getText().toString();
+        String drinkCreditMaxStr = drinkCreditMax.getText().toString();
         TextInputLayout drinkCreditMinLayout = (TextInputLayout) getView().findViewById(R.id.drinkCreditMinLayout);
         TextInputLayout drinkCreditMaxLayout = (TextInputLayout) getView().findViewById(R.id.drinkCreditMaxLayout);
         double drinkCreditMinDouble = 0, drinkCreditMaxDouble = 0;

@@ -99,11 +99,11 @@
                 android:background="@color/colorPrimary" />
 
             <android.support.design.widget.TextInputLayout
-                android:layout_marginLeft="2dp"
                 android:id="@+id/previousCreditLayout"
+                android:layout_marginLeft="2dp"
+                android:layout_marginTop="15dp"
                 android:layout_width="match_parent"
                 android:focusableInTouchMode="true"
-                android:layout_marginTop="15dp"
                 app:hintTextAppearance="@style/FloatingLabel"
                 android:layout_height="wrap_content">
 
@@ -224,15 +224,16 @@
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/noteLayout"
-                android:layout_width="0dp"
-                android:focusableInTouchMode="true"
+                android:layout_marginTop="15dp"
+                android:layout_marginLeft="2dp"
+                android:layout_width="match_parent"
                 android:visibility="invisible"
                 android:layout_height="wrap_content">
 
                 <EditText
                     android:id="@+id/note"
                     android:enabled="false"
-                    android:inputType="none"
+                    android:inputType="text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Note"/>

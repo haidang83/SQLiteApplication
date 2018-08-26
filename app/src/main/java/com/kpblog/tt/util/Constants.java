@@ -42,4 +42,15 @@ public class Constants {
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.SEND_SMS
     };
+
+    //for templated query
+    public static final int DRINK_REMINDER_LAST_VISIT_MIN = 7;
+    public static final int DRINK_REMINDER_LAST_VISIT_MAX = 60;
+    public static final int DRINK_REMINDER_LAST_TEXTED_MIN = 7;
+    public static final int DRINK_REMINDER_LAST_TEXTED_MAX = 60;
+    public static final int DRINK_REMINDER_CREDIT_MIN = 7;
+    public static final int DRINK_REMINDER_CREDIT_MAX = 10;
+
+    public static final int INACTIVE_CREDIT_MIN = 1;
+    public static final int INACTIVE_CREDIT_MAX = 6;
 }
