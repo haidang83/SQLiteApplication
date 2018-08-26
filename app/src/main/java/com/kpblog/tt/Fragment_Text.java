@@ -24,7 +24,6 @@ import android.widget.Toast;
 
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
-import com.kpblog.tt.model.CustomerBroadcast;
 import com.kpblog.tt.receiver.TraTemptationReceiver;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
@@ -46,11 +45,11 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String KEY_CUSTOMER_ARRAY = "customerArray";
-    private static final String ARG_PARAM2 = "param2";
+    private static final String KEY_QUERY_TYPE = "param2";
 
     // TODO: Rename and change types of parameters
     private Customer[] customers;
-    private String mParam2;
+    private String queryType;
 
     private OnFragmentInteractionListener mListener;
     private DatabaseHandler handler;
@@ -70,15 +69,15 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
      * this fragment using the provided parameters.
      *
      * @param customers Parameter 1.
-     * @param param2 Parameter 2.
+     * @param queryType Parameter 2.
      * @return A new instance of fragment Fragment_Text.
      */
     // TODO: Rename and change types and number of parameters
-    public static Fragment_Text newInstance(Customer[] customers, String param2) {
+    public static Fragment_Text newInstance(Customer[] customers, String queryType) {
         Fragment_Text fragment = new Fragment_Text();
         Bundle args = new Bundle();
         args.putSerializable(KEY_CUSTOMER_ARRAY, customers);
-        args.putString(ARG_PARAM2, param2);
+        args.putString(KEY_QUERY_TYPE, queryType);
         fragment.setArguments(args);
         return fragment;
     }
@@ -88,7 +87,7 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             customers = (Customer[]) getArguments().getSerializable(KEY_CUSTOMER_ARRAY);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+            queryType = getArguments().getString(KEY_QUERY_TYPE);
         }
     }
 
@@ -104,7 +103,7 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
         handler = new DatabaseHandler(getContext());
 
         //test code, remove when done
-        Util.sendScheduledBroadcast(handler);
+        //Util.sendScheduledBroadcast(getContext(), handler);
 
         adminCode = (EditText) (getView().findViewById(R.id.adminCode));
         adminCode.setTransformationMethod(null);
@@ -154,6 +153,7 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
 
         messageBox = (EditText) getView().findViewById(R.id.messageBox);
         promotionName = (EditText) getView().findViewById(R.id.promotionName);
+        setMessageContentAndPromoNameBasedOnQueryType();
 
         textActionDropdown = (Spinner) getView().findViewById(R.id.textActionDropdown);
         textActionDropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -190,6 +190,26 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
         });
     }
 
+    private void setMessageContentAndPromoNameBasedOnQueryType() {
+        if (isDrinkCreditReminderQueryType()){
+            messageBox.setText(getString(R.string.drinkCreditReminderMessage));
+        }
+        else if (isInactiveUserQueryType()){
+            final String inactiveMessage = getString(R.string.inactiveUserMessage_sendPromo);
+            String inactiveMesageWithPromo = inactiveMessage.replace(Constants.PROMO_NAME_PLACE_HOLDER, Constants.INACTIVE_USER_PROMO_NAME);
+            messageBox.setText(inactiveMesageWithPromo);
+            promotionName.setText(Constants.INACTIVE_USER_PROMO_NAME);
+        }
+    }
+
+    private boolean isInactiveUserQueryType() {
+        return getString(R.string.queryType_inactiveUser).equals(queryType);
+    }
+
+    private boolean isDrinkCreditReminderQueryType() {
+        return getString(R.string.queryType_drinkCreditReminder).equals(queryType);
+    }
+
     private void performSelectedAction() {
         String msg = messageBox.getText().toString();
         if (msg.isEmpty()){
@@ -204,7 +224,12 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
             String userType = userTypeDropdown.getSelectedItem().toString();
             if (getString(R.string.realUsers).equals(userType)){
                 //text real users from customer list
-                textCustomers(msg, promoName);
+                if (isDrinkCreditReminderQueryType()){
+                    textDrinkCreditReminderToCustomers(customers, msg);
+                }
+                else {
+                    textCustomers(msg, promoName);
+                }
             }
             else {
                 //text test users
@@ -214,15 +239,23 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
                     return;
                 }
                 List<String> testPhoneNumbers = splitIntoTestPhoneNumbers(testUserList);
-                Util.textPromoToMultipleRecipientsAndUpdateLastTexted(testPhoneNumbers, msg, handler, true, promoName);
+
+                //need to check the query type to determine whether dynamic info is needed
+                if (isDrinkCreditReminderQueryType()){
+                    textDrinkCreditReminderUsingPhoneList(testPhoneNumbers, msg);
+                }
+                else {
+                    Util.textPromoToMultipleRecipientsAndUpdateLastTexted(testPhoneNumbers, msg, handler, true, promoName);
+                }
+
                 Util.displayToast(getContext(), String.format("Message sent to %d test users", testPhoneNumbers.size()));
             }
         }
         else {
             //schedule
             Calendar scheduledTime = getScheduledTime();
-            String type = Constants.BROADCAST_TYPE_ON_DEMAND;
-            int broadcastId = handler.insertIntoCustomerBroadcastTable(scheduledTime.getTimeInMillis(), msg, type, promoName, customers);
+            String type = getBroadcastType();
+            int broadcastId = handler.insertIntoCustomerBroadcastTable(scheduledTime.getTimeInMillis(), msg, type, promoName, customers, getContext());
 
             //need to set the alarm to send the message
             Intent intent = new Intent(getContext(), TraTemptationReceiver.class);
@@ -231,6 +264,53 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
             Util.displayToast(getContext(), String.format("Text scheduled for %s", scheduledTimeDropdown.getSelectedItem().toString()));
             submitBtn.setEnabled(false);
         }
+    }
+
+    private void textDrinkCreditReminderToCustomers(Customer[] customers, String msg) {
+
+        long timestamp = System.currentTimeMillis();
+        for (Customer c : customers){
+            textDrinkCreditReminderToSingleCustomer(msg, timestamp, c);
+        }
+
+    }
+
+    private void textDrinkCreditReminderToSingleCustomer(String msg, long timestamp, Customer c) {
+        msg = String.format(msg, c.getTotalCredit(), Constants.FREE_DRINK_THRESHOLD - c.getTotalCredit());
+        Util.textSingleRecipient(c.getCustomerId(), msg);
+        handler.updateLastTexted(c.getCustomerId(), timestamp);
+    }
+
+    /**
+     * retrieve the customers by the phone numbers
+     * and text the credit reminder
+     * @param recipientList
+     */
+    private void textDrinkCreditReminderUsingPhoneList(List<String> recipientList, String msg) {
+        long timestamp = System.currentTimeMillis();
+
+        for (String customerId : recipientList){
+            Customer c = handler.getCustomerById(customerId);
+            if (c == null){
+                c = new Customer();
+                c.setCustomerId(customerId);
+            }
+
+            textDrinkCreditReminderToSingleCustomer(msg, timestamp, c);
+        }
+    }
+
+    private String getBroadcastType() {
+        String broadcastType = Constants.BROADCAST_TYPE_SCHEDULED_FREE_FORM;
+
+        if (isDrinkCreditReminderQueryType()){
+            broadcastType = Constants.BROADCAST_TYPE_SCHEDULED_CREDIT_REMINDER;
+        }
+        else if (isInactiveUserQueryType()){
+            broadcastType = Constants.BROADCAST_TYPE_SCHEDULED_INACTIVE_NEW_PROMO;
+        }
+
+        return broadcastType;
     }
 
     @NonNull

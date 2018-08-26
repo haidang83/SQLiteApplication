@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.kpblog.tt.R;
 import com.kpblog.tt.model.Customer;
 import com.kpblog.tt.model.CustomerBroadcast;
 import com.kpblog.tt.model.CustomerClaimCode;
@@ -20,8 +21,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.sql.Date;
 import java.text.MessageFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -574,8 +575,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return isSuccess;
     }
 
-    public List<Customer> searchCustomerByLastVisitAndText(int lastVisitOrDrinkCreditMin,
-                                                           int lastVisitOrDrinkCreditMax,
+    public List<Customer> searchCustomerByLastVisitAndText(int lastVisitDayMin,
+                                                           int lastVisitDayMax,
                                                            int lastTextMinDayInt,
                                                            int lastTextMaxDayInt,
                                                            double drinkCreditMinDouble, double drinkCreditMaxDouble,
@@ -586,7 +587,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = null;
         try {
 
-            String selectQuery = getSelectQuery(lastVisitOrDrinkCreditMin, lastVisitOrDrinkCreditMax,
+            String selectQuery = getSelectQuery(lastVisitDayMin, lastVisitDayMax,
                                     lastTextMinDayInt, lastTextMaxDayInt, drinkCreditMinDouble, drinkCreditMaxDouble, sortByDbColumn, sortOrder);
 
             db = getReadableDatabase();
@@ -619,8 +620,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                                   int lastVisitMax, int lastTextMinDayInt, int lastTextMaxDayInt,
                                   double drinkCreditMinDouble, double drinkCreditMaxDouble, String sortByDbColumn, String sortOrder) {
 
-        Calendar today = new GregorianCalendar();
-        long todayInMillis = today.getTimeInMillis();
 
         /**
          * SELECT customerId, lastVisitDate, totalCredit, lastContactDate
@@ -631,7 +630,35 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         String selectClauseFormat = String.format("SELECT %s, %s, %s, %s, %s, (%s + %s) as %s, %s FROM %s ", KEY_CUSTOMER_ID, KEY_LAST_VISIT_DATE, KEY_PURCHASE_CREDIT, KEY_LAST_CONTACTED_DATE,
                                 KEY_REFERRAL_CREDIT, KEY_PURCHASE_CREDIT, KEY_REFERRAL_CREDIT, KEY_TOTAL_CREDIT, KEY_IS_OPT_IN, TABLE_CUSTOMER);
 
+        String selectCondition = getSelectCondition(lastVisitMin, lastVisitMax, lastTextMinDayInt, lastTextMaxDayInt, drinkCreditMinDouble, drinkCreditMaxDouble);
+
+        if (selectCondition.isEmpty()){
+            //no condition, retrieve all users
+            return selectClauseFormat + " ORDER BY " + sortByDbColumn + " " + sortOrder;
+        }
+        else {
+            //if any condition is specified, user meeting those criteria AND is opted in
+            selectCondition +=  String.format(" AND %s=%d", KEY_IS_OPT_IN, 1);
+            return selectClauseFormat + " WHERE " + selectCondition + " ORDER BY " + sortByDbColumn + " " + sortOrder;
+        }
+    }
+
+    /**
+     * the part between WHERE and ORDER BY
+     * @param lastVisitMin
+     * @param lastVisitMax
+     * @param lastTextMinDayInt
+     * @param lastTextMaxDayInt
+     * @param drinkCreditMinDouble
+     * @param drinkCreditMaxDouble
+     * @return
+     */
+    private String getSelectCondition(int lastVisitMin, int lastVisitMax,
+                                      int lastTextMinDayInt, int lastTextMaxDayInt,
+                                      double drinkCreditMinDouble, double drinkCreditMaxDouble) {
         String selectCondition = "";
+        Calendar today = new GregorianCalendar();
+        long todayInMillis = today.getTimeInMillis();
 
         if (lastTextMinDayInt != 0 || lastTextMaxDayInt != 0){
             //if either min or max text day is specified, then set up the condition and query for opt-in customer. Otherwise leave it empty
@@ -681,16 +708,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 selectCondition += " AND " + totalDrinkCreditCondition;
             }
         }
-
-        if (selectCondition.isEmpty()){
-            //no condition, retrieve all users
-            return selectClauseFormat + " ORDER BY " + sortByDbColumn + " " + sortOrder;
-        }
-        else {
-            //if any condition is specified, user meeting those criteria AND is opted in
-            selectCondition +=  String.format(" AND %s=%d", KEY_IS_OPT_IN, 1);
-            return selectClauseFormat + " WHERE " + selectCondition + " ORDER BY " + sortByDbColumn + " " + sortOrder;
-        }
+        return selectCondition;
     }
 
     public void addReferralCreditForCustomerId(String referrerId, double additionalReferralCredit) {
@@ -750,7 +768,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     public int insertIntoCustomerBroadcastTable(long timeInMillis, String msg, String type,
-                                                 String promoName, Customer[] customers) {
+                                                 String promoName, Customer[] customers, Context ctx) {
 
         SQLiteDatabase db = null;
         int broadcastId = 0;
@@ -766,7 +784,26 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             values.put(KEY_SENT, 0);
 
             broadcastId = (int) db.insert(TABLE_CUSTOMER_BROADCAST, null, values);
-            insertCustomerForRecipientList(broadcastId, customers, db);
+            if (Constants.BROADCAST_TYPE_SCHEDULED_FREE_FORM.equals(type)){
+                //only for on-demand type: insert the customer for this recipient list
+                //for the other types, the customer list will be queried right before broadcast
+                insertCustomerForRecipientList(broadcastId, Arrays.asList(customers), db);
+            }
+            else if (Constants.BROADCAST_TYPE_SCHEDULED_INACTIVE_NEW_PROMO.equals(type)){
+                //for new promo, which is already scheduled above, we also schedule one to remind
+                //inactive customer who already has a promo
+                ContentValues promoReminderJob = new ContentValues();
+                promoReminderJob.put(KEY_BROADCAST_TIME, timeInMillis);
+
+                String promoReminderMsgFormat = ctx.getResources().getString(R.string.inactiveUser_promoReminder);
+                promoReminderMsgFormat = promoReminderMsgFormat.replace("%s", Constants.CLAIM_CODE_PLACE_HOLDER);
+                promoReminderJob.put(KEY_BROADCAST_MESSAGE, promoReminderMsgFormat);
+
+                promoReminderJob.put(KEY_BROADCAST_TYPE, Constants.BROADCAST_TYPE_SCHEDULED_INACTIVE_OLD_PROMO);
+                promoReminderJob.put(KEY_SENT, 0);
+
+                broadcastId = (int) db.insert(TABLE_CUSTOMER_BROADCAST, null, promoReminderJob);
+            }
 
             db.setTransactionSuccessful();
         } finally {
@@ -779,16 +816,40 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return broadcastId;
     }
 
-    private void insertCustomerForRecipientList(int id, Customer[] customers, SQLiteDatabase db) {
+    private void insertCustomerForRecipientList(int id, List<Customer> customers, SQLiteDatabase db) {
         for (Customer c : customers){
 
-            ContentValues values = new ContentValues();
-            values.put(KEY_RECIPIENT_LIST, id);
-            values.put(KEY_CUSTOMER_ID, c.getCustomerId());
-
-            db.insert(TABLE_RECIPIENT_LIST_CUSTOMER, null, values);
+            insertPhoneNumberIntoRecipientListId(id, db, c.getCustomerId());
         }
     }
+
+    private void insertPhoneNumberIntoRecipientListId(int id, SQLiteDatabase db, String phoneNum) {
+        ContentValues values = new ContentValues();
+        values.put(KEY_RECIPIENT_LIST, id);
+        values.put(KEY_CUSTOMER_ID, phoneNum);
+
+        db.insert(TABLE_RECIPIENT_LIST_CUSTOMER, null, values);
+    }
+
+    public void massInsertPhoneNumbersIntoRecipientListId(int id, List<String> phoneList){
+        SQLiteDatabase db = null;
+        try {
+            db = this.getWritableDatabase();
+            db.beginTransaction();
+
+            for (String num : phoneList){
+                insertPhoneNumberIntoRecipientListId(id, db, num);
+            }
+
+            db.setTransactionSuccessful();
+        } finally {
+            if (db != null){
+                db.endTransaction();
+                db.close();
+            }
+        }
+    }
+
 
     public List<CustomerBroadcast> getAllTodayCustomerBroadcastsBeforeTimestamp(long now) {
         SQLiteDatabase db = null;
@@ -823,7 +884,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
                 //if broadcast type is onDemand, get the customers' phones
                 //for the other types, we'll re-run the query to get the most updated customer list
-                if (Constants.BROADCAST_TYPE_ON_DEMAND.equals(cb.getType())){
+                if (Constants.BROADCAST_TYPE_SCHEDULED_FREE_FORM.equals(cb.getType())){
 
                     whereClause = String.format("%s = %d", KEY_RECIPIENT_LIST, cb.getRecipientListId());
                     cursor = db.query(TABLE_RECIPIENT_LIST_CUSTOMER, new String[] {KEY_CUSTOMER_ID}, whereClause, null, null, null, null);
@@ -857,5 +918,129 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 db.close();
             }
         }
+    }
+
+    public List<Customer> getCustomersForCreditReminder() {
+        List<Customer> cList = new ArrayList<Customer>();
+        SQLiteDatabase db = null;
+
+        try {
+
+            String selectQuery = getSelectQuery(Constants.DRINK_REMINDER_LAST_VISIT_MIN, Constants.DRINK_REMINDER_LAST_VISIT_MAX,
+                    Constants.DRINK_REMINDER_LAST_TEXTED_MIN, Constants.DRINK_REMINDER_LAST_TEXTED_MAX,
+                    Constants.DRINK_REMINDER_CREDIT_MIN, Constants.DRINK_REMINDER_CREDIT_MAX, KEY_TOTAL_CREDIT, "asc");
+
+            db = getReadableDatabase();
+
+            Cursor cursor = db.rawQuery(selectQuery, null);
+            if (cursor != null && cursor.moveToFirst()){
+                do {
+                    String customerId = cursor.getString(0);
+                    double totalCredit = cursor.getDouble(5);
+                    Customer c = new Customer();
+                    c.setCustomerId(customerId);
+                    c.setPurchaseCredit(totalCredit);
+                    cList.add(c);
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            if (db != null){
+                db.close();
+            }
+        }
+
+        return cList;
+    }
+
+    /**
+     * get the inactive customers without
+     * @return
+     */
+    public List<String> getInactiveCustomerPhoneNumbersWithoutPromo() {
+
+        List<String> phoneList = new ArrayList<String>();
+        SQLiteDatabase db = null;
+        try {
+            /*
+              select c.customerId from Customer c, customerClaimCode ccc
+              where {selectCondition}
+              and c.customerId = ccc.customerId and (ccc.promoName is NULL OR ccc.promoName='')
+             */
+            String selectColumns = MessageFormat.format("Select {0}.{1}, ({0}.{5} + {0}.{6}) as {7} from {2} {0}, {3} {4} WHERE ",
+                                    "c", KEY_CUSTOMER_ID, TABLE_CUSTOMER, TABLE_CUSTOMER_CLAIM_CODE, "ccc",
+                                        KEY_PURCHASE_CREDIT, KEY_REFERRAL_CREDIT, KEY_TOTAL_CREDIT);
+
+            String selectCondition = getSelectCondition(Constants.INACTIVE_LAST_VISIT_MIN, Constants.INACTIVE_LAST_VISIT_MAX,
+                                        Constants.INACTIVE_LAST_TEXTED_MIN, Constants.INACTIVE_LAST_TEXTED_MAX,
+                                        Constants.INACTIVE_CREDIT_MIN, Constants.INACTIVE_CREDIT_MAX);
+
+            String joinCondition = MessageFormat.format(" AND {0}.{1} = {2}.{1} AND ({2}.{3} is NULL OR {2}.{3} ='''') AND {0}.{4} = 1",
+                                                        "c", KEY_CUSTOMER_ID, "ccc", KEY_PROMO_NAME, KEY_IS_OPT_IN);
+
+            String query = selectColumns + selectCondition + joinCondition;
+
+            db = getReadableDatabase();
+
+            Cursor cursor = db.rawQuery(query, null);
+            if (cursor != null && cursor.moveToFirst()){
+                do {
+                    phoneList.add(cursor.getString(0));
+                } while (cursor.moveToNext());
+            }
+
+        } finally {
+            if (db != null){
+                db.close();
+            }
+        }
+
+        return phoneList;
+    }
+
+    public List<CustomerClaimCode> getCustomerClaimCodeWithPromoForInactiveUsers(){
+        List<CustomerClaimCode> customerClaimCodes = new ArrayList<CustomerClaimCode>();
+        SQLiteDatabase db = null;
+
+        try {
+
+            /*
+              select c.customerId, ccc.promoName, ccc.claimCode from Customer c, customerClaimCode ccc
+              where {selectCondition}
+              and c.customerId = ccc.customerId and (ccc.promoName is NOT NULL OR ccc.promoName != '')
+             */
+            String selectColumns = MessageFormat.format("Select {0}.{1}, {2}.{3}, {2}.{4}, ({0}.{7} + {0}.{8}) as {9} from {5} {0}, {6} {2} WHERE ",
+                    "c", KEY_CUSTOMER_ID, "ccc", KEY_PROMO_NAME, KEY_CLAIM_CODE,
+                    TABLE_CUSTOMER, TABLE_CUSTOMER_CLAIM_CODE, KEY_PURCHASE_CREDIT, KEY_REFERRAL_CREDIT, KEY_TOTAL_CREDIT);
+
+            String selectCondition = getSelectCondition(Constants.INACTIVE_LAST_VISIT_MIN, Constants.INACTIVE_LAST_VISIT_MAX,
+                    Constants.INACTIVE_LAST_TEXTED_MIN, Constants.INACTIVE_LAST_TEXTED_MAX,
+                    Constants.INACTIVE_CREDIT_MIN, Constants.INACTIVE_CREDIT_MAX);
+
+            String joinCondition = MessageFormat.format(" AND {0}.{1} = {2}.{1} AND ({2}.{3} is NOT NULL OR {2}.{3} != '''') AND {0}.{4} = 1",
+                    "c", KEY_CUSTOMER_ID, "ccc", KEY_PROMO_NAME, KEY_IS_OPT_IN);
+
+            String query = selectColumns + selectCondition + joinCondition;
+
+            db = getReadableDatabase();
+
+            Cursor cursor = db.rawQuery(query, null);
+            if (cursor != null && cursor.moveToFirst()){
+                do {
+                    String customerId = cursor.getString(0);
+                    String promoName = cursor.getString(1);
+                    String claimCode = cursor.getString(2);
+
+                    CustomerClaimCode ccc = new CustomerClaimCode(customerId, claimCode, null, promoName);
+                    customerClaimCodes.add(ccc);
+                } while (cursor.moveToNext());
+            }
+
+        } finally {
+            if (db != null){
+                db.close();
+            }
+        }
+
+        return customerClaimCodes;
     }
 }

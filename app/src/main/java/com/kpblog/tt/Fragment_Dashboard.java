@@ -143,7 +143,7 @@ public class Fragment_Dashboard extends Fragment {
                 if (SystemClock.elapsedRealtime() - sendTextBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
                     sendTextBtnLastClicked = SystemClock.elapsedRealtime();
                     Customer[] customers = getOptInCustomerMeetingCriteria();
-                    Fragment_Text text = Fragment_Text.newInstance(customers, null);
+                    Fragment_Text text = Fragment_Text.newInstance(customers, templateQuery.getSelectedItem().toString());
                     getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.textFragment,text).commit();
                     TabLayout tabs = (TabLayout)((MainActivity)getActivity()).findViewById(R.id.tabs);
                     tabs.getTabAt(5).select();
@@ -171,10 +171,10 @@ public class Fragment_Dashboard extends Fragment {
     private void handleTemplateQuerySelection() {
         String queryType = templateQuery.getSelectedItem().toString();
         if (getString(R.string.queryType_inactiveUser).equals(queryType)){
-            lastVisitMin.setText(String.valueOf(Constants.DRINK_REMINDER_LAST_VISIT_MIN));
-            lastVisitMax.setText(String.valueOf(Constants.DRINK_REMINDER_LAST_VISIT_MAX));
-            lastTextMinDay.setText(String.valueOf(Constants.DRINK_REMINDER_LAST_TEXTED_MIN));
-            lastTextMaxDay.setText(String.valueOf(Constants.DRINK_REMINDER_LAST_TEXTED_MAX));
+            lastVisitMin.setText(String.valueOf(Constants.INACTIVE_LAST_VISIT_MIN));
+            lastVisitMax.setText(String.valueOf(Constants.INACTIVE_LAST_VISIT_MAX));
+            lastTextMinDay.setText(String.valueOf(Constants.INACTIVE_LAST_TEXTED_MIN));
+            lastTextMaxDay.setText(String.valueOf(Constants.INACTIVE_LAST_TEXTED_MAX));
 
             //the same customer might fall under both scenario, so for inactive, set credit from 1-6
             //since the reminder is for 7-10

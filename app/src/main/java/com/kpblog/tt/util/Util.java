@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Environment;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.design.widget.TextInputLayout;
 import android.telephony.PhoneNumberUtils;
@@ -13,7 +14,9 @@ import android.telephony.SmsManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.kpblog.tt.R;
 import com.kpblog.tt.dao.DatabaseHandler;
+import com.kpblog.tt.model.Customer;
 import com.kpblog.tt.model.CustomerBroadcast;
 import com.kpblog.tt.model.CustomerClaimCode;
 import com.kpblog.tt.receiver.TraTemptationReceiver;
@@ -25,6 +28,7 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -213,33 +217,36 @@ public class Util {
         editor.commit();
     }
 
-    public static boolean textPromoToMultipleRecipientsAndUpdateLastTexted(List<String> recipients, String message,
+    public static List<String> textPromoToMultipleRecipientsAndUpdateLastTexted(List<String> recipients, String message,
                                                                         DatabaseHandler handler, boolean updateLastTexted,
                                                                         String promoName) {
-        boolean sentToRecipient = false;
 
-        Date today = new Date();
-        for (String phone : recipients){
-            //text and update database 1 by 1 so that there's some time gap between text
-            //dont want carrier to block as spam
+        try {
 
-            String messageWithCode = message;
-            if(message.contains(Constants.CLAIM_CODE_PLACE_HOLDER)){
-                //need to fill in the claim code and save it to customerClaim table with the promo name
-                final String claimCode = Util.generateRandom4DigitCode();
-                messageWithCode = MessageFormat.format(message, claimCode);
-                CustomerClaimCode cc = new CustomerClaimCode(phone, claimCode, today, promoName);
-                handler.insertOrUpdateCustomerClaimCode(cc);
+            Date today = new Date();
+            for (String phone : recipients){
+                //text and update database 1 by 1 so that there's some time gap between text
+                //dont want carrier to block as spam
+
+                String messageWithCode = message;
+                if(message.contains(Constants.CLAIM_CODE_PLACE_HOLDER)){
+                    //need to fill in the claim code and save it to customerClaim table with the promo name
+                    final String claimCode = Util.generateRandom4DigitCode();
+                    messageWithCode = MessageFormat.format(message, claimCode);
+                    CustomerClaimCode cc = new CustomerClaimCode(phone, claimCode, today, promoName);
+                    handler.insertOrUpdateCustomerClaimCode(cc);
+                }
+                textSingleRecipient(phone, messageWithCode);
+                if (updateLastTexted){
+                    handler.updateLastTexted(phone, today.getTime());
+                }
+
             }
-            textSingleRecipient(phone, messageWithCode);
-            if (updateLastTexted){
-                handler.updateLastTexted(phone, today.getTime());
-            }
-
-            sentToRecipient = true;
+        } catch (Exception e){
+            //catch so it continues with other steps
         }
 
-        return sentToRecipient;
+        return recipients;
     }
 
     public static void textMultipleRecipients(List<String> recipients, String message){
@@ -288,24 +295,139 @@ public class Util {
         return isValid;
     }
 
-    public static void sendScheduledBroadcast(DatabaseHandler handler) {
+    public static void sendScheduledBroadcast(Context ctx, DatabaseHandler handler) {
         List<CustomerBroadcast> cbList = handler.getAllTodayCustomerBroadcastsBeforeTimestamp(System.currentTimeMillis());
-        boolean sentToRecipient = false;
+        List<String> recipientSent = new ArrayList<String>();
 
         for (int i = 0; i < cbList.size(); i++){
             CustomerBroadcast cb = cbList.get(i);
-            sentToRecipient = Util.textPromoToMultipleRecipientsAndUpdateLastTexted(cb.getRecipientPhoneNumbers(),
-                    cb.getMessage(), handler, true, cb.getPromoName());
+            if (Constants.BROADCAST_TYPE_SCHEDULED_FREE_FORM.equals(cb.getType())){
+                //for free-form, can use the customer list from the db to text
+                recipientSent = Util.textPromoToMultipleRecipientsAndUpdateLastTexted(cb.getRecipientPhoneNumbers(),
+                        cb.getMessage(), handler, true, cb.getPromoName());
+            }
+            else {
+                //for other type, need to look up the customer list.
+                //need to do this so that we text based on the latest customer's data
+
+                if (Constants.BROADCAST_TYPE_SCHEDULED_CREDIT_REMINDER.equals(cb.getType())){
+                    recipientSent = broadcastCreditReminder(handler, cb);
+                }
+                else if (Constants.BROADCAST_TYPE_SCHEDULED_INACTIVE_NEW_PROMO.equals(cb.getType())){
+                    recipientSent = broadcastInactiveWithNewPromo(handler, cb);
+                }
+                else if (Constants.BROADCAST_TYPE_SCHEDULED_INACTIVE_OLD_PROMO.equals(cb.getType())){
+                    recipientSent = broadcastInactiveOldPromoReminder(handler, cb);
+                }
+
+                //save the phone numbers that we texted into the recipientList
+                handler.massInsertPhoneNumbersIntoRecipientListId(cb.getRecipientListId(), recipientSent);
+            }
 
             handler.markBroadcastIdAsSent(cb.getRecipientListId());
         }
 
         List<String> admins = handler.getAllAdmins();
-        if (sentToRecipient){
+        if (recipientSent.size() > 0){
             Util.textMultipleRecipients(admins, "broadcast sent");
         }
         else {
             Util.textMultipleRecipients(admins, "ran scheduled broadcast, but no recipient to send");
         }
+    }
+
+    private static List<String> broadcastInactiveOldPromoReminder(DatabaseHandler handler, CustomerBroadcast cb) {
+        List<String> recipientSent = new ArrayList<String>();
+
+        try {
+
+            //2. get the inactive ones already having promo code & send reminder
+            List<CustomerClaimCode> claimCodeList = handler.getCustomerClaimCodeWithPromoForInactiveUsers();
+            recipientSent = Util.textPromoReminder(claimCodeList, cb.getMessage(), true, handler);
+        } catch (Exception e){
+
+        }
+        return recipientSent;
+    }
+
+    private static List<String> broadcastInactiveWithNewPromo(DatabaseHandler handler, CustomerBroadcast cb) {
+        List<String> recipientSent = new ArrayList<String>();
+
+        try {
+            //1. get the inactive customer without promo & send the promo code
+            List<String> phoneList = handler.getInactiveCustomerPhoneNumbersWithoutPromo();
+
+            recipientSent = Util.textPromoToMultipleRecipientsAndUpdateLastTexted(phoneList,
+                    cb.getMessage(), handler, true, cb.getPromoName());
+
+        } catch (Exception e){
+
+        }
+
+        return recipientSent;
+    }
+
+    private static List<String> broadcastCreditReminder(DatabaseHandler handler, CustomerBroadcast cb) {
+        List<String> recipientSent = new ArrayList<String>();
+
+        try {
+            List<Customer> customers = handler.getCustomersForCreditReminder();
+
+            recipientSent = Util.textCreditReminder(customers, cb.getMessage(), handler, true);
+        } catch (Exception e){
+
+        }
+        return recipientSent;
+    }
+
+    private static List<String> textCreditReminder(List<Customer> customers, String message,
+                                              DatabaseHandler handler, boolean updateLastTexted) {
+
+        List<String> recipientSent = new ArrayList<String>();
+        long timestamp = System.currentTimeMillis();
+
+        try {
+
+            for (Customer c : customers){
+                String textMsg = String.format(message, c.getTotalCredit(), Constants.FREE_DRINK_THRESHOLD - c.getTotalCredit());
+                Util.textSingleRecipient(c.getCustomerId(), textMsg);
+
+                if (updateLastTexted){
+                    handler.updateLastTexted(c.getCustomerId(), timestamp);
+                }
+
+                recipientSent.add(c.getCustomerId());
+            }
+        } catch (Exception e){
+            //catch so it doesnt block other steps
+        }
+
+        return recipientSent;
+    }
+
+    private static List<String> textPromoReminder(List<CustomerClaimCode> claimCodeList, String message,
+                                             boolean updateLastTexted, DatabaseHandler handler) {
+
+        long timestamp = System.currentTimeMillis();
+        List<String> recipientSent = new ArrayList<String>();
+
+        try {
+
+            for (CustomerClaimCode ccc : claimCodeList){
+
+                String messageWithPromoName = message.replace(Constants.PROMO_NAME_PLACE_HOLDER, ccc.getPromoName());
+                String textMsg = MessageFormat.format(messageWithPromoName, ccc.getClaimCode());
+                Util.textSingleRecipient(ccc.getCustomerId(), textMsg);
+                recipientSent.add(ccc.getCustomerId());
+
+                if (updateLastTexted){
+                    handler.updateLastTexted(ccc.getCustomerId(), timestamp);
+                }
+            }
+        } catch (Exception e){
+            //catch so it doesn't affect other step
+        }
+
+        return recipientSent;
     }
 }

@@ -44,7 +44,7 @@ public class TraTemptationReceiver extends BroadcastReceiver {
         }
         else if (Constants.SCHEDULED_TEXT_ACTION.equals(intentAction)){
             DatabaseHandler handler = new DatabaseHandler(context);
-            Util.sendScheduledBroadcast(handler);
+            Util.sendScheduledBroadcast(context, handler);
         }
     }
 

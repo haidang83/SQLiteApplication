@@ -35,7 +35,12 @@ public class Constants {
     public static double SECOND_LEVEL_REFERRAL_CREDIT_RATE = 0.25;
 
     public static final String CLAIM_CODE_PLACE_HOLDER = "{0}";
-    public static final String BROADCAST_TYPE_ON_DEMAND = "ON-DEMAND";
+    public static final String PROMO_NAME_PLACE_HOLDER = "{promo}";
+    public static final String INACTIVE_USER_PROMO_NAME = "20% off";
+    public static final String BROADCAST_TYPE_SCHEDULED_FREE_FORM = "SCHEDULED_FREE_FORM";
+    public static String BROADCAST_TYPE_SCHEDULED_CREDIT_REMINDER = "SCHEDULED_CREDIT_REMINDER";
+    public static String BROADCAST_TYPE_SCHEDULED_INACTIVE_NEW_PROMO = "SCHEDULED_INACTIVE_NEW_PROMO";
+    public static String BROADCAST_TYPE_SCHEDULED_INACTIVE_OLD_PROMO = "SCHEDULED_INACTIVE_OLD_PROMO";
 
     public static String[] PERMISSIONS_STORAGE_SMS = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -51,6 +56,10 @@ public class Constants {
     public static final int DRINK_REMINDER_CREDIT_MIN = 7;
     public static final int DRINK_REMINDER_CREDIT_MAX = 10;
 
+    public static final int INACTIVE_LAST_VISIT_MIN = DRINK_REMINDER_LAST_VISIT_MIN;
+    public static final int INACTIVE_LAST_VISIT_MAX = DRINK_REMINDER_LAST_VISIT_MAX;
+    public static final int INACTIVE_LAST_TEXTED_MIN = DRINK_REMINDER_LAST_TEXTED_MIN;
+    public static final int INACTIVE_LAST_TEXTED_MAX = DRINK_REMINDER_LAST_TEXTED_MAX;
     public static final int INACTIVE_CREDIT_MIN = 1;
     public static final int INACTIVE_CREDIT_MAX = 6;
 }
