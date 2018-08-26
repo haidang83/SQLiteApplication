@@ -29,6 +29,7 @@ public class Constants {
     public static final String SCHEDULED_TEXT_ACTION = "SCHEDULED_TEXT";
 
     public static long DAYS_TO_MILLIS = 24 * 60 * 60 * 1000;
+    public static long FIVE_MIN_TO_MILLIS = 5 * 60 * 1000;
 
     public static int FIRST_PURCHASE_IMMEDIATE_REFERRAL_CREDIT = 1;
     public static double IMMEDIATE_REFERRAL_CREDIT_RATE = 0.5;

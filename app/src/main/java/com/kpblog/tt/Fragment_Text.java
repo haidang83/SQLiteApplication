@@ -324,6 +324,7 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
         alarmTime.set(Calendar.HOUR_OF_DAY, scheduleHour);
         alarmTime.set(Calendar.MINUTE, scheduledMin);
         alarmTime.set(Calendar.SECOND, 0);
+        alarmTime.set(Calendar.MILLISECOND, 0);
 
         final long now = System.currentTimeMillis();
         if (now >= alarmTime.getTimeInMillis()){
