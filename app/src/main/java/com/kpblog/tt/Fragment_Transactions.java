@@ -84,9 +84,7 @@ public class Fragment_Transactions extends Fragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        ((EditText) getView().findViewById(R.id.result)).setText("0");
-
-        Button search = (Button) getView().findViewById(R.id.searchBtn);
+                Button search = (Button) getView().findViewById(R.id.searchBtn);
         search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -108,6 +106,13 @@ public class Fragment_Transactions extends Fragment {
         ViewGroup headerView = (ViewGroup)getLayoutInflater().inflate(R.layout.transaction_header, listview,false);
         // Add customerHeader view to the ListView
         listview.addHeaderView(headerView);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        ((EditText) getView().findViewById(R.id.result)).setText("0");
     }
 
     private void validateInputAndSearchTransactions() {
