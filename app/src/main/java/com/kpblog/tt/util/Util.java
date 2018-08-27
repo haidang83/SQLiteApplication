@@ -297,7 +297,8 @@ public class Util {
 
     public static void sendScheduledBroadcast(Context ctx, DatabaseHandler handler) {
         List<CustomerBroadcast> cbList = handler.getAllTodayCustomerBroadcastsBeforeTimestamp(System.currentTimeMillis());
-        StringBuffer summary = new StringBuffer("schedule broadcast summary: ");
+        final String summaryHeader = "schedule broadcast summary: ";
+        StringBuffer summary = new StringBuffer(summaryHeader);
 
         for (int i = 0; i < cbList.size(); i++){
             List<String> recipientSent = new ArrayList<String>();
@@ -328,11 +329,16 @@ public class Util {
 
             handler.markBroadcastIdAsSent(cb.getRecipientListId());
 
-            summary.append(cb.getType() + "->" + recipientSent.size() + "; ");
+            summary.append(cb.getType().replace("SCHEDULE_", "") + "->" + recipientSent.size() + "; ");
         }
 
         List<String> admins = handler.getAllAdmins();
-        Util.textMultipleRecipients(admins, summary.toString());
+        String textMsg = summary.toString();
+        if (summary.toString().equals(summaryHeader)){
+            //empty result
+            textMsg = "job ran but found no eligible customers";
+        }
+        Util.textMultipleRecipients(admins, textMsg);
     }
 
     private static List<String> broadcastInactiveOldPromoReminder(DatabaseHandler handler, CustomerBroadcast cb) {

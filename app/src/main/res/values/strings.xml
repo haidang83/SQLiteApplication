@@ -140,7 +140,7 @@
         <item>20:30</item>
         <item>21:30</item>
     </string-array>
-    <string name="templateQuery">TEMPLATE QUERY</string>
+    <string name="templateQuery">PRESET QUERY</string>
     <string name="queryType_inactiveUser">INACTIVE</string>
     <string name="queryType_drinkCreditReminder">REMINDER</string>
     <string name="queryType_none">NONE</string>

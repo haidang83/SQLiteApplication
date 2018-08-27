@@ -65,7 +65,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_BROADCAST_TIME = "broadcastTime";
     private static final String KEY_BROADCAST_MESSAGE = "message";
     private static final String KEY_BROADCAST_TYPE = "broadcastType";
-    private static final String KEY_SENT = "sent";
+    private static final String KEY_STATUS = "status";
 
     private static final String TABLE_RECIPIENT_LIST_CUSTOMER = "recipientListCustomer";
 
@@ -98,8 +98,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL(MessageFormat.format(CREATE_CUSTOMER_CLAIM_CODE_TABLE, TABLE_CUSTOMER_CLAIM_CODE, KEY_CUSTOMER_ID, KEY_CLAIM_CODE, KEY_DATE_ISSUED, KEY_PROMO_NAME));
 
         //this table has all the broadcast schedule/sent to customers
-        String CREATE_CUSTOMER_BROADCAST_TABLE = "CREATE TABLE %s (%s INTEGER PRIMARY KEY, %s INTEGER, %s TEXT, %s TEXT, %s INTEGER, %s TEXT)";
-        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_BROADCAST_TABLE, TABLE_CUSTOMER_BROADCAST, KEY_RECIPIENT_LIST, KEY_BROADCAST_TIME, KEY_BROADCAST_MESSAGE, KEY_BROADCAST_TYPE, KEY_SENT, KEY_PROMO_NAME));
+        String CREATE_CUSTOMER_BROADCAST_TABLE = "CREATE TABLE %s (%s INTEGER PRIMARY KEY, %s INTEGER, %s TEXT, %s TEXT, %s TEXT, %s TEXT)";
+        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_BROADCAST_TABLE, TABLE_CUSTOMER_BROADCAST, KEY_RECIPIENT_LIST, KEY_BROADCAST_TIME, KEY_BROADCAST_MESSAGE, KEY_BROADCAST_TYPE, KEY_STATUS, KEY_PROMO_NAME));
 
         //this table has all the customers in a recipient list
         String CREATE_RECIPIENT_LIST_CUSTOMER_TABLE = "CREATE TABLE %s (%s INTEGER, %s TEXT)";
@@ -781,7 +781,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             values.put(KEY_BROADCAST_MESSAGE, msg);
             values.put(KEY_BROADCAST_TYPE, type);
             values.put(KEY_PROMO_NAME, promoName);
-            values.put(KEY_SENT, 0);
+            values.put(KEY_STATUS, Constants.STATUS_READY);
 
             broadcastId = (int) db.insert(TABLE_CUSTOMER_BROADCAST, null, values);
             if (Constants.BROADCAST_TYPE_SCHEDULED_FREE_FORM.equals(type)){
@@ -800,7 +800,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 promoReminderJob.put(KEY_BROADCAST_MESSAGE, promoReminderMsgFormat);
 
                 promoReminderJob.put(KEY_BROADCAST_TYPE, Constants.BROADCAST_TYPE_SCHEDULED_INACTIVE_OLD_PROMO);
-                promoReminderJob.put(KEY_SENT, 0);
+                promoReminderJob.put(KEY_STATUS, Constants.STATUS_READY);
 
                 broadcastId = (int) db.insert(TABLE_CUSTOMER_BROADCAST, null, promoReminderJob);
             }
@@ -863,7 +863,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             startOfToday.set(Calendar.SECOND, 1);
 
 
-            String whereClause = String.format("%s <= %d AND %s > %d AND %s != 1", KEY_BROADCAST_TIME, now, KEY_BROADCAST_TIME, startOfToday.getTimeInMillis(), KEY_SENT);
+            String whereClause = String.format("%s <= %d AND %s > %d AND %s = %s", KEY_BROADCAST_TIME, now, KEY_BROADCAST_TIME, startOfToday.getTimeInMillis(), KEY_STATUS, Constants.STATUS_READY);
             String orderBy = KEY_BROADCAST_TIME + " ASC";
             String query = String.format("SELECT * FROM %s WHERE %s ORDER BY %s", TABLE_CUSTOMER_BROADCAST, whereClause, orderBy);
             Cursor cursor = db.rawQuery(query, null);
@@ -911,7 +911,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = null;
         try {
             db = getWritableDatabase();
-            String update = String.format("UPDATE %s SET %s = %d WHERE %s = %d ", TABLE_CUSTOMER_BROADCAST, KEY_SENT, 1, KEY_RECIPIENT_LIST, recipientListId);
+            String update = String.format("UPDATE %s SET %s = %s WHERE %s = %d ", TABLE_CUSTOMER_BROADCAST, KEY_STATUS, Constants.STATUS_SENT, KEY_RECIPIENT_LIST, recipientListId);
             db.execSQL(update);
         } finally {
             if (db != null){

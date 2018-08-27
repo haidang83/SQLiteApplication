@@ -84,7 +84,7 @@ public class Fragment_Transactions extends Fragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        EditText daysAgo = (EditText) getView().findViewById(R.id.daysAgo);
+        ((EditText) getView().findViewById(R.id.result)).setText("0");
 
         Button search = (Button) getView().findViewById(R.id.searchBtn);
         search.setOnClickListener(new View.OnClickListener() {

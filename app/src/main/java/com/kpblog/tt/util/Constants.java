@@ -43,6 +43,10 @@ public class Constants {
     public static String BROADCAST_TYPE_SCHEDULED_INACTIVE_NEW_PROMO = "SCHEDULED_INACTIVE_NEW_PROMO";
     public static String BROADCAST_TYPE_SCHEDULED_INACTIVE_OLD_PROMO = "SCHEDULED_INACTIVE_OLD_PROMO";
 
+    public static final String STATUS_READY = "ready";
+    public static final String STATUS_SENT = "sent";
+    public static final String STATUS_CANCELLED = "cancelled";
+
     public static String[] PERMISSIONS_STORAGE_SMS = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
