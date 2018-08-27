@@ -282,7 +282,7 @@ public class Util {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ctx);
         SharedPreferences.Editor editor = sp.edit();
         editor.putString(Constants.SHARED_PREF_ADMIN_CODE_KEY, code);
-        editor.commit();
+        editor.apply();
     }
 
     /**
@@ -294,14 +294,14 @@ public class Util {
         SharedPreferences.Editor editor = sp.edit();
         editor.remove(Constants.SHARED_PREF_ADMIN_CODE_KEY);
         editor.putLong(Constants.SHARED_PREF_ADMIN_CODE_EXPIRATION_KEY, System.currentTimeMillis() + Constants.FIVE_MIN_TO_MILLIS);
-        editor.commit();
+        editor.apply();
     }
 
     public static void expireAdminCode(Context ctx){
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ctx);
         SharedPreferences.Editor editor = sp.edit();
         editor.remove(Constants.SHARED_PREF_ADMIN_CODE_EXPIRATION_KEY);
-        editor.commit();
+        editor.apply();
     }
 
     public static boolean isAdminCodeRequired(Context ctx){
