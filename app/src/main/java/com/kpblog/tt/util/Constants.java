@@ -19,6 +19,7 @@ public class Constants {
 
     public static final String SHARED_PREF_ADMIN_CODE_KEY = "adminCode";
     public static final String SHARED_PREF_DAILY_CODE_KEY = "dailyCode";
+    public static final String SHARED_PREF_ADMIN_CODE_EXPIRATION_KEY = "adminCodeExpiration";
 
     public static final String EXPORTED_FOLDER_NAME = "exportedDb";
     public static final String YYYY_MM_HH_MM_SS_FORMAT = "yyyy-MM-dd HH:mm:ss";

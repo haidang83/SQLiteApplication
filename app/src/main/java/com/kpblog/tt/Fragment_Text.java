@@ -188,6 +188,15 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
                 }
             }
         });
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (!Util.isAdminCodeRequired(getActivity())){
+            showAdminScreen();
+        }
     }
 
     private void setMessageContentAndPromoNameBasedOnQueryType() {
@@ -258,9 +267,7 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
             int broadcastId = handler.insertIntoCustomerBroadcastTable(scheduledTime.getTimeInMillis(), msg, type, promoName, customers, getContext());
 
             //need to set the alarm to send the message
-            Intent intent = new Intent(getContext(), TraTemptationReceiver.class);
-            intent.setAction(Constants.SCHEDULED_TEXT_ACTION);
-            Util.setAlarmForScheduledJob(getContext(), scheduledTime, intent, broadcastId);
+            Util.setAlarmForScheduledJob(getActivity().getApplicationContext(), scheduledTime, broadcastId);
             Util.displayToast(getContext(), String.format("Text scheduled for %s", scheduledTimeDropdown.getSelectedItem().toString()));
             submitBtn.setEnabled(false);
         }
@@ -408,6 +415,8 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
         adminCode.setEnabled(true);
 
         getView().findViewById(R.id.adminLayout).setVisibility(View.INVISIBLE);
+
+        Util.expireAdminCode(getActivity());
     }
 
     private void unlockScreen() {
@@ -421,23 +430,23 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
         if (!inputCode.isEmpty() && inputCode.equals(expectedCode)){
             adminCodeLayout.setErrorEnabled(false);
 
-            //clear sharedpref code
-            SharedPreferences.Editor editor = sp.edit();
-            editor.remove(Constants.SHARED_PREF_ADMIN_CODE_KEY);
-            editor.apply();
-
-            //change unlock button text to lock
-            lockUnlockBtn.setText(getString(R.string.lock));
-            getCodeBtn.setEnabled(false);
-            adminCode.setText("");
-            adminCode.setEnabled(false);
-
-            //open admin screen
-            getView().findViewById(R.id.adminLayout).setVisibility(View.VISIBLE);
+            Util.clearAdminCodeAndSetExpirationTime(sp);
+            showAdminScreen();
         }
         else {
             adminCodeLayout.setError(getString(R.string.claimCode_err_msg));
         }
+    }
+
+    private void showAdminScreen() {
+        //change unlock button text to lock
+        lockUnlockBtn.setText(getString(R.string.lock));
+        getCodeBtn.setEnabled(false);
+        adminCode.setText("");
+        adminCode.setEnabled(false);
+
+        //open admin screen
+        getView().findViewById(R.id.adminLayout).setVisibility(View.VISIBLE);
     }
 
     // TODO: Rename method, update argument and hook method into UI event

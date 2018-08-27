@@ -251,6 +251,9 @@ public class Fragment_Admin extends Fragment implements TextView.OnEditorActionL
     @Override
     public void onResume() {
         super.onResume();
+        if (!Util.isAdminCodeRequired(getActivity())){
+            showAdminScreen();
+        }
         updateLocationWithLatestFile();
     }
 
@@ -458,6 +461,7 @@ public class Fragment_Admin extends Fragment implements TextView.OnEditorActionL
         phone.setText("");
 
         getView().findViewById(R.id.adminLayout).setVisibility(View.INVISIBLE);
+        Util.expireAdminCode(getActivity());
     }
 
     private void unlockScreen() {
@@ -471,24 +475,24 @@ public class Fragment_Admin extends Fragment implements TextView.OnEditorActionL
         if (!inputCode.isEmpty() && inputCode.equals(expectedCode)){
             adminCodeLayout.setErrorEnabled(false);
 
-            //clear sharedpref code
-            SharedPreferences.Editor editor = sp.edit();
-            editor.remove(Constants.SHARED_PREF_ADMIN_CODE_KEY);
-            editor.apply();
-
-            //change unlock button text to lock
-            lockUnlockBtn.setText(getString(R.string.lock));
-            getCodeBtn.setEnabled(false);
-            adminCode.setText("");
-            adminCode.setEnabled(false);
-
-            //open admin screen
-            getView().findViewById(R.id.adminLayout).setVisibility(View.VISIBLE);
-            updateLocationWithLatestFile();
+            Util.clearAdminCodeAndSetExpirationTime(sp);
+            showAdminScreen();
         }
         else {
             adminCodeLayout.setError(getString(R.string.claimCode_err_msg));
         }
+    }
+
+    private void showAdminScreen() {
+        //change unlock button text to lock
+        lockUnlockBtn.setText(getString(R.string.lock));
+        getCodeBtn.setEnabled(false);
+        adminCode.setText("");
+        adminCode.setEnabled(false);
+
+        //open admin screen
+        getView().findViewById(R.id.adminLayout).setVisibility(View.VISIBLE);
+        updateLocationWithLatestFile();
     }
 
     String textMsg;

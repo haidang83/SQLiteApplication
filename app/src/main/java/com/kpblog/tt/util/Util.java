@@ -179,14 +179,25 @@ public class Util {
         Log.d("Util", "db backup scheduled for " + new SimpleDateFormat(Constants.YYYY_MM_HH_MM_SS_FORMAT).format(alarmTime.getTime()));
     }
 
-    public static void setAlarmForScheduledJob(Context ctx, Calendar alarmTime, Intent intent, int id){
+    public static void setAlarmForScheduledJob(Context ctx, Calendar alarmTime, int id){
 
-        PendingIntent scheduleJobIntent = PendingIntent.getBroadcast(ctx, id, intent, 0);
-
-        AlarmManager alarms = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
-
-        alarms.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, alarmTime.getTimeInMillis(), scheduleJobIntent);
+        PendingIntent scheduleJobIntent = getPendingIntentForScheduledJob(ctx, id);
+        AlarmManager alarmManager = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
+        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, alarmTime.getTimeInMillis(), scheduleJobIntent);
     }
+
+    public static void cancelAlarmForScheduledJob(Context ctx, int id){
+        PendingIntent scheduleJobIntent = getPendingIntentForScheduledJob(ctx, id);
+        AlarmManager alarmManager = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
+        alarmManager.cancel(scheduleJobIntent);
+    }
+
+    private static PendingIntent getPendingIntentForScheduledJob(Context ctx, int id) {
+        Intent intent = new Intent(ctx, TraTemptationReceiver.class);
+        intent.setAction(Constants.SCHEDULED_TEXT_ACTION);
+        return PendingIntent.getBroadcast(ctx, id, intent, 0);
+    }
+
 
     /**
      * create this method because the PhoneUtils returns a different format (xxx) xxx-xxxx
@@ -272,6 +283,32 @@ public class Util {
         SharedPreferences.Editor editor = sp.edit();
         editor.putString(Constants.SHARED_PREF_ADMIN_CODE_KEY, code);
         editor.commit();
+    }
+
+    /**
+     * after successful unlock, clear out the admin code and the user can have 5-min of not having to enter it again
+     * @param sp
+     */
+    public static void clearAdminCodeAndSetExpirationTime(SharedPreferences sp) {
+        //clear sharedpref code
+        SharedPreferences.Editor editor = sp.edit();
+        editor.remove(Constants.SHARED_PREF_ADMIN_CODE_KEY);
+        editor.putLong(Constants.SHARED_PREF_ADMIN_CODE_EXPIRATION_KEY, System.currentTimeMillis() + Constants.FIVE_MIN_TO_MILLIS);
+        editor.commit();
+    }
+
+    public static void expireAdminCode(Context ctx){
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ctx);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.remove(Constants.SHARED_PREF_ADMIN_CODE_EXPIRATION_KEY);
+        editor.commit();
+    }
+
+    public static boolean isAdminCodeRequired(Context ctx){
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ctx);
+        long expirationTime = sp.getLong(Constants.SHARED_PREF_ADMIN_CODE_EXPIRATION_KEY, 0);
+
+        return (System.currentTimeMillis() > expirationTime);
     }
 
     public static void displayToast(Context ctx, String msg) {
