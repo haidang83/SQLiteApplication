@@ -863,7 +863,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             startOfToday.set(Calendar.SECOND, 1);
 
 
-            String whereClause = String.format("%s <= %d AND %s > %d AND %s = %s", KEY_BROADCAST_TIME, now, KEY_BROADCAST_TIME, startOfToday.getTimeInMillis(), KEY_STATUS, Constants.STATUS_READY);
+            String whereClause = String.format("%s <= %d AND %s > %d AND %s = '%s'", KEY_BROADCAST_TIME, now, KEY_BROADCAST_TIME, startOfToday.getTimeInMillis(), KEY_STATUS, Constants.STATUS_READY);
             String orderBy = KEY_BROADCAST_TIME + " ASC";
             String query = String.format("SELECT * FROM %s WHERE %s ORDER BY %s", TABLE_CUSTOMER_BROADCAST, whereClause, orderBy);
             Cursor cursor = db.rawQuery(query, null);
@@ -911,7 +911,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = null;
         try {
             db = getWritableDatabase();
-            String update = String.format("UPDATE %s SET %s = %s WHERE %s = %d ", TABLE_CUSTOMER_BROADCAST, KEY_STATUS, Constants.STATUS_SENT, KEY_RECIPIENT_LIST, recipientListId);
+            String update = String.format("UPDATE %s SET %s = '%s' WHERE %s = %d ", TABLE_CUSTOMER_BROADCAST, KEY_STATUS, Constants.STATUS_SENT, KEY_RECIPIENT_LIST, recipientListId);
             db.execSQL(update);
         } finally {
             if (db != null){
@@ -962,20 +962,27 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = null;
         try {
             /*
-              select c.customerId from Customer c, customerClaimCode ccc
-              where {selectCondition}
-              and c.customerId = ccc.customerId and (ccc.promoName is NULL OR ccc.promoName='')
+                CustomerIds with existing promo:
+                (Select customerId from customerClaimCode where promoName is not null or promoName != '')
              */
-            String selectColumns = MessageFormat.format("Select {0}.{1}, ({0}.{5} + {0}.{6}) as {7} from {2} {0}, {3} {4} WHERE ",
-                                    "c", KEY_CUSTOMER_ID, TABLE_CUSTOMER, TABLE_CUSTOMER_CLAIM_CODE, "ccc",
-                                        KEY_PURCHASE_CREDIT, KEY_REFERRAL_CREDIT, KEY_TOTAL_CREDIT);
+            String customerIdsWithPromo = MessageFormat.format("Select {0} from {1} where {2} is not null or {2} != ''''",
+                                        KEY_CUSTOMER_ID, TABLE_CUSTOMER_CLAIM_CODE, KEY_PROMO_NAME);
+
+            /*
+              Select customerID, (purchaseCredit + referralCredit) as totalCredit from customer c
+                WHERE {selectCondition}
+                AND c.isOptIn = 1
+                AND c.customerID not IN {customerIds with existing promo}
+             */
+            String selectColumns = MessageFormat.format("Select {0}, ({1} + {2}) as {3} from {4} WHERE ",
+                            KEY_CUSTOMER_ID, KEY_PURCHASE_CREDIT, KEY_REFERRAL_CREDIT, KEY_TOTAL_CREDIT, TABLE_CUSTOMER);
 
             String selectCondition = getSelectCondition(Constants.INACTIVE_LAST_VISIT_MIN, Constants.INACTIVE_LAST_VISIT_MAX,
                                         Constants.INACTIVE_LAST_TEXTED_MIN, Constants.INACTIVE_LAST_TEXTED_MAX,
                                         Constants.INACTIVE_CREDIT_MIN, Constants.INACTIVE_CREDIT_MAX);
 
-            String joinCondition = MessageFormat.format(" AND {0}.{1} = {2}.{1} AND ({2}.{3} is NULL OR {2}.{3} ='''') AND {0}.{4} = 1",
-                                                        "c", KEY_CUSTOMER_ID, "ccc", KEY_PROMO_NAME, KEY_IS_OPT_IN);
+            String joinCondition = MessageFormat.format(" AND {0} = 1 AND {1} NOT IN({2})"
+                                        , KEY_IS_OPT_IN, KEY_CUSTOMER_ID, customerIdsWithPromo);
 
             String query = selectColumns + selectCondition + joinCondition;
 
