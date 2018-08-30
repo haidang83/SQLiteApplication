@@ -366,7 +366,7 @@ public class Util {
 
             handler.markBroadcastIdAsSent(cb.getRecipientListId());
 
-            summary.append(cb.getType().replace("SCHEDULE_", "") + "->" + recipientSent.size() + "; ");
+            summary.append(cb.getType().replace("SCHEDULED_", "") + "->" + recipientSent.size() + "; ");
         }
 
         List<String> admins = handler.getAllAdmins();

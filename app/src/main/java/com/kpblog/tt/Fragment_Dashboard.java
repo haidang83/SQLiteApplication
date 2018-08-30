@@ -193,7 +193,7 @@ public class Fragment_Dashboard extends Fragment {
             drinkCreditMax.setText(String.valueOf(Constants.DRINK_REMINDER_CREDIT_MAX));
 
             orderByDropdown.setSelection(0);//days not visit
-            orderByDropdown.setSelection(1);//desc
+            ascDescDropdown.setSelection(1);//desc
         }
         else {
             clearInputs();
