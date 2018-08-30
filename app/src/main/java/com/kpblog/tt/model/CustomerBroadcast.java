@@ -5,7 +5,7 @@ import java.util.List;
 public class CustomerBroadcast {
     private long timestamp;
     private int recipientListId;
-    private String message, type, promoName;
+    private String message, type, promoName, status;
     private List<String> recipientPhoneNumbers;
 
     public CustomerBroadcast(long timestamp, int recipientListId, String message, String type, String promoName){
@@ -62,5 +62,13 @@ public class CustomerBroadcast {
 
     public void setRecipientPhoneNumbers(List<String> recipientPhoneNumbers) {
         this.recipientPhoneNumbers = recipientPhoneNumbers;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

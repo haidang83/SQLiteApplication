@@ -41,6 +41,9 @@ public class TraTemptationReceiver extends BroadcastReceiver {
             String exportedDbPath = Util.exportDatabase(sourceDbName);
 
             Util.textDailyCode(context);
+
+            DatabaseHandler handler = new DatabaseHandler(context);
+            Util.sendScheduledBroadcast(context, handler);
         }
         else if (Constants.SCHEDULED_TEXT_ACTION.equals(intentAction)){
             DatabaseHandler handler = new DatabaseHandler(context);

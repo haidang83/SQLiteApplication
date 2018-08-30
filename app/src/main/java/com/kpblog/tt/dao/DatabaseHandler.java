@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -622,10 +623,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
 
         /**
-         * SELECT customerId, lastVisitDate, totalCredit, lastContactDate
+         * SELECT customerId, broadcastTimestamp, totalCredit, lastContactDate
          FROM table_name
          WHERE (lastContactDate IS NULL OR (lastContactDate >= lastTextStartDate AND lastContactDate <= lastTextEndDate))
-         AND (lastVisitDate >= lastVisitStartDate and lastVisitDate =< lastVisitEndDate)
+         AND (broadcastTimestamp >= lastVisitStartDate and broadcastTimestamp =< lastVisitEndDate)
          */
         String selectClauseFormat = String.format("SELECT %s, %s, %s, %s, %s, (%s + %s) as %s, %s FROM %s ", KEY_CUSTOMER_ID, KEY_LAST_VISIT_DATE, KEY_PURCHASE_CREDIT, KEY_LAST_CONTACTED_DATE,
                                 KEY_REFERRAL_CREDIT, KEY_PURCHASE_CREDIT, KEY_REFERRAL_CREDIT, KEY_TOTAL_CREDIT, KEY_IS_OPT_IN, TABLE_CUSTOMER);
@@ -886,14 +887,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 //for the other types, we'll re-run the query to get the most updated customer list
                 if (Constants.BROADCAST_TYPE_SCHEDULED_FREE_FORM.equals(cb.getType())){
 
-                    whereClause = String.format("%s = %d", KEY_RECIPIENT_LIST, cb.getRecipientListId());
-                    cursor = db.query(TABLE_RECIPIENT_LIST_CUSTOMER, new String[] {KEY_CUSTOMER_ID}, whereClause, null, null, null, null);
-                    List<String> recipientPhones = new ArrayList<String>();
-                    if (cursor.moveToFirst()){
-                        do {
-                            recipientPhones.add(cursor.getString(0));
-                        } while (cursor.moveToNext());
-                    }
+                    List<String> recipientPhones = getPhoneNumByRecipientListId(db, cb.getRecipientListId());
 
                     cb.setRecipientPhoneNumbers(recipientPhones);
                 }
@@ -905,6 +899,21 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         }
 
         return cbList;
+    }
+
+    @NonNull
+    private List<String> getPhoneNumByRecipientListId(SQLiteDatabase db, int id) {
+        String whereClause;
+        Cursor cursor;
+        whereClause = String.format("%s = %d", KEY_RECIPIENT_LIST, id);
+        cursor = db.query(TABLE_RECIPIENT_LIST_CUSTOMER, new String[] {KEY_CUSTOMER_ID}, whereClause, null, null, null, null);
+        List<String> recipientPhones = new ArrayList<String>();
+        if (cursor.moveToFirst()){
+            do {
+                recipientPhones.add(cursor.getString(0));
+            } while (cursor.moveToNext());
+        }
+        return recipientPhones;
     }
 
     public void markBroadcastIdAsSent(int recipientListId) {
@@ -1049,5 +1058,48 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         }
 
         return customerClaimCodes;
+    }
+
+    public CustomerBroadcast[] getAllCustomerBroadcastByStatus(String broadcastStatus) {
+        SQLiteDatabase db = null;
+        List<CustomerBroadcast> cbList = new ArrayList<CustomerBroadcast>();
+
+        try {
+            db = getReadableDatabase();
+            String query = MessageFormat.format("Select {0}, {1}, {2}, {3} from {4} ", KEY_RECIPIENT_LIST, KEY_BROADCAST_TIME, KEY_BROADCAST_TYPE, KEY_STATUS, TABLE_CUSTOMER_BROADCAST);
+
+            if (!broadcastStatus.isEmpty()){
+                String condition = MessageFormat.format("WHERE {0} = ''{1}'' ", KEY_STATUS, broadcastStatus);
+                query += condition;
+            }
+
+            String orderBy = MessageFormat.format("ORDER BY {0} DESC", KEY_BROADCAST_TIME);
+            query += orderBy;
+
+            Cursor cursor = db.rawQuery(query, null);
+            if (cursor != null && cursor.moveToFirst()){
+                do {
+                    int recList = cursor.getInt(0);
+                    long timestamp = cursor.getLong(1);
+                    String type = cursor.getString(2);
+                    String status = cursor.getString(3);
+                    String msg = "";
+                    CustomerBroadcast cb = new CustomerBroadcast(timestamp, recList, msg, type, "");
+                    cb.setStatus(status);
+
+                    List<String> phoneList = getPhoneNumByRecipientListId(db, cb.getRecipientListId());
+                    cb.setRecipientPhoneNumbers(phoneList);
+
+                    cbList.add(cb);
+
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            if (db != null){
+                db.close();
+            }
+        }
+
+        return cbList.toArray(new CustomerBroadcast[0]);
     }
 }

@@ -1,0 +1,63 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFF"
+    android:clickable="true"
+    android:id="@+id/scheduledBroadcast"
+    tools:context="com.kpblog.tt.Fragment_ScheduledBroadcast">
+
+    <LinearLayout
+        android:id="@+id/insertLayout"
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:layout_marginLeft="3dp"
+        android:layout_height="match_parent">
+
+        <LinearLayout android:id="@+id/criteriaLayout"
+            android:layout_width="match_parent"
+            android:orientation="horizontal"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:text="BROADCAST STATUS"
+                android:enabled="false"
+                android:layout_weight="6"
+                android:layout_width="0dp"
+                android:textStyle="bold"
+                android:textAllCaps="true"
+                android:gravity="bottom"
+                android:textColor="@color/grey"
+                android:layout_height="wrap_content" />
+            <!--spacer-->
+            <View
+                android:layout_width="0dp"
+                android:layout_weight="0.10"
+                android:visibility="invisible"
+                android:layout_height="match_parent" />
+
+            <Spinner
+                android:id="@+id/broadcastStatusDropdown"
+                android:layout_weight="4"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginRight="0dp"
+                android:paddingRight="0dp"
+                android:layout_marginLeft="-5dp"
+                android:layout_gravity="start"
+                android:theme="@style/SpinnerItemTextAppearance"
+                android:entries="@array/broadcastStatusDropdown"
+                android:gravity="bottom"
+                android:spinnerMode="dropdown"/>
+
+        </LinearLayout>
+
+        <ListView
+            android:id="@+id/listview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        </ListView>
+    </LinearLayout>
+
+</FrameLayout>

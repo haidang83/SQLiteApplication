@@ -18,7 +18,6 @@ public class CustomerListViewAdapter extends ArrayAdapter<Customer> {
 
     int groupid;
     Customer[] item_list;
-    ArrayList<String> desc;
     Context context;
     public CustomerListViewAdapter(Context context, int vg, int id, Customer[] item_list){
         super(context,vg, id, item_list);
