@@ -1,7 +1,6 @@
 package com.kpblog.tt;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
@@ -24,7 +23,6 @@ import android.widget.Toast;
 
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
-import com.kpblog.tt.receiver.TraTemptationReceiver;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
@@ -203,16 +201,27 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
         if (isDrinkCreditReminderQueryType()){
             messageBox.setText(getString(R.string.drinkCreditReminderMessage));
         }
-        else if (isInactiveUserQueryType()){
-            final String inactiveMessage = getString(R.string.inactiveUserMessage_sendPromo);
+        else if (isInactiveNewPromoQueryType()){
+            //set the new promo in the message
+            final String inactiveMessage = getString(R.string.inactiveUser_sendPromo);
             String inactiveMesageWithPromo = inactiveMessage.replace(Constants.PROMO_NAME_PLACE_HOLDER, Constants.INACTIVE_USER_PROMO_NAME);
             messageBox.setText(inactiveMesageWithPromo);
             promotionName.setText(Constants.INACTIVE_USER_PROMO_NAME);
         }
+        else if (isInactiveOldPromoQueryType()){
+            final String inactiveMessageOldPromoFormat = getString(R.string.inactiveUser_promoReminder);
+            messageBox.setText(inactiveMessageOldPromoFormat);
+            //we'll load the promo name for each customer at texting time
+            promotionName.setText("");
+        }
     }
 
-    private boolean isInactiveUserQueryType() {
-        return getString(R.string.queryType_inactiveUser).equals(queryType);
+    private boolean isInactiveOldPromoQueryType() {
+        return getString(R.string.queryType_inactiveOldPromo).equals(queryType);
+    }
+
+    private boolean isInactiveNewPromoQueryType(){
+        return getString(R.string.queryType_inactiveNewPromo).equals(queryType);
     }
 
     private boolean isDrinkCreditReminderQueryType() {
@@ -230,6 +239,7 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
 
         String action = textActionDropdown.getSelectedItem().toString();
         if (getString(R.string.textNow).equals(action)){
+            msg = msg.replace(Constants.PROMO_NAME_PLACE_HOLDER, promoName);
             String userType = userTypeDropdown.getSelectedItem().toString();
             if (getString(R.string.realUsers).equals(userType)){
                 //text real users from customer list
@@ -313,8 +323,11 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
         if (isDrinkCreditReminderQueryType()){
             broadcastType = Constants.BROADCAST_TYPE_SCHEDULED_CREDIT_REMINDER;
         }
-        else if (isInactiveUserQueryType()){
+        else if (isInactiveNewPromoQueryType()){
             broadcastType = Constants.BROADCAST_TYPE_SCHEDULED_INACTIVE_NEW_PROMO;
+        }
+        else if (isInactiveOldPromoQueryType()){
+            broadcastType = Constants.BROADCAST_TYPE_SCHEDULED_INACTIVE_OLD_PROMO;
         }
 
         return broadcastType;
@@ -391,6 +404,7 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
                 recipients.add(c.getCustomerId());
             }
 
+            msg = msg.replace(Constants.PROMO_NAME_PLACE_HOLDER, promoName);
             Util.textPromoToMultipleRecipientsAndUpdateLastTexted(recipients, msg, handler, true, promoName);
             Util.displayToast(getContext(),"message sent to " + recipients.size() + " recipients");
         }

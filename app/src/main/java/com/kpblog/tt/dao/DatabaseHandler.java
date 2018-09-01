@@ -457,6 +457,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             selection = MessageFormat.format(NULL_OR_EMPTY_PATTERN, KEY_PROMO_NAME) + selection;
         }
 
+        //get the latest one
+        selection += MessageFormat.format(" ORDER BY {0} DESC", KEY_DATE_ISSUED);
+
         // Select All Query
         Cursor cursor = db.query(TABLE_CUSTOMER_CLAIM_CODE, new String[] {KEY_CLAIM_CODE, KEY_PROMO_NAME, KEY_DATE_ISSUED}, selection, new String[] { customerId },
                 null, null, null, null);
@@ -781,7 +784,12 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             values.put(KEY_BROADCAST_TIME, timeInMillis);
             values.put(KEY_BROADCAST_MESSAGE, msg);
             values.put(KEY_BROADCAST_TYPE, type);
-            values.put(KEY_PROMO_NAME, promoName);
+            if (Constants.BROADCAST_TYPE_SCHEDULED_INACTIVE_NEW_PROMO.equals(type)){
+                //if sending new promo, save the promo name
+                //(for old promo, ignore the promoName passed in, we'll load for each customer upon texting)
+                values.put(KEY_PROMO_NAME, promoName);
+            }
+
             values.put(KEY_STATUS, Constants.STATUS_READY);
 
             broadcastId = (int) db.insert(TABLE_CUSTOMER_BROADCAST, null, values);
@@ -789,21 +797,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 //only for on-demand type: insert the customer for this recipient list
                 //for the other types, the customer list will be queried right before broadcast
                 insertCustomerForRecipientList(broadcastId, Arrays.asList(customers), db);
-            }
-            else if (Constants.BROADCAST_TYPE_SCHEDULED_INACTIVE_NEW_PROMO.equals(type)){
-                //for new promo, which is already scheduled above, we also schedule one to remind
-                //inactive customer who already has a promo
-                ContentValues promoReminderJob = new ContentValues();
-                promoReminderJob.put(KEY_BROADCAST_TIME, timeInMillis);
-
-                String promoReminderMsgFormat = ctx.getResources().getString(R.string.inactiveUser_promoReminder);
-                promoReminderMsgFormat = promoReminderMsgFormat.replace("%s", Constants.CLAIM_CODE_PLACE_HOLDER);
-                promoReminderJob.put(KEY_BROADCAST_MESSAGE, promoReminderMsgFormat);
-
-                promoReminderJob.put(KEY_BROADCAST_TYPE, Constants.BROADCAST_TYPE_SCHEDULED_INACTIVE_OLD_PROMO);
-                promoReminderJob.put(KEY_STATUS, Constants.STATUS_READY);
-
-                broadcastId = (int) db.insert(TABLE_CUSTOMER_BROADCAST, null, promoReminderJob);
             }
 
             db.setTransactionSuccessful();

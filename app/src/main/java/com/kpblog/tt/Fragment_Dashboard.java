@@ -178,7 +178,11 @@ public class Fragment_Dashboard extends Fragment {
 
     private void handleTemplateQuerySelection() {
         String queryType = templateQuery.getSelectedItem().toString();
-        if (getString(R.string.queryType_inactiveUser).equals(queryType)){
+        if (getString(R.string.queryType_inactiveOldPromo).equals(queryType) ||
+            getString(R.string.queryType_inactiveNewPromo).equals(queryType)) {
+
+            //on the UI side, both types of inactive have the same criteria
+            //but on the backend, we'll separate users already with promo and user without
             lastVisitMin.setText(String.valueOf(Constants.INACTIVE_LAST_VISIT_MIN));
             lastVisitMax.setText(String.valueOf(Constants.INACTIVE_LAST_VISIT_MAX));
             lastTextMinDay.setText(String.valueOf(Constants.INACTIVE_LAST_TEXTED_MIN));
@@ -188,9 +192,6 @@ public class Fragment_Dashboard extends Fragment {
             //since the reminder is for 7-10
             drinkCreditMin.setText(String.valueOf(Constants.INACTIVE_CREDIT_MIN));
             drinkCreditMax.setText(String.valueOf(Constants.INACTIVE_CREDIT_MAX));
-
-            //for inactive users, give out promo to those not already have it; if they have promo, remind them
-
         }
         else if (getString(R.string.queryType_drinkCreditReminder).equals(queryType)){
             lastVisitMin.setText(String.valueOf(Constants.DRINK_REMINDER_LAST_VISIT_MIN));

@@ -142,19 +142,19 @@
         <item>21:30</item>
     </string-array>
     <string name="templateQuery">PRESET QUERY</string>
-    <string name="queryType_inactiveUser">INACTIVE REM</string>
-    <string name="queryType_inactiveNew">INACTIVE NEW</string>
+    <string name="queryType_inactiveOldPromo">INACTIVE REM</string>
+    <string name="queryType_inactiveNewPromo">INACTIVE NEW</string>
     <string name="queryType_drinkCreditReminder">CREDIT REM</string>
     <string name="queryType_none">NONE</string>
     <string-array name="queryTypeDropdown">
         <item>@string/queryType_none</item>
-        <item>@string/queryType_inactiveUser</item>
-        <item>@string/queryType_inactiveNew</item>
+        <item>@string/queryType_inactiveOldPromo</item>
+        <item>@string/queryType_inactiveNewPromo</item>
         <item>@string/queryType_drinkCreditReminder</item>
     </string-array>
     <string name="availPromo">Available Promotion</string>
     <string name="drinkCreditReminderMessage">You have %.1f drink credits at Tra Temptation, buy %.1f more and get 1 free!</string>
-    <string name="inactiveUserMessage_sendPromo">Congratulations on winning the Tra Temptation raffle. Please use this code for {promo}: %s</string>
+    <string name="inactiveUser_sendPromo">Congratulations on winning the Tra Temptation raffle. Please use this code for {promo}: %s</string>
     <string name="inactiveUser_promoReminder">{promo} promotion is waiting for you at Tra Temptation! Please use this code to claim: %s</string>
     <string name="broadcastStatus_sent">SENT</string>
     <string name="broadcastStatus_ready">READY</string>
