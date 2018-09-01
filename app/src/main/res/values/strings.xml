@@ -142,12 +142,14 @@
         <item>21:30</item>
     </string-array>
     <string name="templateQuery">PRESET QUERY</string>
-    <string name="queryType_inactiveUser">INACTIVE</string>
-    <string name="queryType_drinkCreditReminder">REMINDER</string>
+    <string name="queryType_inactiveUser">INACTIVE REM</string>
+    <string name="queryType_inactiveNew">INACTIVE NEW</string>
+    <string name="queryType_drinkCreditReminder">CREDIT REM</string>
     <string name="queryType_none">NONE</string>
     <string-array name="queryTypeDropdown">
         <item>@string/queryType_none</item>
         <item>@string/queryType_inactiveUser</item>
+        <item>@string/queryType_inactiveNew</item>
         <item>@string/queryType_drinkCreditReminder</item>
     </string-array>
     <string name="availPromo">Available Promotion</string>

@@ -132,7 +132,15 @@ public class Fragment_Dashboard extends Fragment {
         search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                handleSearchClick();
+                //hide soft keyboard
+                InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(getView().getWindowToken(), 0);
+
+                if (SystemClock.elapsedRealtime() - searchBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD) {
+
+                    searchBtnLastClicked = SystemClock.elapsedRealtime();
+                    handleSearchClick();
+                }
             }
         });
 
@@ -203,22 +211,14 @@ public class Fragment_Dashboard extends Fragment {
     }
 
     private void handleSearchClick() {
-        if (SystemClock.elapsedRealtime() - searchBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD) {
-            //hide soft keyboard
-            InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(getView().getWindowToken(), 0);
 
-            searchBtnLastClicked = SystemClock.elapsedRealtime();
-
-            Customer[] customers = validateInputAndSearchCustomers();
-            if (customers != null){
-                // Create an adapter to bind data to the ListView
-                CustomerListViewAdapter adapter = new CustomerListViewAdapter(getContext(), R.layout.dashboard_row_layout, R.id.phone, customers);
-                // Bind data to the ListView
-                listView.setAdapter(adapter);
-                ((EditText) getView().findViewById(R.id.result)).setText(String.valueOf(customers.length));
-            }
-
+        Customer[] customers = validateInputAndSearchCustomers();
+        if (customers != null){
+            // Create an adapter to bind data to the ListView
+            CustomerListViewAdapter adapter = new CustomerListViewAdapter(getContext(), R.layout.dashboard_row_layout, R.id.phone, customers);
+            // Bind data to the ListView
+            listView.setAdapter(adapter);
+            ((EditText) getView().findViewById(R.id.result)).setText(String.valueOf(customers.length));
         }
     }
 
