@@ -68,4 +68,7 @@ public class Constants {
     public static final int INACTIVE_LAST_TEXTED_MAX = DRINK_REMINDER_LAST_TEXTED_MAX;
     public static final int INACTIVE_CREDIT_MIN = 1;
     public static final int INACTIVE_CREDIT_MAX = 6;
+
+    public static final int CLAIM_CODE_TYPE_FREE_DRINK = 1;
+    public static final int CLAIM_CODE_TYPE_PROMOTION = 2;
 }

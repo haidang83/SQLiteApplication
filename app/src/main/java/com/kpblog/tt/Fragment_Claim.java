@@ -258,7 +258,7 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
             //send claim confirmation text
             String msg = String.format(getString(R.string.successfulClaim_text), remainingCredit);
             Util.textSingleRecipient(customerId, msg);
-            Util.displayToast(getContext(), msg);
+            Util.displayToast(getContext(), "Success! Confirmation text sent");
         }
         else {
             Toast.makeText(getContext().getApplicationContext(), getString(R.string.claimSuccess_msg), Toast.LENGTH_LONG).show();
@@ -353,7 +353,6 @@ public class Fragment_Claim extends Fragment implements TextView.OnEditorActionL
 
     private void sendCodeAndUpdateDb(String phoneNumber, String message, String codeStr, boolean isPromo){
         Util.textSingleRecipient(phoneNumber, message);
-
         String promoName = null;
         if (isPromo){
             promoName = availPromo.getText().toString();

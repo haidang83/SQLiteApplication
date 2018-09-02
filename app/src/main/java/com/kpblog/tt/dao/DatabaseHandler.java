@@ -66,6 +66,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_BROADCAST_TIME = "broadcastTime";
     private static final String KEY_BROADCAST_MESSAGE = "message";
     private static final String KEY_BROADCAST_TYPE = "broadcastType";
+    private static final String KEY_CLAIM_CODE_TYPE = "claimCodeType";
     private static final String KEY_STATUS = "status";
 
     private static final String TABLE_RECIPIENT_LIST_CUSTOMER = "recipientListCustomer";
@@ -95,16 +96,16 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_PURCHASE_TABLE, TABLE_CUSTOMER_PURCHASE, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE, KEY_NOTES));
 
         //this table has the outstanding claim code for the customer, only at most 1 outstanding code per customer
-        String CREATE_CUSTOMER_CLAIM_CODE_TABLE = "CREATE TABLE {0} ({1} TEXT, {2} TEXT, {3} INTEGER, {4} TEXT, PRIMARY KEY({1}, {4}))";
-        sqLiteDatabase.execSQL(MessageFormat.format(CREATE_CUSTOMER_CLAIM_CODE_TABLE, TABLE_CUSTOMER_CLAIM_CODE, KEY_CUSTOMER_ID, KEY_CLAIM_CODE, KEY_DATE_ISSUED, KEY_PROMO_NAME));
+        String CREATE_CUSTOMER_CLAIM_CODE_TABLE = "CREATE TABLE {0} ({1} TEXT, {2} TEXT, {3} INTEGER, {4} INTEGER, {5} TEXT, PRIMARY KEY({1}, {4}))";
+        sqLiteDatabase.execSQL(MessageFormat.format(CREATE_CUSTOMER_CLAIM_CODE_TABLE, TABLE_CUSTOMER_CLAIM_CODE, KEY_CUSTOMER_ID, KEY_CLAIM_CODE, KEY_DATE_ISSUED, KEY_CLAIM_CODE_TYPE, KEY_PROMO_NAME));
 
         //this table has all the broadcast schedule/sent to customers
         String CREATE_CUSTOMER_BROADCAST_TABLE = "CREATE TABLE %s (%s INTEGER PRIMARY KEY, %s INTEGER, %s TEXT, %s TEXT, %s TEXT, %s TEXT)";
         sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_BROADCAST_TABLE, TABLE_CUSTOMER_BROADCAST, KEY_RECIPIENT_LIST, KEY_BROADCAST_TIME, KEY_BROADCAST_MESSAGE, KEY_BROADCAST_TYPE, KEY_STATUS, KEY_PROMO_NAME));
 
         //this table has all the customers in a recipient list
-        String CREATE_RECIPIENT_LIST_CUSTOMER_TABLE = "CREATE TABLE %s (%s INTEGER, %s TEXT)";
-        sqLiteDatabase.execSQL(String.format(CREATE_RECIPIENT_LIST_CUSTOMER_TABLE, TABLE_RECIPIENT_LIST_CUSTOMER, KEY_RECIPIENT_LIST, KEY_CUSTOMER_ID));
+        String CREATE_RECIPIENT_LIST_CUSTOMER_TABLE = "CREATE TABLE {0} ({1} INTEGER PRIMARY KEY, {2} TEXT, UNIQUE({1}, {2}))";
+        sqLiteDatabase.execSQL(MessageFormat.format(CREATE_RECIPIENT_LIST_CUSTOMER_TABLE, TABLE_RECIPIENT_LIST_CUSTOMER, KEY_RECIPIENT_LIST, KEY_CUSTOMER_ID));
 
         String CREATE_ADMIN_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY)";
         sqLiteDatabase.execSQL(String.format(CREATE_ADMIN_TABLE, TABLE_ADMIN, KEY_CUSTOMER_ID));
@@ -430,6 +431,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(KEY_CUSTOMER_ID, cc.getCustomerId());
         values.put(KEY_CLAIM_CODE, cc.getClaimCode());
         values.put(KEY_PROMO_NAME, cc.getPromoName());
+        values.put(KEY_CLAIM_CODE_TYPE, cc.getClaimCodeType());
 
         values.put(KEY_DATE_ISSUED, cc.getIssuedDate().getTime());
 
@@ -449,13 +451,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
 
         String selection = KEY_CUSTOMER_ID + "=?";
-        if (getPromo){
-            selection = MessageFormat.format(NOT_NULL_AND_NOT_EMPTY_PATTERN, KEY_PROMO_NAME) + selection;
-        }
-        else {
-            //only get the rows with no promo name, escaped the single quote
-            selection = MessageFormat.format(NULL_OR_EMPTY_PATTERN, KEY_PROMO_NAME) + selection;
-        }
+        final String claimCodeTypeQuery = getClaimCodeTypeQuery(getPromo);
+        selection = claimCodeTypeQuery + selection;
 
         //get the latest one
         selection += MessageFormat.format(" ORDER BY {0} DESC", KEY_DATE_ISSUED);
@@ -476,6 +473,16 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return cc;
     }
 
+    @NonNull
+    private String getClaimCodeTypeQuery(boolean getPromo) {
+        int claimCodeType = Constants.CLAIM_CODE_TYPE_FREE_DRINK;
+        if (getPromo){
+            claimCodeType = Constants.CLAIM_CODE_TYPE_PROMOTION;
+        }
+
+        return MessageFormat.format("{0} = {1} AND ", KEY_CLAIM_CODE_TYPE, claimCodeType);
+    }
+
 
     /**
      * after successful claim, puts all remaining credit into purchase, zero out referral
@@ -494,13 +501,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public void deleteClaimCodeForCustomerId(String customerId, boolean isPromo) {
         SQLiteDatabase db = this.getWritableDatabase();
 
-        String whereClause = KEY_CUSTOMER_ID + "=?";
-        if (isPromo){
-            whereClause = MessageFormat.format(NOT_NULL_AND_NOT_EMPTY_PATTERN, KEY_PROMO_NAME) + whereClause;
-        }
-        else {
-            whereClause = MessageFormat.format(NULL_OR_EMPTY_PATTERN, KEY_PROMO_NAME) + whereClause;
-        }
+        String whereClause = getClaimCodeTypeQuery(isPromo) + KEY_CUSTOMER_ID + "=?";
 
         db.delete(TABLE_CUSTOMER_CLAIM_CODE, whereClause, new String []{customerId});
         db.close();
@@ -822,7 +823,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(KEY_RECIPIENT_LIST, id);
         values.put(KEY_CUSTOMER_ID, phoneNum);
 
-        db.insert(TABLE_RECIPIENT_LIST_CUSTOMER, null, values);
+        db.insertWithOnConflict(TABLE_RECIPIENT_LIST_CUSTOMER, null, values, SQLiteDatabase.CONFLICT_IGNORE);
     }
 
     public void massInsertPhoneNumbersIntoRecipientListId(int id, List<String> phoneList){
@@ -955,7 +956,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     /**
-     * get the inactive customers without
+     * get the inactive customers without promo or free credit claim
      * @return
      */
     public List<String> getInactiveCustomerPhoneNumbersWithoutPromo() {
@@ -964,11 +965,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = null;
         try {
             /*
-                CustomerIds with existing promo:
-                (Select customerId from customerClaimCode where promoName is not null or promoName != '')
+                CustomerIds with existing promo or free credit claim:
+                (Select customerId from customerClaimCode)
              */
-            String customerIdsWithPromo = MessageFormat.format("Select {0} from {1} where {2} is not null or {2} != ''''",
-                                        KEY_CUSTOMER_ID, TABLE_CUSTOMER_CLAIM_CODE, KEY_PROMO_NAME);
+            String customerIdsWithPromo = MessageFormat.format("Select {0} from {1}",
+                                        KEY_CUSTOMER_ID, TABLE_CUSTOMER_CLAIM_CODE);
 
             /*
               Select customerID, (purchaseCredit + referralCredit) as totalCredit from customer c

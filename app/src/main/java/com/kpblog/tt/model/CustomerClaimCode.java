@@ -1,17 +1,26 @@
 package com.kpblog.tt.model;
 
+import com.kpblog.tt.util.Constants;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class CustomerClaimCode {
     private String customerId, claimCode, promoName;
     private Date issuedDate;
+    private int claimCodeType;
 
     public CustomerClaimCode(String customerId, String claimCode, Date issuedDate, String promoName){
         this.customerId = customerId;
         this.claimCode = claimCode;
         this.issuedDate = issuedDate;
         this.promoName = promoName;
+        if (promoName != null && !promoName.isEmpty()){
+            this.claimCodeType = Constants.CLAIM_CODE_TYPE_PROMOTION;
+        }
+        else {
+            this.claimCodeType = Constants.CLAIM_CODE_TYPE_FREE_DRINK;
+        }
     }
 
     public CustomerClaimCode(String customerId, String claimCode, Date issuedDate){
@@ -40,6 +49,10 @@ public class CustomerClaimCode {
 
     public String getPromoName() {
         return promoName;
+    }
+
+    public int getClaimCodeType() {
+        return claimCodeType;
     }
 
     @Override

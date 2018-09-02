@@ -361,7 +361,9 @@ public class Util {
                 }
 
                 //save the phone numbers that we texted into the recipientList
-                handler.massInsertPhoneNumbersIntoRecipientListId(cb.getRecipientListId(), recipientSent);
+                if (recipientSent.size() > 0){
+                    handler.massInsertPhoneNumbersIntoRecipientListId(cb.getRecipientListId(), recipientSent);
+                }
             }
 
             handler.markBroadcastIdAsSent(cb.getRecipientListId());
