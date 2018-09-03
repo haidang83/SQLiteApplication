@@ -5,6 +5,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.design.widget.TextInputLayout;
@@ -13,6 +14,7 @@ import android.telephony.SmsManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.kpblog.tt.R;
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
 import com.kpblog.tt.model.CustomerBroadcast;
@@ -231,7 +233,7 @@ public class Util {
         DatabaseHandler handler = new DatabaseHandler(ctx);
         List<String> phonesToText = handler.getAllAdmins();
         final String dailyCode = Util.generateRandom4DigitCode();
-        String message = String.format("Cashier code: %s", dailyCode);
+        String message = String.format("Daily broadcast job scheduled. Daily cashier code: %s", dailyCode);
 
         textMultipleRecipients(phonesToText, message);
 
@@ -493,4 +495,24 @@ public class Util {
         return customerBroadcast.getType().replace("SCHEDULED_", "");
     }
 
+    public static void scheduleDailyBroadcast(Context context) {
+        DatabaseHandler handler = new DatabaseHandler(context);
+
+        Calendar scheduledTime = getScheduledTimeForHourMin(Constants.SCHEDULED_BROADCAST_HOUR, Constants.SCHEDULED_BROADCAST_MIN);
+
+        final Resources resources = context.getResources();
+        String creditReminderMsg = resources.getString(R.string.drinkCreditReminderMessage);
+        int creditReminderBroadcastId = handler.insertIntoCustomerBroadcastTable(scheduledTime.getTimeInMillis(), creditReminderMsg, Constants.BROADCAST_TYPE_SCHEDULED_CREDIT_REMINDER, "", null);
+        //need to set the alarm to send the message
+        Util.setAlarmForScheduledJob(context, scheduledTime, creditReminderBroadcastId);
+
+        String newPromoMsg = resources.getString(R.string.inactiveUser_sendPromo);
+        String promoName = Constants.INACTIVE_USER_PROMO_NAME;
+        int newPromoBroadcastId = handler.insertIntoCustomerBroadcastTable(scheduledTime.getTimeInMillis(), newPromoMsg, Constants.BROADCAST_TYPE_SCHEDULED_NEW_PROMO, promoName, null);
+        Util.setAlarmForScheduledJob(context, scheduledTime, newPromoBroadcastId);
+
+        String promoReminderMsg = resources.getString(R.string.inactiveUser_promoReminder);
+        int promoReminderBroadcastId = handler.insertIntoCustomerBroadcastTable(scheduledTime.getTimeInMillis(), promoReminderMsg, Constants.BROADCAST_TYPE_SCHEDULED_PROMO_REM, "", null);
+        Util.setAlarmForScheduledJob(context, scheduledTime, promoReminderBroadcastId);
+    }
 }

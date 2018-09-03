@@ -173,8 +173,6 @@
                         android:inputType="textMultiLine"
                         android:background="@android:color/transparent"
                         />
-
-
                 </LinearLayout>
 
                 <TextView

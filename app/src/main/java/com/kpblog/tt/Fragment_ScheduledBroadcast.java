@@ -30,6 +30,7 @@ import com.kpblog.tt.util.Util;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.List;
 
 
 /**
@@ -256,8 +257,7 @@ public class Fragment_ScheduledBroadcast extends Fragment implements TextView.On
         //SimpleDateFormat sdf = new SimpleDateFormat(Constants.DATE_FORMAT_YYYY_MM_DD_HH_MM);
         //((EditText) getView().findViewById(R.id.scheduledTime)).setText(sdf.format(cb.getTimestamp()));
 
-        TextView recipientLabel = (TextView) getView().findViewById(R.id.recipientLabel);
-        recipientLabel.setText(String.format(getString(R.string.recipients), 0));
+        initializeRecipentInfo();
 
         ((EditText) getView().findViewById(R.id.messageBox)).setText(detailedCustomerBroadcast.getMessage().replace(Constants.CLAIM_CODE_PLACE_HOLDER, "%s"));
 
@@ -276,11 +276,44 @@ public class Fragment_ScheduledBroadcast extends Fragment implements TextView.On
 
     }
 
+    private void initializeRecipentInfo() {
+        TextView recipientLabel = (TextView) getView().findViewById(R.id.recipientLabel);
+        EditText recipientBox = (EditText) getView().findViewById(R.id.recipientsBox);
+
+        if (Constants.STATUS_SENT.equals(detailedCustomerBroadcast.getStatus()) ||
+                Constants.BROADCAST_TYPE_SCHEDULED_FREE_FORM.equals(detailedCustomerBroadcast.getType())){
+            //if sent status or free form, then we have the recipient list ready
+
+            List<String> phoneList = detailedCustomerBroadcast.getRecipientPhoneNumbers();
+
+            if (phoneList != null && phoneList.size() > 0){
+                StringBuffer sb = new StringBuffer();
+                recipientLabel.setText(String.format(getString(R.string.recipients), phoneList.size()));
+
+                for (int i = 0; i < phoneList.size(); i++){
+                    if (i > 0){
+                        sb.append(", ");
+                    }
+                    sb.append(Util.formatPhoneNumber(phoneList.get(i)));
+                }
+
+                recipientBox.setText(sb.toString());
+            }
+            else {
+                recipientLabel.setText(String.format(getString(R.string.recipients), 0));
+            }
+        }
+        else {
+            recipientLabel.setText(String.format(getString(R.string.recipients), 0));
+        }
+    }
+
     private void enableAllInputFields(CustomerBroadcast cb) {
         ((EditText) getView().findViewById(R.id.recipientsBox)).setEnabled(true);
         ((EditText) getView().findViewById(R.id.messageBox)).setEnabled(true);
         ((EditText) getView().findViewById(R.id.promotionName)).setEnabled(true);
         final Spinner scheduledTimeSpinner = (Spinner) getView().findViewById(R.id.scheduledTimeDropdown);
+        scheduledTimeSpinner.setEnabled(true);
         scheduledTimeSpinner.setSelection(getSpinnerIndex(scheduledTimeSpinner, cb.getTimestamp()));
 
         updateBtn.setEnabled(true);

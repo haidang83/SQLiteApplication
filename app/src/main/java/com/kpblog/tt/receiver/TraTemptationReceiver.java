@@ -40,6 +40,9 @@ public class TraTemptationReceiver extends BroadcastReceiver {
             final String sourceDbName = context.getDatabasePath(DatabaseHandler.DATABASE_NAME).getPath();
             String exportedDbPath = Util.exportDatabase(sourceDbName);
 
+            //use this to also schedule the daily broadcast
+            Util.scheduleDailyBroadcast(context);
+
             Util.textDailyCode(context);
 
         }

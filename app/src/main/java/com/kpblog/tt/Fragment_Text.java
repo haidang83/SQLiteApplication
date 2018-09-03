@@ -274,7 +274,7 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
             //schedule
             Calendar scheduledTime = getScheduledTime();
             String type = getBroadcastType();
-            int broadcastId = handler.insertIntoCustomerBroadcastTable(scheduledTime.getTimeInMillis(), msg, type, promoName, customers, getContext());
+            int broadcastId = handler.insertIntoCustomerBroadcastTable(scheduledTime.getTimeInMillis(), msg, type, promoName, customers);
 
             //need to set the alarm to send the message
             Util.setAlarmForScheduledJob(getActivity().getApplicationContext(), scheduledTime, broadcastId);

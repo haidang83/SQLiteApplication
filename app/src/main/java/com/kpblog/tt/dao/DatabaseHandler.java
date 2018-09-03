@@ -771,7 +771,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     public int insertIntoCustomerBroadcastTable(long timeInMillis, String msg, String type,
-                                                 String promoName, Customer[] customers, Context ctx) {
+                                                String promoName, Customer[] customers) {
 
         SQLiteDatabase db = null;
         int broadcastId = 0;

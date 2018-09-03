@@ -51,6 +51,9 @@ public class Constants {
     public static final String TBD = "TBD";
     public static final String NA = "N/A";
 
+    public static final int SCHEDULED_BROADCAST_HOUR = 15;
+    public static final int SCHEDULED_BROADCAST_MIN = 30;
+
     public static String[] PERMISSIONS_STORAGE_SMS = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
