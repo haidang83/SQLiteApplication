@@ -142,8 +142,8 @@
         <item>21:30</item>
     </string-array>
     <string name="templateQuery">PRESET QUERY</string>
-    <string name="queryType_inactiveOldPromo">INACTIVE REM</string>
-    <string name="queryType_inactiveNewPromo">INACTIVE NEW</string>
+    <string name="queryType_inactiveOldPromo">PROMO REM</string>
+    <string name="queryType_inactiveNewPromo">PROMO NEW</string>
     <string name="queryType_drinkCreditReminder">CREDIT REM</string>
     <string name="queryType_none">NONE</string>
     <string-array name="queryTypeDropdown">
@@ -164,4 +164,5 @@
         <item>@string/broadcastStatus_sent</item>
         <item>@string/broadcastStatus_all</item>
     </string-array>
+    <string name="promoDisplayName">Promotion Name (to show on Claim Tab)</string>
 </resources>

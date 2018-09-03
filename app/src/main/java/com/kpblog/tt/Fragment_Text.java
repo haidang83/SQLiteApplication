@@ -324,10 +324,10 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
             broadcastType = Constants.BROADCAST_TYPE_SCHEDULED_CREDIT_REMINDER;
         }
         else if (isInactiveNewPromoQueryType()){
-            broadcastType = Constants.BROADCAST_TYPE_SCHEDULED_INACTIVE_NEW_PROMO;
+            broadcastType = Constants.BROADCAST_TYPE_SCHEDULED_NEW_PROMO;
         }
         else if (isInactiveOldPromoQueryType()){
-            broadcastType = Constants.BROADCAST_TYPE_SCHEDULED_INACTIVE_OLD_PROMO;
+            broadcastType = Constants.BROADCAST_TYPE_SCHEDULED_PROMO_REM;
         }
 
         return broadcastType;
@@ -340,20 +340,9 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
         int scheduleHour = Integer.parseInt(scheduledTime[0]);
         int scheduledMin = Integer.parseInt(scheduledTime[1]);
 
-        Calendar alarmTime = Calendar.getInstance();
-        alarmTime.set(Calendar.HOUR_OF_DAY, scheduleHour);
-        alarmTime.set(Calendar.MINUTE, scheduledMin);
-        alarmTime.set(Calendar.SECOND, 0);
-        alarmTime.set(Calendar.MILLISECOND, 0);
-
-        final long now = System.currentTimeMillis();
-        if (now >= alarmTime.getTimeInMillis()){
-            //current time is already later than the alarm time, set for next day
-            alarmTime.add(Calendar.DAY_OF_MONTH, 1);
-        }
-
-        return alarmTime;
+        return Util.getScheduledTimeForHourMin(scheduleHour, scheduledMin);
     }
+
 
     private List<String> splitIntoTestPhoneNumbers(String testUserList) {
         List<String> phoneList = new ArrayList<String>();

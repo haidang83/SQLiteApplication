@@ -31,7 +31,7 @@ public class BroadcastListViewAdapter extends ArrayAdapter<CustomerBroadcast> {
     static class ViewHolder {
         public TextView type;
         public TextView status;
-        public TextView broadcastTimestamp, numTexted;
+        public TextView broadcastTimestamp, numTexted, broadcastId;
 
     }
 
@@ -47,6 +47,7 @@ public class BroadcastListViewAdapter extends ArrayAdapter<CustomerBroadcast> {
             viewHolder.status = (TextView) rowView.findViewById(R.id.status);
             viewHolder.broadcastTimestamp = (TextView) rowView.findViewById(R.id.timestamp);
             viewHolder.numTexted = (TextView) rowView.findViewById(R.id.numTexted);
+            viewHolder.broadcastId = (TextView) rowView.findViewById(R.id.broadcastId);
             rowView.setTag(viewHolder);
 
         }
@@ -54,21 +55,24 @@ public class BroadcastListViewAdapter extends ArrayAdapter<CustomerBroadcast> {
         CustomerBroadcast customerBroadcast = item_list[position];
         BroadcastListViewAdapter.ViewHolder holder = (BroadcastListViewAdapter.ViewHolder) rowView.getTag();
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat(Constants.DATE_FORMAT_YYYY_MM_DD_HH_MM);
         holder.broadcastTimestamp.setText(sdf.format(customerBroadcast.getTimestamp()));
 
-        holder.type.setText(customerBroadcast.getType().replace("SCHEDULED_", ""));
+        holder.type.setText(Util.getBroadcastTypeShortName(customerBroadcast));
         holder.status.setText((customerBroadcast.getStatus()));
+        holder.broadcastId.setText(String.valueOf(customerBroadcast.getRecipientListId()));
 
         if (Constants.BROADCAST_TYPE_SCHEDULED_FREE_FORM.equals(customerBroadcast.getType()) ||
                 customerBroadcast.getStatus().equals(Constants.STATUS_SENT)){
             holder.numTexted.setText(String.valueOf(customerBroadcast.getRecipientPhoneNumbers().size()));
+        }
+        else if (Constants.STATUS_CANCELLED.equals(customerBroadcast.getStatus())){
+            holder.numTexted.setText("");
         }
         else {
             holder.numTexted.setText("TBD");
         }
         return rowView;
     }
-
 
 }

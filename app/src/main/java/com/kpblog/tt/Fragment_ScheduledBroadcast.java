@@ -16,6 +16,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -26,6 +27,9 @@ import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.CustomerBroadcast;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 
 /**
@@ -51,9 +55,11 @@ public class Fragment_ScheduledBroadcast extends Fragment implements TextView.On
     private DatabaseHandler handler;
     ListView listview;
     EditText adminCode;
-    Button getCodeBtn, lockUnlockBtn;
+    Button getCodeBtn, lockUnlockBtn, updateBtn, removeBtn, goBackBtn;
     long getCodeBtnLastClicked = 0;
     long lockUnlockBtnLastClicked = 0;
+    private LinearLayout broadcastSummaryLayout, broadcastDetailLayout;
+    private CustomerBroadcast detailedCustomerBroadcast;
 
     public Fragment_ScheduledBroadcast() {
         // Required empty public constructor
@@ -133,25 +139,174 @@ public class Fragment_ScheduledBroadcast extends Fragment implements TextView.On
         statusDropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                String broadcastStatus = statusDropdown.getSelectedItem().toString();
-                if (broadcastStatus.equals(getString(R.string.broadcastStatus_all))){
-                    broadcastStatus = "";
-                }
-                CustomerBroadcast[] cbs = handler.getAllCustomerBroadcastByStatus(broadcastStatus.toLowerCase());
-
-                BroadcastListViewAdapter adapter = new BroadcastListViewAdapter(getContext(), R.layout.broadcast_row_layout, R.id.timestamp, cbs);
-                listview.setAdapter(adapter);
+                showBroadcastSummary();
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {}
         });
 
+        broadcastSummaryLayout = (LinearLayout) getView().findViewById(R.id.broadcastSummaryLayout);
+        broadcastDetailLayout = (LinearLayout) getView().findViewById(R.id.broadcastDetailLayout);
+
         listview = (ListView) getView().findViewById(R.id.listview);
         // Inflate customerHeader view
         ViewGroup headerView = (ViewGroup)getLayoutInflater().inflate(R.layout.broadcast_header, listview,false);
         // Add customerHeader view to the ListView
         listview.addHeaderView(headerView);
+
+        listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                detailedCustomerBroadcast = (CustomerBroadcast) adapterView.getItemAtPosition(position);
+                showBroadcastDetail();
+            }
+        });
+
+        //this is for the detailed view, set the listener here so they don't get created many times
+        updateBtn = (Button) getView().findViewById(R.id.updateBtn);
+        updateBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                updateScheduledJob();
+            }
+        });
+
+        removeBtn = (Button) getView().findViewById(R.id.removeBtn);
+        removeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                removeScheduledJob();
+            }
+        });
+
+        goBackBtn = (Button) getView().findViewById(R.id.goBackBtn);
+        goBackBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showSummaryView();
+            }
+        });
+    }
+
+    private void updateScheduledJob() {
+        String msg = ((EditText) getView().findViewById(R.id.messageBox)).getText().toString().replace("%s", Constants.CLAIM_CODE_PLACE_HOLDER);
+        String promoName = ((EditText) getView().findViewById(R.id.promotionName)).getText().toString();
+        if (promoName.equals(Constants.NA) || promoName.equals(Constants.TBD)){
+            promoName = "";
+        }
+
+        Calendar scheduledTime = getScheduledTime();
+        String type = detailedCustomerBroadcast.getType();
+        int broadcastId = detailedCustomerBroadcast.getRecipientListId();
+        handler.updateCustomerBroadcastById(broadcastId, scheduledTime.getTimeInMillis(), msg, promoName);
+
+        //need to set the alarm to send the message
+        Util.setAlarmForScheduledJob(getActivity().getApplicationContext(), scheduledTime, broadcastId);
+        Util.displayToast(getContext(), String.format("Text scheduled for %s", new SimpleDateFormat(Constants.DATE_FORMAT_HH_MM).format(scheduledTime.getTime())));
+        updateBtn.setEnabled(false);
+    }
+
+    private Calendar getScheduledTime() {
+        Spinner scheduledTimeDropdown = (Spinner) getView().findViewById(R.id.scheduledTimeDropdown);
+        //e.g 10:00
+        String[] scheduledTime = scheduledTimeDropdown.getSelectedItem().toString().split(":");
+        int scheduleHour = Integer.parseInt(scheduledTime[0]);
+        int scheduledMin = Integer.parseInt(scheduledTime[1]);
+
+        return Util.getScheduledTimeForHourMin(scheduleHour, scheduledMin);
+    }
+
+
+    private void showBroadcastSummary() {
+        String broadcastStatus = statusDropdown.getSelectedItem().toString();
+        if (broadcastStatus.equals(getString(R.string.broadcastStatus_all))){
+            broadcastStatus = "";
+        }
+        CustomerBroadcast[] cbs = handler.getAllCustomerBroadcastByStatus(broadcastStatus.toLowerCase());
+
+        BroadcastListViewAdapter adapter = new BroadcastListViewAdapter(getContext(), R.layout.broadcast_row_layout, R.id.timestamp, cbs);
+        listview.setAdapter(adapter);
+    }
+
+    private void removeScheduledJob() {
+        int broadcastId = detailedCustomerBroadcast.getRecipientListId();
+        Util.cancelAlarmForScheduledJob(getActivity().getApplicationContext(), broadcastId);
+        handler.updateBroadcastStatusById(broadcastId, Constants.STATUS_CANCELLED);
+        Util.displayToast(getActivity(),"Scheduled Broadcast Cancelled");
+    }
+
+    private void showBroadcastDetail() {
+        showDetailView();
+
+        detailedCustomerBroadcast = handler.getCustomerBroadcastById(detailedCustomerBroadcast.getRecipientListId());
+
+        if (Constants.STATUS_SENT.equals(detailedCustomerBroadcast.getStatus()) ||
+                Constants.STATUS_CANCELLED.equals(detailedCustomerBroadcast.getStatus())){
+            disableAllInputFields();
+        }
+        else {
+            //need to do this in case it was disabled previously
+            enableAllInputFields(detailedCustomerBroadcast);
+        }
+
+        TextView broadcastType = (TextView) getView().findViewById(R.id.broadcastType);
+        broadcastType.setText(Util.getBroadcastTypeShortName(detailedCustomerBroadcast) + " | " + detailedCustomerBroadcast.getStatus());
+
+        //SimpleDateFormat sdf = new SimpleDateFormat(Constants.DATE_FORMAT_YYYY_MM_DD_HH_MM);
+        //((EditText) getView().findViewById(R.id.scheduledTime)).setText(sdf.format(cb.getTimestamp()));
+
+        TextView recipientLabel = (TextView) getView().findViewById(R.id.recipientLabel);
+        recipientLabel.setText(String.format(getString(R.string.recipients), 0));
+
+        ((EditText) getView().findViewById(R.id.messageBox)).setText(detailedCustomerBroadcast.getMessage().replace(Constants.CLAIM_CODE_PLACE_HOLDER, "%s"));
+
+        EditText promoName = (EditText) getView().findViewById(R.id.promotionName);
+        if (Constants.BROADCAST_TYPE_SCHEDULED_PROMO_REM.equals(detailedCustomerBroadcast.getType())){
+            promoName.setText(Constants.TBD);
+            promoName.setEnabled(false);
+        }
+        else if (detailedCustomerBroadcast.getPromoName() != null && !detailedCustomerBroadcast.getPromoName().isEmpty()){
+            promoName.setText(detailedCustomerBroadcast.getPromoName());
+        }
+        else {
+            promoName.setText(Constants.NA);
+        }
+
+
+    }
+
+    private void enableAllInputFields(CustomerBroadcast cb) {
+        ((EditText) getView().findViewById(R.id.recipientsBox)).setEnabled(true);
+        ((EditText) getView().findViewById(R.id.messageBox)).setEnabled(true);
+        ((EditText) getView().findViewById(R.id.promotionName)).setEnabled(true);
+        final Spinner scheduledTimeSpinner = (Spinner) getView().findViewById(R.id.scheduledTimeDropdown);
+        scheduledTimeSpinner.setSelection(getSpinnerIndex(scheduledTimeSpinner, cb.getTimestamp()));
+
+        updateBtn.setEnabled(true);
+        removeBtn.setEnabled(true);
+    }
+
+    private int getSpinnerIndex(Spinner spinner, long timestamp) {
+        SimpleDateFormat sdf = new SimpleDateFormat(Constants.DATE_FORMAT_HH_MM);
+        String scheduledTime = sdf.format(timestamp);
+        for (int i = 0; i < spinner.getCount(); ++i){
+            if (spinner.getItemAtPosition(i).toString().equalsIgnoreCase(scheduledTime)){
+                return i;
+            }
+        }
+
+        return 0;
+    }
+
+    private void disableAllInputFields() {
+        ((EditText) getView().findViewById(R.id.recipientsBox)).setEnabled(false);
+        ((EditText) getView().findViewById(R.id.messageBox)).setEnabled(false);
+        ((EditText) getView().findViewById(R.id.promotionName)).setEnabled(false);
+        ((Spinner) getView().findViewById(R.id.scheduledTimeDropdown)).setEnabled(false);
+
+        updateBtn.setEnabled(false);
+        removeBtn.setEnabled(false);
     }
 
     @Override
@@ -210,6 +365,18 @@ public class Fragment_ScheduledBroadcast extends Fragment implements TextView.On
 
         //open admin screen
         getView().findViewById(R.id.unlockedContentLayout).setVisibility(View.VISIBLE);
+        showSummaryView();
+    }
+
+    private void showSummaryView() {
+        broadcastSummaryLayout.setVisibility(View.VISIBLE);
+        broadcastDetailLayout.setVisibility(View.GONE);
+        showBroadcastSummary();
+    }
+
+    private void showDetailView(){
+        broadcastSummaryLayout.setVisibility(View.GONE);
+        broadcastDetailLayout.setVisibility(View.VISIBLE);
     }
 
 

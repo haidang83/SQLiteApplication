@@ -5,11 +5,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.os.Message;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.kpblog.tt.R;
 import com.kpblog.tt.model.Customer;
 import com.kpblog.tt.model.CustomerBroadcast;
 import com.kpblog.tt.model.CustomerClaimCode;
@@ -785,7 +783,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             values.put(KEY_BROADCAST_TIME, timeInMillis);
             values.put(KEY_BROADCAST_MESSAGE, msg);
             values.put(KEY_BROADCAST_TYPE, type);
-            if (Constants.BROADCAST_TYPE_SCHEDULED_INACTIVE_NEW_PROMO.equals(type)){
+            if (Constants.BROADCAST_TYPE_SCHEDULED_NEW_PROMO.equals(type)){
                 //if sending new promo, save the promo name
                 //(for old promo, ignore the promoName passed in, we'll load for each customer upon texting)
                 values.put(KEY_PROMO_NAME, promoName);
@@ -809,6 +807,18 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         }
 
         return broadcastId;
+    }
+
+    public void updateCustomerBroadcastById(int broadcastId, long timeInMillis, String msg, String promoName) {
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KEY_BROADCAST_TIME, timeInMillis);
+        values.put(KEY_BROADCAST_MESSAGE, msg);
+        values.put(KEY_PROMO_NAME, promoName);
+
+        db.update(TABLE_CUSTOMER_BROADCAST, values, KEY_RECIPIENT_LIST + " = " + broadcastId, null);
+        db.close();
     }
 
     private void insertCustomerForRecipientList(int id, List<Customer> customers, SQLiteDatabase db) {
@@ -864,12 +874,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             Cursor cursor = db.rawQuery(query, null);
             if (cursor != null && cursor.moveToFirst()){
                 do {
-                    long timestamp = cursor.getLong(cursor.getColumnIndex(KEY_BROADCAST_TIME));
-                    int recList = cursor.getInt(cursor.getColumnIndex(KEY_RECIPIENT_LIST));
-                    String msg = cursor.getString(cursor.getColumnIndex(KEY_BROADCAST_MESSAGE));
-                    String type = cursor.getString(cursor.getColumnIndex(KEY_BROADCAST_TYPE));
-                    String promoName = cursor.getString(cursor.getColumnIndex(KEY_PROMO_NAME));
-                    CustomerBroadcast cb = new CustomerBroadcast(timestamp, recList, msg, type, promoName);
+                    CustomerBroadcast cb = populateCustomerBroadcast(cursor);
                     cbList.add(cb);
 
                 } while (cursor.moveToNext());
@@ -896,6 +901,40 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     @NonNull
+    private CustomerBroadcast populateCustomerBroadcast(Cursor cursor) {
+        long timestamp = cursor.getLong(cursor.getColumnIndex(KEY_BROADCAST_TIME));
+        int recList = cursor.getInt(cursor.getColumnIndex(KEY_RECIPIENT_LIST));
+        String msg = cursor.getString(cursor.getColumnIndex(KEY_BROADCAST_MESSAGE));
+        String type = cursor.getString(cursor.getColumnIndex(KEY_BROADCAST_TYPE));
+        String promoName = cursor.getString(cursor.getColumnIndex(KEY_PROMO_NAME));
+        String status = cursor.getString(cursor.getColumnIndex(KEY_STATUS));
+        CustomerBroadcast cb = new CustomerBroadcast(timestamp, recList, msg, type, promoName);
+        cb.setStatus(status);
+        return cb;
+    }
+
+    public CustomerBroadcast getCustomerBroadcastById(int id){
+        SQLiteDatabase db = null;
+        CustomerBroadcast cb = null;
+
+        try {
+            db = getReadableDatabase();
+            String query = MessageFormat.format("Select * from {0} where {1} = {2}", TABLE_CUSTOMER_BROADCAST, KEY_RECIPIENT_LIST, id);
+            Cursor c = db.rawQuery(query, null);
+            if (c != null && c.moveToFirst()){
+                cb = populateCustomerBroadcast(c);
+            }
+        } catch (Exception e){
+
+        } finally {
+            if (db != null){
+                db.close();
+            }
+        }
+        return cb;
+    }
+
+    @NonNull
     private List<String> getPhoneNumByRecipientListId(SQLiteDatabase db, int id) {
         String whereClause;
         Cursor cursor;
@@ -910,11 +949,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return recipientPhones;
     }
 
-    public void markBroadcastIdAsSent(int recipientListId) {
+    public void updateBroadcastStatusById(int broadcastId, String status) {
         SQLiteDatabase db = null;
         try {
             db = getWritableDatabase();
-            String update = String.format("UPDATE %s SET %s = '%s' WHERE %s = %d ", TABLE_CUSTOMER_BROADCAST, KEY_STATUS, Constants.STATUS_SENT, KEY_RECIPIENT_LIST, recipientListId);
+            String update = String.format("UPDATE %s SET %s = '%s' WHERE %s = %d ", TABLE_CUSTOMER_BROADCAST, KEY_STATUS, status, KEY_RECIPIENT_LIST, broadcastId);
             db.execSQL(update);
         } finally {
             if (db != null){
@@ -1096,4 +1135,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         return cbList.toArray(new CustomerBroadcast[0]);
     }
+
+
 }

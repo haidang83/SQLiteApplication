@@ -41,12 +41,15 @@ public class Constants {
     public static final String INACTIVE_USER_PROMO_NAME = "20% off";
     public static final String BROADCAST_TYPE_SCHEDULED_FREE_FORM = "SCHEDULED_FREE_FORM";
     public static String BROADCAST_TYPE_SCHEDULED_CREDIT_REMINDER = "SCHEDULED_CREDIT_REMINDER";
-    public static String BROADCAST_TYPE_SCHEDULED_INACTIVE_NEW_PROMO = "SCHEDULED_INACTIVE_NEW_PROMO";
-    public static String BROADCAST_TYPE_SCHEDULED_INACTIVE_OLD_PROMO = "SCHEDULED_INACTIVE_OLD_PROMO";
+    public static String BROADCAST_TYPE_SCHEDULED_NEW_PROMO = "SCHEDULED_PROMOTION_NEW";
+    public static String BROADCAST_TYPE_SCHEDULED_PROMO_REM = "SCHEDULED_PROMOTION_REMINDER";
 
     public static final String STATUS_READY = "ready";
     public static final String STATUS_SENT = "sent";
     public static final String STATUS_CANCELLED = "cancelled";
+
+    public static final String TBD = "TBD";
+    public static final String NA = "N/A";
 
     public static String[] PERMISSIONS_STORAGE_SMS = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -71,4 +74,7 @@ public class Constants {
 
     public static final int CLAIM_CODE_TYPE_FREE_DRINK = 1;
     public static final int CLAIM_CODE_TYPE_PROMOTION = 2;
+
+    public static final String DATE_FORMAT_YYYY_MM_DD_HH_MM = "yyyy-MM-dd HH:mm";
+    public static final String DATE_FORMAT_HH_MM = "HH:mm";
 }

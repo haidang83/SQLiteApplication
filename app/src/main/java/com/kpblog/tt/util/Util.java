@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Environment;
-import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.design.widget.TextInputLayout;
 import android.telephony.PhoneNumberUtils;
@@ -14,7 +13,6 @@ import android.telephony.SmsManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.kpblog.tt.R;
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
 import com.kpblog.tt.model.CustomerBroadcast;
@@ -142,6 +140,22 @@ public class Util {
                 }
             }
         }
+    }
+
+    public static Calendar getScheduledTimeForHourMin(int scheduleHour, int scheduledMin) {
+        Calendar alarmTime = Calendar.getInstance();
+        alarmTime.set(Calendar.HOUR_OF_DAY, scheduleHour);
+        alarmTime.set(Calendar.MINUTE, scheduledMin);
+        alarmTime.set(Calendar.SECOND, 0);
+        alarmTime.set(Calendar.MILLISECOND, 0);
+
+        final long now = System.currentTimeMillis();
+        if (now >= alarmTime.getTimeInMillis()){
+            //current time is already later than the alarm time, set for next day
+            alarmTime.add(Calendar.DAY_OF_MONTH, 1);
+        }
+
+        return alarmTime;
     }
 
     public static Calendar getNightlyDbBackupTime() {
@@ -353,10 +367,10 @@ public class Util {
                 if (Constants.BROADCAST_TYPE_SCHEDULED_CREDIT_REMINDER.equals(cb.getType())){
                     recipientSent = broadcastCreditReminder(handler, cb);
                 }
-                else if (Constants.BROADCAST_TYPE_SCHEDULED_INACTIVE_NEW_PROMO.equals(cb.getType())){
+                else if (Constants.BROADCAST_TYPE_SCHEDULED_NEW_PROMO.equals(cb.getType())){
                     recipientSent = broadcastInactiveWithNewPromo(handler, cb);
                 }
-                else if (Constants.BROADCAST_TYPE_SCHEDULED_INACTIVE_OLD_PROMO.equals(cb.getType())){
+                else if (Constants.BROADCAST_TYPE_SCHEDULED_PROMO_REM.equals(cb.getType())){
                     recipientSent = broadcastInactiveOldPromoReminder(handler, cb);
                 }
 
@@ -366,9 +380,9 @@ public class Util {
                 }
             }
 
-            handler.markBroadcastIdAsSent(cb.getRecipientListId());
+            handler.updateBroadcastStatusById(cb.getRecipientListId(), Constants.STATUS_SENT);
 
-            summary.append(cb.getType().replace("SCHEDULED_", "") + "->" + recipientSent.size() + "; ");
+            summary.append(getBroadcastTypeShortName(cb) + "->" + recipientSent.size() + "; ");
         }
 
         List<String> admins = handler.getAllAdmins();
@@ -474,4 +488,9 @@ public class Util {
 
         return recipientSent;
     }
+
+    public static String getBroadcastTypeShortName(CustomerBroadcast customerBroadcast) {
+        return customerBroadcast.getType().replace("SCHEDULED_", "");
+    }
+
 }

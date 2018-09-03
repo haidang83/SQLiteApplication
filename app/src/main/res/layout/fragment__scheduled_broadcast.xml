@@ -13,7 +13,8 @@
         android:layout_width="match_parent"
         android:orientation="vertical"
         android:layout_marginTop="10dp"
-        android:layout_marginLeft="3dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
         android:layout_height="match_parent">
 
         <LinearLayout
@@ -60,7 +61,6 @@
                 android:layout_weight="1.2"
                 android:layout_width="0dip"
                 android:layout_marginLeft="5dp"
-                android:layout_marginRight="5dp"
                 android:text="@string/unlock"
                 style="@style/buttonStyle"
                 android:textColor="@android:color/white"/>
@@ -93,6 +93,7 @@
                         android:textAllCaps="true"
                         android:gravity="bottom"
                         android:textColor="@color/grey"
+                        android:layout_marginLeft="-2dp"
                         android:layout_height="wrap_content" />
                     <!--spacer-->
                     <View
@@ -128,8 +129,183 @@
                 android:id="@+id/broadcastDetailLayout"
                 android:layout_width="match_parent"
                 android:orientation="vertical"
-                android:layout_height="0dp">
+                android:layout_height="wrap_content">
 
+
+                    <EditText
+                        android:id="@+id/broadcastType"
+                        android:layout_width="match_parent"
+                        android:textStyle="bold"
+                        android:textAllCaps="true"
+                        android:enabled="false"
+                        android:textColor="@color/grey"
+                        android:layout_height="wrap_content">
+                    </EditText>
+
+
+                <TextView
+                    android:id="@+id/recipientLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white"
+                    android:gravity="center_vertical"
+                    android:paddingLeft="5dp"
+                    android:background="@color/colorPrimary"/>
+
+                <LinearLayout
+                    android:id="@+id/recipientsBoxLayout"
+                    android:layout_width="match_parent"
+                    android:orientation="horizontal"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/border">
+
+                    <EditText
+                        android:id="@+id/recipientsBox"
+                        android:enabled="false"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="left|top"
+                        android:padding="5dp"
+                        android:minLines="2"
+                        android:maxLines="2"
+                        android:scrollbars="vertical"
+                        android:inputType="textMultiLine"
+                        android:background="@android:color/transparent"
+                        />
+
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/messageCustomerLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:text="@string/broadcastToCustomerLabel"
+                    android:textStyle="bold"
+                    android:layout_marginTop="10dp"
+                    android:textColor="@android:color/white"
+                    android:gravity="center_vertical"
+                    android:paddingLeft="5dp"
+                    android:background="@color/colorPrimary"/>
+
+                <LinearLayout
+                    android:id="@+id/messageBoxLayout"
+                    android:layout_width="match_parent"
+                    android:orientation="horizontal"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/border">
+
+                    <EditText
+                        android:id="@+id/messageBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="left|top"
+                        android:padding="5dp"
+                        android:minLines="4"
+                        android:maxLines="4"
+                        android:scrollbars="vertical"
+                        android:maxLength="150"
+                        android:inputType="textMultiLine"
+                        android:background="@android:color/transparent"
+                        />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/promotionNameAndScheduleLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <android.support.design.widget.TextInputLayout
+                        android:id="@+id/promotionNameLayout"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        app:hintTextAppearance="@style/FloatingLabel">
+
+                        <EditText
+                            android:id="@+id/promotionName"
+                            android:layout_marginLeft="-2dp"
+                            android:layout_marginRight="-2dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:hint="@string/promoDisplayName" />
+                    </android.support.design.widget.TextInputLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                        <EditText
+                            android:id="@+id/scheduledTime"
+                            android:layout_width="0dp"
+                            android:layout_weight="6"
+                            android:layout_height="wrap_content"
+                            android:textStyle="bold"
+                            android:textColor="@color/grey"
+                            android:enabled="false"
+                            android:text="SCHEDULED TIME"/>
+
+                    <!--<View
+                        android:layout_width="0dp"
+                        android:layout_weight=".5"
+                        android:visibility="invisible"
+                        android:layout_height="match_parent" />-->
+
+                    <Spinner
+                        android:id="@+id/scheduledTimeDropdown"
+                        android:layout_weight="4"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="0dp"
+                        android:layout_gravity="start|bottom"
+                        android:theme="@style/SpinnerItemTextAppearance"
+                        android:entries="@array/hourDropdown"
+                        android:gravity="bottom"
+                        android:spinnerMode="dropdown"/>
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_weight="2"
+                        android:visibility="invisible"
+                        android:layout_height="match_parent" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/buttonLayout"
+                    android:layout_marginTop="10dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/updateBtn"
+                        style="@style/buttonStyle"
+                        android:layout_width="0dip"
+                        android:layout_weight="1"
+                        android:text="Update" />
+
+                    <Button
+                        android:id="@+id/removeBtn"
+                        style="@style/buttonStyle"
+                        android:layout_width="0dip"
+                        android:layout_marginLeft="30dp"
+                        android:layout_weight="1"
+                        android:text="Remove"/>
+
+                    <Button
+                        android:id="@+id/goBackBtn"
+                        style="@style/buttonStyle"
+                        android:layout_width="0dip"
+                        android:layout_marginLeft="30dp"
+                        android:layout_weight="1"
+                        android:text="Go Back"/>
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
