@@ -178,6 +178,7 @@ public class Fragment_Dashboard extends Fragment {
 
     private void handleTemplateQuerySelection() {
         String queryType = templateQuery.getSelectedItem().toString();
+
         if (getString(R.string.queryType_inactiveOldPromo).equals(queryType) ||
             getString(R.string.queryType_inactiveNewPromo).equals(queryType)) {
 
@@ -384,20 +385,33 @@ public class Fragment_Dashboard extends Fragment {
             customers = searchCustomers(lastVisitMinInt, lastVisitMaxInt,
                                 lastTextMinDayInt, lastTextMaxDayInt,
                                 drinkCreditMinDouble, drinkCreditMaxDouble,
-                                sortByDbColumn, sortOrder);
+                                sortByDbColumn, sortOrder, getExistingPromoRequirement());
         }
 
         return customers;
     }
 
+    private Constants.EXISTING_PROMO_REQUIREMENT getExistingPromoRequirement() {
+        String queryType = templateQuery.getSelectedItem().toString();
+        Constants.EXISTING_PROMO_REQUIREMENT promo_requirement = Constants.EXISTING_PROMO_REQUIREMENT.ANY;
+        if (getString(R.string.queryType_inactiveNewPromo).equals(queryType)){
+            promo_requirement = Constants.EXISTING_PROMO_REQUIREMENT.NO_EXISTING_PROMO;
+        }
+        else if (getString(R.string.queryType_inactiveOldPromo).equals(queryType)){
+            promo_requirement = Constants.EXISTING_PROMO_REQUIREMENT.HAS_EXISTING_PROMO;
+        }
+
+        return promo_requirement;
+    }
+
     private Customer[] searchCustomers(int lastVisitMinDayInt, int lastVisitMaxDayInt,
                                        int lastTextMinDayInt, int lastTextMaxDayInt,
                                        double drinkCreditMinDouble, double drinkCreditMaxDouble,
-                                       String sortByDbColumn, String sortOrder) {
+                                       String sortByDbColumn, String sortOrder, Constants.EXISTING_PROMO_REQUIREMENT existing_promo_requirement) {
 
         List<Customer> customerList = handler.searchCustomerByLastVisitAndText(lastVisitMinDayInt,
                                                 lastVisitMaxDayInt, lastTextMinDayInt, lastTextMaxDayInt,
-                                                drinkCreditMinDouble, drinkCreditMaxDouble, sortByDbColumn, sortOrder);
+                                                drinkCreditMinDouble, drinkCreditMaxDouble, sortByDbColumn, sortOrder, existing_promo_requirement);
         return customerList.toArray(new Customer[0]);
     }
 

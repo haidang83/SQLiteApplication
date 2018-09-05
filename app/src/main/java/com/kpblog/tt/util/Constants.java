@@ -80,4 +80,8 @@ public class Constants {
 
     public static final String DATE_FORMAT_YYYY_MM_DD_HH_MM = "yyyy-MM-dd HH:mm";
     public static final String DATE_FORMAT_HH_MM = "HH:mm";
+
+    public enum EXISTING_PROMO_REQUIREMENT {
+        ANY, NO_EXISTING_PROMO, HAS_EXISTING_PROMO
+    }
 }

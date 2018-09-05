@@ -584,14 +584,15 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                                                            int lastTextMaxDayInt,
                                                            double drinkCreditMinDouble, double drinkCreditMaxDouble,
                                                            String sortByDbColumn,
-                                                           String sortOrder) {
+                                                           String sortOrder,
+                                                           Constants.EXISTING_PROMO_REQUIREMENT existing_promo_requirement) {
 
         List<Customer> customerList = new ArrayList<Customer>();
         SQLiteDatabase db = null;
         try {
 
             String selectQuery = getSelectQuery(lastVisitDayMin, lastVisitDayMax,
-                                    lastTextMinDayInt, lastTextMaxDayInt, drinkCreditMinDouble, drinkCreditMaxDouble, sortByDbColumn, sortOrder);
+                                    lastTextMinDayInt, lastTextMaxDayInt, drinkCreditMinDouble, drinkCreditMaxDouble, sortByDbColumn, sortOrder, existing_promo_requirement);
 
             db = getReadableDatabase();
 
@@ -621,7 +622,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     @NonNull
     private String getSelectQuery(int lastVisitMin,
                                   int lastVisitMax, int lastTextMinDayInt, int lastTextMaxDayInt,
-                                  double drinkCreditMinDouble, double drinkCreditMaxDouble, String sortByDbColumn, String sortOrder) {
+                                  double drinkCreditMinDouble, double drinkCreditMaxDouble,
+                                  String sortByDbColumn, String sortOrder, Constants.EXISTING_PROMO_REQUIREMENT existing_promo_requirement) {
 
 
         /**
@@ -634,6 +636,16 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                                 KEY_REFERRAL_CREDIT, KEY_PURCHASE_CREDIT, KEY_REFERRAL_CREDIT, KEY_TOTAL_CREDIT, KEY_IS_OPT_IN, TABLE_CUSTOMER);
 
         String selectCondition = getSelectCondition(lastVisitMin, lastVisitMax, lastTextMinDayInt, lastTextMaxDayInt, drinkCreditMinDouble, drinkCreditMaxDouble);
+
+        String customerIdsWithPromo = getSelectQueryForCustomerIdWithPromo();
+        if (existing_promo_requirement == Constants.EXISTING_PROMO_REQUIREMENT.NO_EXISTING_PROMO){
+            String customerIdsWithoutPromoCondition = MessageFormat.format(" AND ({0} NOT IN ({1}))", KEY_CUSTOMER_ID, customerIdsWithPromo);
+            selectCondition += customerIdsWithoutPromoCondition;
+        }
+        else if (existing_promo_requirement == Constants.EXISTING_PROMO_REQUIREMENT.HAS_EXISTING_PROMO){
+            String customerIdsWithPromoCondition = MessageFormat.format(" AND ({0} IN ({1}))", KEY_CUSTOMER_ID, customerIdsWithPromo);
+            selectCondition += customerIdsWithPromoCondition;
+        }
 
         if (selectCondition.isEmpty()){
             //no condition, retrieve all users
@@ -970,7 +982,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
             String selectQuery = getSelectQuery(Constants.DRINK_REMINDER_LAST_VISIT_MIN, Constants.DRINK_REMINDER_LAST_VISIT_MAX,
                     Constants.DRINK_REMINDER_LAST_TEXTED_MIN, Constants.DRINK_REMINDER_LAST_TEXTED_MAX,
-                    Constants.DRINK_REMINDER_CREDIT_MIN, Constants.DRINK_REMINDER_CREDIT_MAX, KEY_TOTAL_CREDIT, "asc");
+                    Constants.DRINK_REMINDER_CREDIT_MIN, Constants.DRINK_REMINDER_CREDIT_MAX, KEY_TOTAL_CREDIT, "asc", Constants.EXISTING_PROMO_REQUIREMENT.ANY);
 
             db = getReadableDatabase();
 
@@ -1007,8 +1019,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 CustomerIds with existing promo or free credit claim:
                 (Select customerId from customerClaimCode)
              */
-            String customerIdsWithPromo = MessageFormat.format("Select {0} from {1}",
-                                        KEY_CUSTOMER_ID, TABLE_CUSTOMER_CLAIM_CODE);
+            String customerIdsWithPromo = getSelectQueryForCustomerIdWithPromo();
 
             /*
               Select customerID, (purchaseCredit + referralCredit) as totalCredit from customer c
@@ -1044,6 +1055,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         }
 
         return phoneList;
+    }
+
+    @NonNull
+    private String getSelectQueryForCustomerIdWithPromo() {
+        return MessageFormat.format("Select {0} from {1}", KEY_CUSTOMER_ID, TABLE_CUSTOMER_CLAIM_CODE);
     }
 
     public List<CustomerClaimCode> getCustomerClaimCodeWithPromoForInactiveUsers(){
