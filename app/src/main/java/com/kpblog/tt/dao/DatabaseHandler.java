@@ -886,7 +886,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             Cursor cursor = db.rawQuery(query, null);
             if (cursor != null && cursor.moveToFirst()){
                 do {
-                    CustomerBroadcast cb = populateCustomerBroadcast(cursor);
+                    CustomerBroadcast cb = populateCustomerBroadcast(cursor, db);
                     cbList.add(cb);
 
                 } while (cursor.moveToNext());
@@ -913,7 +913,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     @NonNull
-    private CustomerBroadcast populateCustomerBroadcast(Cursor cursor) {
+    private CustomerBroadcast populateCustomerBroadcast(Cursor cursor, SQLiteDatabase db) {
         long timestamp = cursor.getLong(cursor.getColumnIndex(KEY_BROADCAST_TIME));
         int recList = cursor.getInt(cursor.getColumnIndex(KEY_RECIPIENT_LIST));
         String msg = cursor.getString(cursor.getColumnIndex(KEY_BROADCAST_MESSAGE));
@@ -922,6 +922,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         String status = cursor.getString(cursor.getColumnIndex(KEY_STATUS));
         CustomerBroadcast cb = new CustomerBroadcast(timestamp, recList, msg, type, promoName);
         cb.setStatus(status);
+
+        List<String> phoneList = getPhoneNumByRecipientListId(db, cb.getRecipientListId());
+        cb.setRecipientPhoneNumbers(phoneList);
+
         return cb;
     }
 
@@ -934,7 +938,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             String query = MessageFormat.format("Select * from {0} where {1} = {2}", TABLE_CUSTOMER_BROADCAST, KEY_RECIPIENT_LIST, id);
             Cursor c = db.rawQuery(query, null);
             if (c != null && c.moveToFirst()){
-                cb = populateCustomerBroadcast(c);
+                cb = populateCustomerBroadcast(c, db);
             }
         } catch (Exception e){
 
@@ -1071,7 +1075,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             /*
               select c.customerId, ccc.promoName, ccc.claimCode from Customer c, customerClaimCode ccc
               where {selectCondition}
-              and c.customerId = ccc.customerId and (ccc.promoName is NOT NULL OR ccc.promoName != '')
+              and c.customerId = ccc.customerId and (ccc.claimCodeType = 2)
              */
             String selectColumns = MessageFormat.format("Select {0}.{1}, {2}.{3}, {2}.{4}, ({0}.{7} + {0}.{8}) as {9} from {5} {0}, {6} {2} WHERE ",
                     "c", KEY_CUSTOMER_ID, "ccc", KEY_PROMO_NAME, KEY_CLAIM_CODE,
@@ -1081,8 +1085,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                     Constants.INACTIVE_LAST_TEXTED_MIN, Constants.INACTIVE_LAST_TEXTED_MAX,
                     Constants.INACTIVE_CREDIT_MIN, Constants.INACTIVE_CREDIT_MAX);
 
-            String joinCondition = MessageFormat.format(" AND {0}.{1} = {2}.{1} AND ({2}.{3} is NOT NULL OR {2}.{3} != '''') AND {0}.{4} = 1",
-                    "c", KEY_CUSTOMER_ID, "ccc", KEY_PROMO_NAME, KEY_IS_OPT_IN);
+            String joinCondition = MessageFormat.format(" AND {0}.{1} = {2}.{1} AND ({2}.{3} = {4}) AND {0}.{5} = 1",
+                    "c", KEY_CUSTOMER_ID, "ccc", KEY_CLAIM_CODE_TYPE, Constants.CLAIM_CODE_TYPE_PROMOTION, KEY_IS_OPT_IN);
 
             String query = selectColumns + selectCondition + joinCondition;
 
