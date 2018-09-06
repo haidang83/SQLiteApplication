@@ -393,12 +393,12 @@ public class Fragment_Dashboard extends Fragment {
 
     private Constants.EXISTING_PROMO_REQUIREMENT getExistingPromoRequirement() {
         String queryType = templateQuery.getSelectedItem().toString();
-        Constants.EXISTING_PROMO_REQUIREMENT promo_requirement = Constants.EXISTING_PROMO_REQUIREMENT.ANY;
+        Constants.EXISTING_PROMO_REQUIREMENT promo_requirement = Constants.EXISTING_PROMO_REQUIREMENT.IGNORE;
         if (getString(R.string.queryType_inactiveNewPromo).equals(queryType)){
-            promo_requirement = Constants.EXISTING_PROMO_REQUIREMENT.NO_EXISTING_PROMO;
+            promo_requirement = Constants.EXISTING_PROMO_REQUIREMENT.NEITHER_EXISTING_PROMO_NOR_FREE_DRINK;
         }
         else if (getString(R.string.queryType_inactiveOldPromo).equals(queryType)){
-            promo_requirement = Constants.EXISTING_PROMO_REQUIREMENT.HAS_EXISTING_PROMO;
+            promo_requirement = Constants.EXISTING_PROMO_REQUIREMENT.HAS_EXISTING_PROMO_ONLY;
         }
 
         return promo_requirement;

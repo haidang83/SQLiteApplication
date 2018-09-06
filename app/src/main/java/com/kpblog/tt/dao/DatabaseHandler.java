@@ -637,13 +637,14 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         String selectCondition = getSelectCondition(lastVisitMin, lastVisitMax, lastTextMinDayInt, lastTextMaxDayInt, drinkCreditMinDouble, drinkCreditMaxDouble);
 
-        String customerIdsWithPromo = getSelectQueryForCustomerIdWithPromo();
-        if (existing_promo_requirement == Constants.EXISTING_PROMO_REQUIREMENT.NO_EXISTING_PROMO){
-            String customerIdsWithoutPromoCondition = MessageFormat.format(" AND ({0} NOT IN ({1}))", KEY_CUSTOMER_ID, customerIdsWithPromo);
+        if (existing_promo_requirement == Constants.EXISTING_PROMO_REQUIREMENT.NEITHER_EXISTING_PROMO_NOR_FREE_DRINK){
+            String customerIdsWithPromoOrFreeDrink = getSelectQueryForCustomerIdHavingPromoRequirement(Constants.EXISTING_PROMO_REQUIREMENT.HAS_PROMO_OR_FREE_DRINK);
+            String customerIdsWithoutPromoCondition = MessageFormat.format(" AND ({0} NOT IN ({1}))", KEY_CUSTOMER_ID, customerIdsWithPromoOrFreeDrink);
             selectCondition += customerIdsWithoutPromoCondition;
         }
-        else if (existing_promo_requirement == Constants.EXISTING_PROMO_REQUIREMENT.HAS_EXISTING_PROMO){
-            String customerIdsWithPromoCondition = MessageFormat.format(" AND ({0} IN ({1}))", KEY_CUSTOMER_ID, customerIdsWithPromo);
+        else if (existing_promo_requirement == Constants.EXISTING_PROMO_REQUIREMENT.HAS_EXISTING_PROMO_ONLY){
+            String customerIdsWithPromoOnly = getSelectQueryForCustomerIdHavingPromoRequirement(Constants.EXISTING_PROMO_REQUIREMENT.HAS_EXISTING_PROMO_ONLY);
+            String customerIdsWithPromoCondition = MessageFormat.format(" AND ({0} IN ({1}))", KEY_CUSTOMER_ID, customerIdsWithPromoOnly);
             selectCondition += customerIdsWithPromoCondition;
         }
 
@@ -986,7 +987,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
             String selectQuery = getSelectQuery(Constants.DRINK_REMINDER_LAST_VISIT_MIN, Constants.DRINK_REMINDER_LAST_VISIT_MAX,
                     Constants.DRINK_REMINDER_LAST_TEXTED_MIN, Constants.DRINK_REMINDER_LAST_TEXTED_MAX,
-                    Constants.DRINK_REMINDER_CREDIT_MIN, Constants.DRINK_REMINDER_CREDIT_MAX, KEY_TOTAL_CREDIT, "asc", Constants.EXISTING_PROMO_REQUIREMENT.ANY);
+                    Constants.DRINK_REMINDER_CREDIT_MIN, Constants.DRINK_REMINDER_CREDIT_MAX, KEY_TOTAL_CREDIT, "asc", Constants.EXISTING_PROMO_REQUIREMENT.IGNORE);
 
             db = getReadableDatabase();
 
@@ -1023,7 +1024,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 CustomerIds with existing promo or free credit claim:
                 (Select customerId from customerClaimCode)
              */
-            String customerIdsWithPromo = getSelectQueryForCustomerIdWithPromo();
+            String customerIdsWithPromo = getSelectQueryForCustomerIdHavingPromoRequirement(Constants.EXISTING_PROMO_REQUIREMENT.HAS_PROMO_OR_FREE_DRINK);
 
             /*
               Select customerID, (purchaseCredit + referralCredit) as totalCredit from customer c
@@ -1062,8 +1063,16 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     @NonNull
-    private String getSelectQueryForCustomerIdWithPromo() {
-        return MessageFormat.format("Select {0} from {1}", KEY_CUSTOMER_ID, TABLE_CUSTOMER_CLAIM_CODE);
+    private String getSelectQueryForCustomerIdHavingPromoRequirement(Constants.EXISTING_PROMO_REQUIREMENT promo_requirement) {
+        switch (promo_requirement){
+            case HAS_EXISTING_PROMO_ONLY:
+                return MessageFormat.format("Select {0} from {1} where {2} = {3}",
+                        KEY_CUSTOMER_ID, TABLE_CUSTOMER_CLAIM_CODE, KEY_CLAIM_CODE_TYPE, Constants.CLAIM_CODE_TYPE_PROMOTION);
+            case HAS_PROMO_OR_FREE_DRINK:
+                return MessageFormat.format("Select {0} from {1}", KEY_CUSTOMER_ID, TABLE_CUSTOMER_CLAIM_CODE);
+            default:
+                return MessageFormat.format("Select {0} from {1}", KEY_CUSTOMER_ID, TABLE_CUSTOMER_CLAIM_CODE);
+        }
     }
 
     public List<CustomerClaimCode> getCustomerClaimCodeWithPromoForInactiveUsers(){
