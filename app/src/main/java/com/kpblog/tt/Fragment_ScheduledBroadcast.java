@@ -288,7 +288,6 @@ public class Fragment_ScheduledBroadcast extends Fragment implements TextView.On
 
             if (phoneList != null && phoneList.size() > 0){
                 StringBuffer sb = new StringBuffer();
-                recipientLabel.setText(String.format(getString(R.string.recipients), phoneList.size()));
 
                 for (int i = 0; i < phoneList.size(); i++){
                     if (i > 0){
@@ -297,10 +296,12 @@ public class Fragment_ScheduledBroadcast extends Fragment implements TextView.On
                     sb.append(Util.formatPhoneNumber(phoneList.get(i)));
                 }
 
+                recipientLabel.setText(String.format(getString(R.string.recipients), phoneList.size()));
                 recipientBox.setText(sb.toString());
             }
             else {
                 recipientLabel.setText(String.format(getString(R.string.recipients), 0));
+                recipientBox.setText("");
             }
         }
         else {
