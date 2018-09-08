@@ -242,6 +242,8 @@ public class Fragment_ScheduledBroadcast extends Fragment implements TextView.On
         showDetailView();
 
         detailedCustomerBroadcast = handler.getCustomerBroadcastById(detailedCustomerBroadcast.getRecipientListId());
+        final Spinner scheduledTimeSpinner = (Spinner) getView().findViewById(R.id.scheduledTimeDropdown);
+        scheduledTimeSpinner.setSelection(getSpinnerIndex(scheduledTimeSpinner, detailedCustomerBroadcast.getTimestamp()));
 
         if (Constants.STATUS_SENT.equals(detailedCustomerBroadcast.getStatus()) ||
                 Constants.STATUS_CANCELLED.equals(detailedCustomerBroadcast.getStatus())){
@@ -314,9 +316,7 @@ public class Fragment_ScheduledBroadcast extends Fragment implements TextView.On
         ((EditText) getView().findViewById(R.id.recipientsBox)).setEnabled(true);
         ((EditText) getView().findViewById(R.id.messageBox)).setEnabled(true);
         ((EditText) getView().findViewById(R.id.promotionName)).setEnabled(true);
-        final Spinner scheduledTimeSpinner = (Spinner) getView().findViewById(R.id.scheduledTimeDropdown);
-        scheduledTimeSpinner.setEnabled(true);
-        scheduledTimeSpinner.setSelection(getSpinnerIndex(scheduledTimeSpinner, cb.getTimestamp()));
+        ((Spinner) getView().findViewById(R.id.scheduledTimeDropdown)).setEnabled(true);
 
         updateBtn.setEnabled(true);
         removeBtn.setEnabled(true);
