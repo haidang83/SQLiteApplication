@@ -3,18 +3,11 @@ package com.kpblog.tt.receiver;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
-import android.telephony.SmsManager;
 import android.util.Log;
 
 import com.kpblog.tt.dao.DatabaseHandler;
-import com.kpblog.tt.model.CustomerBroadcast;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
-
-import java.util.Calendar;
-import java.util.List;
 
 /**
  * [good example] https://code.tutsplus.com/tutorials/android-fundamentals-scheduling-recurring-tasks--mobile-5788
@@ -47,8 +40,9 @@ public class TraTemptationReceiver extends BroadcastReceiver {
 
         }
         else if (Constants.SCHEDULED_TEXT_ACTION.equals(intentAction)){
+            int broadcastRecipientListId = intent.getIntExtra(Constants.BROADCAST_RECIPIENT_LIST_ID, -1);
             DatabaseHandler handler = new DatabaseHandler(context);
-            Util.sendScheduledBroadcast(context, handler);
+            Util.sendScheduledBroadcastByBroadcastId(context, handler, broadcastRecipientListId);
         }
     }
 

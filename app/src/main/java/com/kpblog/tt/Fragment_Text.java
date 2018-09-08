@@ -101,7 +101,7 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
         handler = new DatabaseHandler(getContext());
 
         //test code, remove when done
-        //Util.sendScheduledBroadcast(getContext(), handler);
+        //Util.sendScheduledBroadcastByBroadcastId(getContext(), handler);
 
         adminCode = (EditText) (getView().findViewById(R.id.adminCode));
         adminCode.setTransformationMethod(null);
@@ -234,7 +234,7 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
             Util.displayToast(getContext(), "Message is empty");
             return;
         }
-        msg = msg.replace("%s", Constants.CLAIM_CODE_PLACE_HOLDER);
+        msg = Util.replaceClaimCodePlaceHolderType(msg);
         String promoName = promotionName.getText().toString();
 
         String action = textActionDropdown.getSelectedItem().toString();
@@ -282,6 +282,7 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
             submitBtn.setEnabled(false);
         }
     }
+
 
     private void textDrinkCreditReminderToCustomers(Customer[] customers, String msg) {
 

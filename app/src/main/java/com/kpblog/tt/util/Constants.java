@@ -84,4 +84,6 @@ public class Constants {
     public enum EXISTING_PROMO_REQUIREMENT {
         IGNORE, NEITHER_EXISTING_PROMO_NOR_FREE_DRINK, HAS_EXISTING_PROMO_ONLY, HAS_PROMO_OR_FREE_DRINK, HAS_FREE_DRINK_ONLY
     }
+
+    public static final String BROADCAST_RECIPIENT_LIST_ID = "recipientListId";
 }

@@ -210,6 +210,7 @@ public class Util {
 
     private static PendingIntent getPendingIntentForScheduledJob(Context ctx, int id) {
         Intent intent = new Intent(ctx, TraTemptationReceiver.class);
+        intent.putExtra(Constants.BROADCAST_RECIPIENT_LIST_ID, id);
         intent.setAction(Constants.SCHEDULED_TEXT_ACTION);
         return PendingIntent.getBroadcast(ctx, id, intent, 0);
     }
@@ -274,6 +275,10 @@ public class Util {
         }
 
         return recipients;
+    }
+
+    public static String replaceClaimCodePlaceHolderType(String msg) {
+        return msg.replace("%s", Constants.CLAIM_CODE_PLACE_HOLDER);
     }
 
     public static void textMultipleRecipients(List<String> recipients, String message){
@@ -348,15 +353,18 @@ public class Util {
         return isValid;
     }
 
-    public static void sendScheduledBroadcast(Context ctx, DatabaseHandler handler) {
-        List<CustomerBroadcast> cbList = handler.getAllTodayCustomerBroadcastsBeforeTimestamp(System.currentTimeMillis());
-        final String summaryHeader = "schedule broadcast summary: ";
-        StringBuffer summary = new StringBuffer(summaryHeader);
+    //synchronized because if multiple jobs run at the same time, there's a chance that a customer might be in more than 1 job
+    public static synchronized void sendScheduledBroadcastByBroadcastId(Context ctx, DatabaseHandler handler, int broadcastId) {
+        StringBuffer result = new StringBuffer();
+        CustomerBroadcast cb = handler.getCustomerBroadcastById(broadcastId);
+        if (cb == null){
+            result.append(MessageFormat.format("CustomerBroadcast = null for id={0}", broadcastId));
+        }
+        else if (cb.getStatus().equals(Constants.STATUS_READY)){
 
-        for (int i = 0; i < cbList.size(); i++){
+
             List<String> recipientSent = new ArrayList<String>();
 
-            CustomerBroadcast cb = cbList.get(i);
             if (Constants.BROADCAST_TYPE_SCHEDULED_FREE_FORM.equals(cb.getType())){
                 //for free-form, can use the customer list from the db to text
                 recipientSent = Util.textPromoToMultipleRecipientsAndUpdateLastTexted(cb.getRecipientPhoneNumbers(),
@@ -384,15 +392,14 @@ public class Util {
 
             handler.updateBroadcastStatusById(cb.getRecipientListId(), Constants.STATUS_SENT);
 
-            summary.append(getBroadcastTypeShortName(cb) + "->" + recipientSent.size() + "; ");
+            result.append(getBroadcastTypeShortName(cb) + "->" + recipientSent.size());
+        }
+        else {
+            result.append(MessageFormat.format("CustomerBroadcastId={0}, type={1} has status={2}. Should not be processed by scheduled job.", broadcastId, cb.getType(), cb.getStatus()));
         }
 
         List<String> admins = handler.getAllAdmins();
-        String textMsg = summary.toString();
-        if (summary.toString().equals(summaryHeader)){
-            //empty result
-            textMsg = "job ran but found no eligible customers";
-        }
+        String textMsg = result.toString();
         Util.textMultipleRecipients(admins, textMsg);
     }
 
@@ -506,12 +513,12 @@ public class Util {
         //need to set the alarm to send the message
         Util.setAlarmForScheduledJob(context, scheduledTime, creditReminderBroadcastId);
 
-        String newPromoMsg = resources.getString(R.string.inactiveUser_sendPromo);
+        String newPromoMsg = Util.replaceClaimCodePlaceHolderType(resources.getString(R.string.inactiveUser_sendPromo));
         String promoName = Constants.INACTIVE_USER_PROMO_NAME;
         int newPromoBroadcastId = handler.insertIntoCustomerBroadcastTable(scheduledTime.getTimeInMillis(), newPromoMsg, Constants.BROADCAST_TYPE_SCHEDULED_NEW_PROMO, promoName, null);
         Util.setAlarmForScheduledJob(context, scheduledTime, newPromoBroadcastId);
 
-        String promoReminderMsg = resources.getString(R.string.inactiveUser_promoReminder);
+        String promoReminderMsg = Util.replaceClaimCodePlaceHolderType(resources.getString(R.string.inactiveUser_promoReminder));
         int promoReminderBroadcastId = handler.insertIntoCustomerBroadcastTable(scheduledTime.getTimeInMillis(), promoReminderMsg, Constants.BROADCAST_TYPE_SCHEDULED_PROMO_REM, "", null);
         Util.setAlarmForScheduledJob(context, scheduledTime, promoReminderBroadcastId);
     }

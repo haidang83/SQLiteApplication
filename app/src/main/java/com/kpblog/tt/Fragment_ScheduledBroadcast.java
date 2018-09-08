@@ -191,7 +191,8 @@ public class Fragment_ScheduledBroadcast extends Fragment implements TextView.On
     }
 
     private void updateScheduledJob() {
-        String msg = ((EditText) getView().findViewById(R.id.messageBox)).getText().toString().replace("%s", Constants.CLAIM_CODE_PLACE_HOLDER);
+        String msg = ((EditText) getView().findViewById(R.id.messageBox)).getText().toString();
+        msg = Util.replaceClaimCodePlaceHolderType(msg);
         String promoName = ((EditText) getView().findViewById(R.id.promotionName)).getText().toString();
         if (promoName.equals(Constants.NA) || promoName.equals(Constants.TBD)){
             promoName = "";
