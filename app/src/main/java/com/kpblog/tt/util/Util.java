@@ -234,7 +234,7 @@ public class Util {
         DatabaseHandler handler = new DatabaseHandler(ctx);
         List<String> phonesToText = handler.getAllAdmins();
         final String dailyCode = Util.generateRandom4DigitCode();
-        String message = String.format("Daily broadcast job scheduled. Daily cashier code: %s", dailyCode);
+        String message = String.format("Daily cashier code: %s", dailyCode);
 
         textMultipleRecipients(phonesToText, message);
 
@@ -355,7 +355,7 @@ public class Util {
 
     //synchronized because if multiple jobs run at the same time, there's a chance that a customer might be in more than 1 job
     public static synchronized void sendScheduledBroadcastByBroadcastId(Context ctx, DatabaseHandler handler, int broadcastId) {
-        StringBuffer result = new StringBuffer();
+        StringBuffer result = new StringBuffer("Running scheduled broadcast: ");
         CustomerBroadcast cb = handler.getCustomerBroadcastById(broadcastId);
         if (cb == null){
             result.append(MessageFormat.format("CustomerBroadcast = null for id={0}", broadcastId));

@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import com.kpblog.tt.dao.DatabaseHandler;
+import com.kpblog.tt.service.BackgroundIntentService;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
@@ -26,7 +27,12 @@ public class TraTemptationReceiver extends BroadcastReceiver {
             //called when boot is completed
             Util.setNextDbBackupAlarm(context, Util.getNightlyDbBackupTime());
         }
-        else if (Constants.DB_BACKUP_ACTION.equals(intentAction)) {
+        else {
+            //just redirect to BackgroundIntentService
+            intent.setClass(context, BackgroundIntentService.class);
+            context.startService(intent);
+        }
+        /*else if (Constants.DB_BACKUP_ACTION.equals(intentAction)) {
             //schedule the next backup time
             Util.setNextDbBackupAlarm(context, Util.getNightlyDbBackupTime());
 
@@ -43,7 +49,7 @@ public class TraTemptationReceiver extends BroadcastReceiver {
             int broadcastRecipientListId = intent.getIntExtra(Constants.BROADCAST_RECIPIENT_LIST_ID, -1);
             DatabaseHandler handler = new DatabaseHandler(context);
             Util.sendScheduledBroadcastByBroadcastId(context, handler, broadcastRecipientListId);
-        }
+        }*/
     }
 
 }

@@ -102,6 +102,7 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
 
         //test code, remove when done
         //Util.sendScheduledBroadcastByBroadcastId(getContext(), handler);
+        //Util.scheduleDailyBroadcast(getContext());
 
         adminCode = (EditText) (getView().findViewById(R.id.adminCode));
         adminCode.setTransformationMethod(null);

@@ -236,6 +236,7 @@ public class Fragment_ScheduledBroadcast extends Fragment implements TextView.On
         Util.cancelAlarmForScheduledJob(getActivity().getApplicationContext(), broadcastId);
         handler.updateBroadcastStatusById(broadcastId, Constants.STATUS_CANCELLED);
         Util.displayToast(getActivity(),"Scheduled Broadcast Cancelled");
+        showSummaryView();
     }
 
     private void showBroadcastDetail() {
