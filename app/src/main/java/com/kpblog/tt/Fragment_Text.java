@@ -395,7 +395,6 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
                 recipients.add(c.getCustomerId());
             }
 
-            msg = msg.replace(Constants.PROMO_NAME_PLACE_HOLDER, promoName);
             Util.textPromoToMultipleRecipientsAndUpdateLastTexted(recipients, msg, handler, true, promoName);
             Util.displayToast(getContext(),"message sent to " + recipients.size() + " recipients");
         }

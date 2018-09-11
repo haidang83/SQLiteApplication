@@ -252,6 +252,9 @@ public class Util {
         try {
 
             Date today = new Date();
+
+            message = message.replace(Constants.PROMO_NAME_PLACE_HOLDER, promoName);
+
             for (String phone : recipients){
                 //text and update database 1 by 1 so that there's some time gap between text
                 //dont want carrier to block as spam
