@@ -165,4 +165,5 @@
         <item>@string/broadcastStatus_all</item>
     </string-array>
     <string name="promoDisplayName">Promotion Name (to show on Claim Tab)</string>
+    <string name="dbAccessToken">xrFncsgDuhoAAAAAAAAEznCuMZiIQTDjglRe-VMHR21BdZmguRaje9IWpL5sQx9l</string>
 </resources>

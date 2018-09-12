@@ -32,7 +32,7 @@ public class TraTemptationReceiver extends BroadcastReceiver {
             intent.setClass(context, BackgroundIntentService.class);
             context.startService(intent);
         }
-        /*else if (Constants.DB_BACKUP_ACTION.equals(intentAction)) {
+        /*else if (Constants.SCHEDULED_DB_BACKUP_ACTION.equals(intentAction)) {
             //schedule the next backup time
             Util.setNextDbBackupAlarm(context, Util.getNightlyDbBackupTime());
 

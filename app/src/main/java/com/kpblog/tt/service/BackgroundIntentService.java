@@ -8,7 +8,10 @@ import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
+import java.io.File;
+
 public class BackgroundIntentService extends IntentService {
+    private String TAG = "BackgroundIntentService";
     public BackgroundIntentService() {
         super("BackgroundIntentService");
     }
@@ -17,12 +20,13 @@ public class BackgroundIntentService extends IntentService {
     protected void onHandleIntent(@Nullable Intent intent) {
         final String intentAction = intent.getAction();
 
-        if (Constants.DB_BACKUP_ACTION.equals(intentAction)) {
+        if (Constants.SCHEDULED_DB_BACKUP_ACTION.equals(intentAction)) {
             //schedule the next backup time
             Util.setNextDbBackupAlarm(this, Util.getNightlyDbBackupTime());
 
-            final String sourceDbName = this.getDatabasePath(DatabaseHandler.DATABASE_NAME).getPath();
-            String exportedDbPath = Util.exportDatabase(sourceDbName);
+            File exportedDbFile = Util.exportDatabaseAsFile(this);
+
+            Util.uploadToServer(this, exportedDbFile);
 
             //use this to also schedule the daily broadcast
             Util.scheduleDailyBroadcast(this);
@@ -34,6 +38,9 @@ public class BackgroundIntentService extends IntentService {
             int broadcastRecipientListId = intent.getIntExtra(Constants.BROADCAST_RECIPIENT_LIST_ID, -1);
             DatabaseHandler handler = new DatabaseHandler(this);
             Util.sendScheduledBroadcastByBroadcastId(this, handler, broadcastRecipientListId);
+        }
+        else if (Constants.DB_EXPORT.equals(intentAction)){
+            Util.exportDatabase(this);
         }
     }
 }

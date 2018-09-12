@@ -14,6 +14,11 @@ import android.telephony.SmsManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.dropbox.core.DbxException;
+import com.dropbox.core.DbxRequestConfig;
+import com.dropbox.core.v2.DbxClientV2;
+import com.dropbox.core.v2.files.WriteMode;
+import com.dropbox.core.v2.users.FullAccount;
 import com.kpblog.tt.R;
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
@@ -25,6 +30,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
@@ -63,9 +69,23 @@ public class Util {
     }
 
 
-    public static String exportDatabase(String sourceDbName) {
-        String exportedDbPath = "";
+    public static String exportDatabase(Context ctx) {
+        File exportedFile = exportDatabaseAsFile(ctx);
 
+        //test code
+        //uploadToServer(ctx, exportedFile);
+
+        String[] fileNameParts = exportedFile.getAbsolutePath().split(File.separator);
+        String fileName = exportedFile.getName();
+        final int length = fileNameParts.length;
+        if (length > 3){
+            fileName = fileNameParts[length - 3] + File.separator + fileNameParts[length - 2] + File.separator + fileNameParts[length - 1];
+        }
+        return fileName;
+    }
+
+    public static File exportDatabaseAsFile(Context ctx) {
+        final String sourceDbName = ctx.getDatabasePath(DatabaseHandler.DATABASE_NAME).getPath();
         final File documentPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
         File exportedFolder = new File (documentPath, Constants.EXPORTED_FOLDER_NAME);
 
@@ -87,8 +107,6 @@ public class Util {
             output = new FileOutputStream(dest);
 
             copyFile(fis, output);
-
-            exportedDbPath = String.format("%s/%s/%s", documentPath.getName(), Constants.EXPORTED_FOLDER_NAME, fileName);
         } catch (Exception e){
             Log.e("Database backup", e.getMessage());
         } finally {
@@ -107,7 +125,7 @@ public class Util {
                 Log.e("Database backup", e.getMessage());
             }
         }
-        return exportedDbPath;
+        return dest;
     }
 
     /**
@@ -177,7 +195,7 @@ public class Util {
 
     public static void setNextDbBackupAlarm(Context context, Calendar alarmTime) {
         Intent receiverIntent = new Intent(context, TraTemptationReceiver.class);
-        receiverIntent.setAction(Constants.DB_BACKUP_ACTION);
+        receiverIntent.setAction(Constants.SCHEDULED_DB_BACKUP_ACTION);
 
         //https://stackoverflow.com/questions/10930034/is-there-any-way-to-check-if-an-alarm-is-already-set/11411073
         //use same id to overwrite the old one
@@ -524,5 +542,24 @@ public class Util {
         String promoReminderMsg = Util.replaceClaimCodePlaceHolderType(resources.getString(R.string.inactiveUser_promoReminder));
         int promoReminderBroadcastId = handler.insertIntoCustomerBroadcastTable(scheduledTime.getTimeInMillis(), promoReminderMsg, Constants.BROADCAST_TYPE_SCHEDULED_PROMO_REM, "", null);
         Util.setAlarmForScheduledJob(context, scheduledTime, promoReminderBroadcastId);
+    }
+
+    public static void uploadToServer(Context ctx, File file) {
+        try {
+            final Resources resources = ctx.getResources();
+            String accessToken = resources.getString(R.string.dbAccessToken);
+
+            DbxRequestConfig config = DbxRequestConfig.newBuilder("dropbox/java-tutorial").build();
+            DbxClientV2 client = new DbxClientV2(config, accessToken);
+
+            String remoteFileName = file.getName();
+
+            InputStream inputStream = new FileInputStream(file);
+                client.files().uploadBuilder("/" + remoteFileName)
+                        .withMode(WriteMode.OVERWRITE)
+                        .uploadAndFinish(inputStream);
+        } catch (DbxException | IOException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -3,6 +3,7 @@ package com.kpblog.tt;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -29,6 +30,8 @@ import android.widget.Toast;
 
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
+import com.kpblog.tt.receiver.TraTemptationReceiver;
+import com.kpblog.tt.service.BackgroundIntentService;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
@@ -434,12 +437,16 @@ public class Fragment_Admin extends Fragment implements TextView.OnEditorActionL
     //http://www.zoftino.com/saving-files-to-internal-storage-&-external-storage-in-android
     private boolean exportDatabase() {
 
-        final String sourceDbName = getContext().getDatabasePath(DatabaseHandler.DATABASE_NAME).getPath();
+        String exportedDbPath = "";
 
-        String exportedDbPath = Util.exportDatabase(sourceDbName);
+        exportedDbPath = Util.exportDatabase(getContext());
 
         EditText dbExportedLocation = (EditText) (getView().findViewById(R.id.locationInput));
         dbExportedLocation.setText(exportedDbPath);
+
+        /*Intent receiverIntent = new Intent(getContext(), BackgroundIntentService.class);
+        receiverIntent.setAction(Constants.DB_EXPORT);
+        getContext().startService(receiverIntent);*/
 
         return !exportedDbPath.isEmpty();
     }
