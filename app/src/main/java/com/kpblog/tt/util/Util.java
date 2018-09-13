@@ -17,6 +17,8 @@ import android.widget.Toast;
 import com.dropbox.core.DbxException;
 import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.v2.DbxClientV2;
+import com.dropbox.core.v2.files.ListFolderResult;
+import com.dropbox.core.v2.files.Metadata;
 import com.dropbox.core.v2.files.WriteMode;
 import com.dropbox.core.v2.users.FullAccount;
 import com.kpblog.tt.R;
@@ -549,17 +551,52 @@ public class Util {
             final Resources resources = ctx.getResources();
             String accessToken = resources.getString(R.string.dbAccessToken);
 
-            DbxRequestConfig config = DbxRequestConfig.newBuilder("dropbox/java-tutorial").build();
+            DbxRequestConfig config = DbxRequestConfig.newBuilder("traTemptation").build();
             DbxClientV2 client = new DbxClientV2(config, accessToken);
 
-            String remoteFileName = file.getName();
+            uploadFile(client, file);
 
-            InputStream inputStream = new FileInputStream(file);
-                client.files().uploadBuilder("/" + remoteFileName)
-                        .withMode(WriteMode.OVERWRITE)
-                        .uploadAndFinish(inputStream);
+            synchLocalAndRemoteFolder(file.getParentFile(), client);
         } catch (DbxException | IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void synchLocalAndRemoteFolder(File localFolder, DbxClientV2 dropboxClient) throws DbxException, IOException {
+        List<String> remoteFiles = new ArrayList<String>();
+        ListFolderResult listFolderResult = dropboxClient.files().listFolder("");
+        for (Metadata metadata : listFolderResult.getEntries()) {
+            String name = metadata.getName();
+            if (name.endsWith(".db")) {
+                remoteFiles.add(name);
+            }
+        }
+
+        File[] localFiles = localFolder.listFiles();
+        List<File> localFilesToUpload = new ArrayList<File>();
+        for (File localFile : localFiles){
+            if (!remoteFiles.contains(localFile.getName())){
+                //local file not uploaded, add to list to upload
+                localFilesToUpload.add(localFile);
+            }
+        }
+
+        uploadFile(localFilesToUpload, dropboxClient);
+    }
+
+    private static void uploadFile(List<File> files, DbxClientV2 client) throws DbxException, IOException {
+
+        for (File file : files){
+            uploadFile(client, file);
+        }
+    }
+
+    private static void uploadFile(DbxClientV2 client, File file) throws DbxException, IOException {
+        InputStream inputStream = new FileInputStream(file);
+        final String remoteFileName = file.getName();
+
+        client.files().uploadBuilder("/" + remoteFileName)
+                    .withMode(WriteMode.OVERWRITE)
+                    .uploadAndFinish(inputStream);
     }
 }
