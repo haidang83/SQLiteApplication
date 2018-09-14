@@ -310,6 +310,8 @@ public class Fragment_ScheduledBroadcast extends Fragment implements TextView.On
         }
         else {
             recipientLabel.setText(String.format(getString(R.string.recipients), 0));
+            recipientBox.setText("");
+            recipientBox.setEnabled(false);
         }
     }
 
