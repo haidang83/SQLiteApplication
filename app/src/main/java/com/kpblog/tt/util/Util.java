@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.text.MessageFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -75,7 +76,7 @@ public class Util {
         File exportedFile = exportDatabaseAsFile(ctx);
 
         //test code
-        //uploadToServer(ctx, exportedFile);
+        uploadToServer(ctx, exportedFile);
 
         String[] fileNameParts = exportedFile.getAbsolutePath().split(File.separator);
         String fileName = exportedFile.getName();
@@ -91,7 +92,7 @@ public class Util {
         final File documentPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
         File exportedFolder = new File (documentPath, Constants.EXPORTED_FOLDER_NAME);
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
+        SimpleDateFormat sdf = new SimpleDateFormat(Constants.BACKUP_DATE_FORMAT_YYYY_MM_DD_HHMMSS);
         String fileName = sdf.format(new Date()) + ".db";
         File dest = new File(exportedFolder, fileName);
 
@@ -563,25 +564,71 @@ public class Util {
     }
 
     private static void synchLocalAndRemoteFolder(File localFolder, DbxClientV2 dropboxClient) throws DbxException, IOException {
-        List<String> remoteFiles = new ArrayList<String>();
+        long deleteTimeCutOff = System.currentTimeMillis() - (Constants.DAYS_TO_KEEP_DB_BACKUP * Constants.DAYS_TO_MILLIS);
+
+        List<String> remoteFilesToKeep = new ArrayList<String>();
+        List<String> remoteFilesToDelete = new ArrayList<String>();
         ListFolderResult listFolderResult = dropboxClient.files().listFolder("");
         for (Metadata metadata : listFolderResult.getEntries()) {
             String name = metadata.getName();
             if (name.endsWith(".db")) {
-                remoteFiles.add(name);
+                if (isFileUpForDeletion(name, deleteTimeCutOff)){
+                    remoteFilesToDelete.add(name);
+                }
+                else {
+                    remoteFilesToKeep.add(name);
+                }
             }
         }
 
         File[] localFiles = localFolder.listFiles();
         List<File> localFilesToUpload = new ArrayList<File>();
+        List<File> localFilesToDelete = new ArrayList<File>();
         for (File localFile : localFiles){
-            if (!remoteFiles.contains(localFile.getName())){
+            if (Util.isFileUpForDeletion(localFile.getName(), deleteTimeCutOff)){
+                localFilesToDelete.add(localFile);
+            }
+            else if (!remoteFilesToKeep.contains(localFile.getName())){
                 //local file not uploaded, add to list to upload
                 localFilesToUpload.add(localFile);
             }
         }
 
+
+        Util.deleteLocalFiles(localFilesToDelete);
         uploadFile(localFilesToUpload, dropboxClient);
+        deleteRemoteFiles(remoteFilesToDelete, dropboxClient);
+    }
+
+    private static void deleteRemoteFiles(List<String> remoteFilesToDelete, DbxClientV2 dropboxClient) {
+        try {
+            for (String remoteFile : remoteFilesToDelete){
+                dropboxClient.files().deleteV2(Constants.DROPBOX_ROOT + remoteFile);
+            }
+        } catch (DbxException e) {
+            e.printStackTrace();
+            Log.e("Util", e.toString());
+        }
+    }
+
+    private static void deleteLocalFiles(List<File> localFilesToDelete) {
+        for (File f : localFilesToDelete){
+            f.delete();
+        }
+    }
+
+    private static boolean isFileUpForDeletion(String fileName, long deleteTimeCutOff) {
+        boolean delete = false;
+
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat(Constants.BACKUP_DATE_FORMAT_YYYY_MM_DD_HHMMSS);
+            long localFileDate = sdf.parse(fileName.replace(".db", "")).getTime();
+            delete = localFileDate < deleteTimeCutOff;
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        return delete;
     }
 
     private static void uploadFile(List<File> files, DbxClientV2 client) throws DbxException, IOException {
@@ -595,7 +642,7 @@ public class Util {
         InputStream inputStream = new FileInputStream(file);
         final String remoteFileName = file.getName();
 
-        client.files().uploadBuilder("/" + remoteFileName)
+        client.files().uploadBuilder(Constants.DROPBOX_ROOT + remoteFileName)
                     .withMode(WriteMode.OVERWRITE)
                     .uploadAndFinish(inputStream);
     }

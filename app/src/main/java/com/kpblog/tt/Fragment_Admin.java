@@ -439,14 +439,14 @@ public class Fragment_Admin extends Fragment implements TextView.OnEditorActionL
 
         String exportedDbPath = "";
 
-        exportedDbPath = Util.exportDatabase(getContext());
+        /*exportedDbPath = Util.exportDatabase(getContext());
 
         EditText dbExportedLocation = (EditText) (getView().findViewById(R.id.locationInput));
-        dbExportedLocation.setText(exportedDbPath);
+        dbExportedLocation.setText(exportedDbPath);*/
 
-        /*Intent receiverIntent = new Intent(getContext(), BackgroundIntentService.class);
+        Intent receiverIntent = new Intent(getContext(), BackgroundIntentService.class);
         receiverIntent.setAction(Constants.DB_EXPORT);
-        getContext().startService(receiverIntent);*/
+        getContext().startService(receiverIntent);
 
         return !exportedDbPath.isEmpty();
     }
