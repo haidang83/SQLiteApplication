@@ -274,7 +274,9 @@ public class Util {
 
             Date today = new Date();
 
-            message = message.replace(Constants.PROMO_NAME_PLACE_HOLDER, promoName);
+            if (promoName != null && !promoName.isEmpty()){
+                message = message.replace(Constants.PROMO_NAME_PLACE_HOLDER, promoName);
+            }
 
             for (String phone : recipients){
                 //text and update database 1 by 1 so that there's some time gap between text
@@ -296,6 +298,7 @@ public class Util {
             }
         } catch (Exception e){
             //catch so it continues with other steps
+            Log.e("Util", "error:", e.getCause());
         }
 
         return recipients;

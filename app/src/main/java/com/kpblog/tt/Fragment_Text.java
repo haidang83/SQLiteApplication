@@ -1,6 +1,7 @@
 package com.kpblog.tt;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
@@ -23,6 +24,7 @@ import android.widget.Toast;
 
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
+import com.kpblog.tt.service.BackgroundIntentService;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
@@ -101,8 +103,10 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
         handler = new DatabaseHandler(getContext());
 
         //test code, remove when done
-        //Util.sendScheduledBroadcastByBroadcastId(getContext(), handler);
-        //Util.scheduleDailyBroadcast(getContext());
+        Intent receiverIntent = new Intent(getContext(), BackgroundIntentService.class);
+        receiverIntent.setAction(Constants.SCHEDULED_TEXT_ACTION);
+        receiverIntent.putExtra(Constants.BROADCAST_RECIPIENT_LIST_ID, 2);
+        getContext().startService(receiverIntent);
 
         adminCode = (EditText) (getView().findViewById(R.id.adminCode));
         adminCode.setTransformationMethod(null);
