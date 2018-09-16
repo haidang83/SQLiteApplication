@@ -60,7 +60,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_DATE_ISSUED = "dateIssued";
 
     private static final String TABLE_CUSTOMER_BROADCAST = "customerBroadcast";
-    private static final String KEY_RECIPIENT_LIST = "recipientList";
+    private static final String KEY_RECIPIENT_LIST_ID = "recipientListId";
     private static final String KEY_BROADCAST_TIME = "broadcastTime";
     private static final String KEY_BROADCAST_MESSAGE = "message";
     private static final String KEY_BROADCAST_TYPE = "broadcastType";
@@ -90,20 +90,20 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_TABLE, TABLE_CUSTOMER, KEY_CUSTOMER_ID, KEY_PURCHASE_CREDIT, KEY_REFERRAL_CREDIT, KEY_LAST_VISIT_DATE, KEY_IS_OPT_IN, KEY_OPT_IN_DATE, KEY_OPT_OUT_DATE, KEY_IS_TEST_USER, KEY_LAST_CONTACTED_DATE, KEY_REFERRER_ID));
 
         //this table keeps track of all the customer purchases, each row represents a purchase, so there can be multiple rows per each customer
-        String CREATE_CUSTOMER_PURCHASE_TABLE = "CREATE TABLE %s (%s TEXT, %s REAL, %s INTEGER, %s INTEGER, %s TEXT)";
-        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_PURCHASE_TABLE, TABLE_CUSTOMER_PURCHASE, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE, KEY_NOTES));
+        String CREATE_CUSTOMER_PURCHASE_TABLE = "CREATE TABLE {0} ({1} TEXT, {2} REAL, {3} INTEGER, {4} INTEGER, {5} TEXT, FOREIGN KEY({1}) REFERENCES {6}({1}) ON DELETE CASCADE ON UPDATE CASCADE)";
+        sqLiteDatabase.execSQL(MessageFormat.format(CREATE_CUSTOMER_PURCHASE_TABLE, TABLE_CUSTOMER_PURCHASE, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE, KEY_NOTES, TABLE_CUSTOMER));
 
         //this table has the outstanding claim code for the customer, only at most 1 outstanding code per customer
-        String CREATE_CUSTOMER_CLAIM_CODE_TABLE = "CREATE TABLE {0} ({1} TEXT, {2} TEXT, {3} INTEGER, {4} INTEGER, {5} TEXT, PRIMARY KEY({1}, {4}))";
-        sqLiteDatabase.execSQL(MessageFormat.format(CREATE_CUSTOMER_CLAIM_CODE_TABLE, TABLE_CUSTOMER_CLAIM_CODE, KEY_CUSTOMER_ID, KEY_CLAIM_CODE, KEY_DATE_ISSUED, KEY_CLAIM_CODE_TYPE, KEY_PROMO_NAME));
+        String CREATE_CUSTOMER_CLAIM_CODE_TABLE = "CREATE TABLE {0} ({1} TEXT, {2} TEXT, {3} INTEGER, {4} INTEGER, {5} TEXT, PRIMARY KEY({1}, {4}), FOREIGN KEY({1}) REFERENCES {6}({1}) ON DELETE CASCADE ON UPDATE CASCADE)";
+        sqLiteDatabase.execSQL(MessageFormat.format(CREATE_CUSTOMER_CLAIM_CODE_TABLE, TABLE_CUSTOMER_CLAIM_CODE, KEY_CUSTOMER_ID, KEY_CLAIM_CODE, KEY_DATE_ISSUED, KEY_CLAIM_CODE_TYPE, KEY_PROMO_NAME, TABLE_CUSTOMER));
 
         //this table has all the broadcast schedule/sent to customers
         String CREATE_CUSTOMER_BROADCAST_TABLE = "CREATE TABLE %s (%s INTEGER PRIMARY KEY, %s INTEGER, %s TEXT, %s TEXT, %s TEXT, %s TEXT)";
-        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_BROADCAST_TABLE, TABLE_CUSTOMER_BROADCAST, KEY_RECIPIENT_LIST, KEY_BROADCAST_TIME, KEY_BROADCAST_MESSAGE, KEY_BROADCAST_TYPE, KEY_STATUS, KEY_PROMO_NAME));
+        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_BROADCAST_TABLE, TABLE_CUSTOMER_BROADCAST, KEY_RECIPIENT_LIST_ID, KEY_BROADCAST_TIME, KEY_BROADCAST_MESSAGE, KEY_BROADCAST_TYPE, KEY_STATUS, KEY_PROMO_NAME));
 
         //this table has all the customers in a recipient list
-        String CREATE_RECIPIENT_LIST_CUSTOMER_TABLE = "CREATE TABLE {0} ({1} INTEGER, {2} TEXT,  PRIMARY KEY({1}, {2}))";
-        sqLiteDatabase.execSQL(MessageFormat.format(CREATE_RECIPIENT_LIST_CUSTOMER_TABLE, TABLE_RECIPIENT_LIST_CUSTOMER, KEY_RECIPIENT_LIST, KEY_CUSTOMER_ID));
+        String CREATE_RECIPIENT_LIST_CUSTOMER_TABLE = "CREATE TABLE {0} ({1} INTEGER, {2} TEXT,  PRIMARY KEY({1}, {2}), FOREIGN KEY({1}) REFERENCES {3}({1}) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY({2}) REFERENCES {4}({2}) ON DELETE CASCADE ON UPDATE CASCADE)";
+        sqLiteDatabase.execSQL(MessageFormat.format(CREATE_RECIPIENT_LIST_CUSTOMER_TABLE, TABLE_RECIPIENT_LIST_CUSTOMER, KEY_RECIPIENT_LIST_ID, KEY_CUSTOMER_ID, TABLE_CUSTOMER_BROADCAST, TABLE_CUSTOMER));
 
         String CREATE_ADMIN_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY)";
         sqLiteDatabase.execSQL(String.format(CREATE_ADMIN_TABLE, TABLE_ADMIN, KEY_CUSTOMER_ID));
@@ -138,6 +138,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         //do nothing
         Log.d("DatabaseHander", String.format("oldversion=%d, newVersion=%d", oldVersion, newVersion));
+    }
+
+    @Override
+    public void onConfigure(SQLiteDatabase db){
+        db.setForeignKeyConstraintsEnabled(true);
     }
 
     /**
@@ -830,7 +835,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(KEY_BROADCAST_MESSAGE, msg);
         values.put(KEY_PROMO_NAME, promoName);
 
-        db.update(TABLE_CUSTOMER_BROADCAST, values, KEY_RECIPIENT_LIST + " = " + broadcastId, null);
+        db.update(TABLE_CUSTOMER_BROADCAST, values, KEY_RECIPIENT_LIST_ID + " = " + broadcastId, null);
         db.close();
     }
 
@@ -843,7 +848,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     private void insertPhoneNumberIntoRecipientListId(int id, SQLiteDatabase db, String phoneNum) {
         ContentValues values = new ContentValues();
-        values.put(KEY_RECIPIENT_LIST, id);
+        values.put(KEY_RECIPIENT_LIST_ID, id);
         values.put(KEY_CUSTOMER_ID, phoneNum);
 
         db.insertWithOnConflict(TABLE_RECIPIENT_LIST_CUSTOMER, null, values, SQLiteDatabase.CONFLICT_IGNORE);
@@ -916,7 +921,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     @NonNull
     private CustomerBroadcast populateCustomerBroadcast(Cursor cursor, SQLiteDatabase db) {
         long timestamp = cursor.getLong(cursor.getColumnIndex(KEY_BROADCAST_TIME));
-        int recList = cursor.getInt(cursor.getColumnIndex(KEY_RECIPIENT_LIST));
+        int recList = cursor.getInt(cursor.getColumnIndex(KEY_RECIPIENT_LIST_ID));
         String msg = cursor.getString(cursor.getColumnIndex(KEY_BROADCAST_MESSAGE));
         String type = cursor.getString(cursor.getColumnIndex(KEY_BROADCAST_TYPE));
         String promoName = cursor.getString(cursor.getColumnIndex(KEY_PROMO_NAME));
@@ -936,7 +941,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         try {
             db = getReadableDatabase();
-            String query = MessageFormat.format("Select * from {0} where {1} = {2}", TABLE_CUSTOMER_BROADCAST, KEY_RECIPIENT_LIST, id);
+            String query = MessageFormat.format("Select * from {0} where {1} = {2}", TABLE_CUSTOMER_BROADCAST, KEY_RECIPIENT_LIST_ID, id);
             Cursor c = db.rawQuery(query, null);
             if (c != null && c.moveToFirst()){
                 cb = populateCustomerBroadcast(c, db);
@@ -955,7 +960,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private List<String> getPhoneNumByRecipientListId(SQLiteDatabase db, int id) {
         String whereClause;
         Cursor cursor;
-        whereClause = String.format("%s = %d", KEY_RECIPIENT_LIST, id);
+        whereClause = String.format("%s = %d", KEY_RECIPIENT_LIST_ID, id);
         cursor = db.query(TABLE_RECIPIENT_LIST_CUSTOMER, new String[] {KEY_CUSTOMER_ID}, whereClause, null, null, null, null);
         List<String> recipientPhones = new ArrayList<String>();
         if (cursor.moveToFirst()){
@@ -970,7 +975,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = null;
         try {
             db = getWritableDatabase();
-            String update = String.format("UPDATE %s SET %s = '%s' WHERE %s = %d ", TABLE_CUSTOMER_BROADCAST, KEY_STATUS, status, KEY_RECIPIENT_LIST, broadcastId);
+            String update = String.format("UPDATE %s SET %s = '%s' WHERE %s = %d ", TABLE_CUSTOMER_BROADCAST, KEY_STATUS, status, KEY_RECIPIENT_LIST_ID, broadcastId);
             db.execSQL(update);
         } finally {
             if (db != null){
@@ -1128,7 +1133,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         try {
             db = getReadableDatabase();
-            String query = MessageFormat.format("Select {0}, {1}, {2}, {3} from {4} ", KEY_RECIPIENT_LIST, KEY_BROADCAST_TIME, KEY_BROADCAST_TYPE, KEY_STATUS, TABLE_CUSTOMER_BROADCAST);
+            String query = MessageFormat.format("Select {0}, {1}, {2}, {3} from {4} ", KEY_RECIPIENT_LIST_ID, KEY_BROADCAST_TIME, KEY_BROADCAST_TYPE, KEY_STATUS, TABLE_CUSTOMER_BROADCAST);
 
             if (!broadcastStatus.isEmpty()){
                 String condition = MessageFormat.format("WHERE {0} = ''{1}'' ", KEY_STATUS, broadcastStatus);

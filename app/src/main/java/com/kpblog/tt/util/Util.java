@@ -76,7 +76,7 @@ public class Util {
         File exportedFile = exportDatabaseAsFile(ctx);
 
         //test code
-        uploadToServer(ctx, exportedFile);
+        //uploadToServer(ctx, exportedFile);
 
         String[] fileNameParts = exportedFile.getAbsolutePath().split(File.separator);
         String fileName = exportedFile.getName();
