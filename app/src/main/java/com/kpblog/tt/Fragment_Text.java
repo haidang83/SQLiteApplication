@@ -103,10 +103,10 @@ public class Fragment_Text extends Fragment implements TextView.OnEditorActionLi
         handler = new DatabaseHandler(getContext());
 
         //test code, remove when done
-        Intent receiverIntent = new Intent(getContext(), BackgroundIntentService.class);
+        /*Intent receiverIntent = new Intent(getContext(), BackgroundIntentService.class);
         receiverIntent.setAction(Constants.SCHEDULED_TEXT_ACTION);
         receiverIntent.putExtra(Constants.BROADCAST_RECIPIENT_LIST_ID, 2);
-        getContext().startService(receiverIntent);
+        getContext().startService(receiverIntent);*/
 
         adminCode = (EditText) (getView().findViewById(R.id.adminCode));
         adminCode.setTransformationMethod(null);

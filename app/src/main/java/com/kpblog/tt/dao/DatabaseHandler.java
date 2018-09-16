@@ -60,7 +60,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_DATE_ISSUED = "dateIssued";
 
     private static final String TABLE_CUSTOMER_BROADCAST = "customerBroadcast";
-    private static final String KEY_RECIPIENT_LIST_ID = "recipientListId";
+    private static final String KEY_BROADCAST_ID = "broadcastId";
     private static final String KEY_BROADCAST_TIME = "broadcastTime";
     private static final String KEY_BROADCAST_MESSAGE = "message";
     private static final String KEY_BROADCAST_TYPE = "broadcastType";
@@ -68,6 +68,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_STATUS = "status";
 
     private static final String TABLE_RECIPIENT_LIST_CUSTOMER = "recipientListCustomer";
+    private static final String KEY_RECIPIENT_LIST_ID = "recipientListId";
+
+    private static final String TABLE_BROADCAST_CRITERIA = "broadcastCriteria";
 
 
     private static final String TABLE_ADMIN = "admin";
@@ -99,11 +102,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         //this table has all the broadcast schedule/sent to customers
         String CREATE_CUSTOMER_BROADCAST_TABLE = "CREATE TABLE %s (%s INTEGER PRIMARY KEY, %s INTEGER, %s TEXT, %s TEXT, %s TEXT, %s TEXT)";
-        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_BROADCAST_TABLE, TABLE_CUSTOMER_BROADCAST, KEY_RECIPIENT_LIST_ID, KEY_BROADCAST_TIME, KEY_BROADCAST_MESSAGE, KEY_BROADCAST_TYPE, KEY_STATUS, KEY_PROMO_NAME));
+        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_BROADCAST_TABLE, TABLE_CUSTOMER_BROADCAST, KEY_BROADCAST_ID, KEY_BROADCAST_TIME, KEY_BROADCAST_MESSAGE, KEY_BROADCAST_TYPE, KEY_STATUS, KEY_PROMO_NAME));
 
         //this table has all the customers in a recipient list
-        String CREATE_RECIPIENT_LIST_CUSTOMER_TABLE = "CREATE TABLE {0} ({1} INTEGER, {2} TEXT,  PRIMARY KEY({1}, {2}), FOREIGN KEY({1}) REFERENCES {3}({1}) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY({2}) REFERENCES {4}({2}) ON DELETE CASCADE ON UPDATE CASCADE)";
-        sqLiteDatabase.execSQL(MessageFormat.format(CREATE_RECIPIENT_LIST_CUSTOMER_TABLE, TABLE_RECIPIENT_LIST_CUSTOMER, KEY_RECIPIENT_LIST_ID, KEY_CUSTOMER_ID, TABLE_CUSTOMER_BROADCAST, TABLE_CUSTOMER));
+        String CREATE_RECIPIENT_LIST_CUSTOMER_TABLE = "CREATE TABLE {0} ({1} INTEGER, {2} TEXT,  PRIMARY KEY({1}, {2}), FOREIGN KEY({1}) REFERENCES {3}({4}) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY({2}) REFERENCES {5}({2}) ON DELETE CASCADE ON UPDATE CASCADE)";
+        sqLiteDatabase.execSQL(MessageFormat.format(CREATE_RECIPIENT_LIST_CUSTOMER_TABLE, TABLE_RECIPIENT_LIST_CUSTOMER, KEY_RECIPIENT_LIST_ID, KEY_CUSTOMER_ID, TABLE_CUSTOMER_BROADCAST, KEY_BROADCAST_ID, TABLE_CUSTOMER));
 
         String CREATE_ADMIN_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY)";
         sqLiteDatabase.execSQL(String.format(CREATE_ADMIN_TABLE, TABLE_ADMIN, KEY_CUSTOMER_ID));
@@ -835,7 +838,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(KEY_BROADCAST_MESSAGE, msg);
         values.put(KEY_PROMO_NAME, promoName);
 
-        db.update(TABLE_CUSTOMER_BROADCAST, values, KEY_RECIPIENT_LIST_ID + " = " + broadcastId, null);
+        db.update(TABLE_CUSTOMER_BROADCAST, values, KEY_BROADCAST_ID + " = " + broadcastId, null);
         db.close();
     }
 
@@ -921,12 +924,12 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     @NonNull
     private CustomerBroadcast populateCustomerBroadcast(Cursor cursor, SQLiteDatabase db) {
         long timestamp = cursor.getLong(cursor.getColumnIndex(KEY_BROADCAST_TIME));
-        int recList = cursor.getInt(cursor.getColumnIndex(KEY_RECIPIENT_LIST_ID));
+        int broadcastId = cursor.getInt(cursor.getColumnIndex(KEY_BROADCAST_ID));
         String msg = cursor.getString(cursor.getColumnIndex(KEY_BROADCAST_MESSAGE));
         String type = cursor.getString(cursor.getColumnIndex(KEY_BROADCAST_TYPE));
         String promoName = cursor.getString(cursor.getColumnIndex(KEY_PROMO_NAME));
         String status = cursor.getString(cursor.getColumnIndex(KEY_STATUS));
-        CustomerBroadcast cb = new CustomerBroadcast(timestamp, recList, msg, type, promoName);
+        CustomerBroadcast cb = new CustomerBroadcast(timestamp, broadcastId, msg, type, promoName);
         cb.setStatus(status);
 
         List<String> phoneList = getPhoneNumByRecipientListId(db, cb.getRecipientListId());
@@ -941,7 +944,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         try {
             db = getReadableDatabase();
-            String query = MessageFormat.format("Select * from {0} where {1} = {2}", TABLE_CUSTOMER_BROADCAST, KEY_RECIPIENT_LIST_ID, id);
+            String query = MessageFormat.format("Select * from {0} where {1} = {2}", TABLE_CUSTOMER_BROADCAST, KEY_BROADCAST_ID, id);
             Cursor c = db.rawQuery(query, null);
             if (c != null && c.moveToFirst()){
                 cb = populateCustomerBroadcast(c, db);
@@ -975,7 +978,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = null;
         try {
             db = getWritableDatabase();
-            String update = String.format("UPDATE %s SET %s = '%s' WHERE %s = %d ", TABLE_CUSTOMER_BROADCAST, KEY_STATUS, status, KEY_RECIPIENT_LIST_ID, broadcastId);
+            String update = String.format("UPDATE %s SET %s = '%s' WHERE %s = %d ", TABLE_CUSTOMER_BROADCAST, KEY_STATUS, status, KEY_BROADCAST_ID, broadcastId);
             db.execSQL(update);
         } finally {
             if (db != null){
@@ -1133,7 +1136,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         try {
             db = getReadableDatabase();
-            String query = MessageFormat.format("Select {0}, {1}, {2}, {3} from {4} ", KEY_RECIPIENT_LIST_ID, KEY_BROADCAST_TIME, KEY_BROADCAST_TYPE, KEY_STATUS, TABLE_CUSTOMER_BROADCAST);
+            String query = MessageFormat.format("Select {0}, {1}, {2}, {3} from {4} ", KEY_BROADCAST_ID, KEY_BROADCAST_TIME, KEY_BROADCAST_TYPE, KEY_STATUS, TABLE_CUSTOMER_BROADCAST);
 
             if (!broadcastStatus.isEmpty()){
                 String condition = MessageFormat.format("WHERE {0} = ''{1}'' ", KEY_STATUS, broadcastStatus);
