@@ -55,13 +55,13 @@ public class Fragment_Admin extends Fragment implements TextView.OnEditorActionL
     private String mParam2;
 
     boolean permissionRequestedOnStart = false;
-    EditText adminCode, phone;
+    EditText adminCode, phone, oldPhoneNum, newPhoneNum;
     Button getCodeBtn, lockUnlockBtn, exportBtn, importBtn,
             addAdminBtn, removeAdminBtn, addTestUserBtn, removeTestUserBtn;
 
     Spinner adminDropdown;
 
-    TextInputLayout phoneLayout;
+    TextInputLayout phoneLayout, oldPhoneNumLayout, newPhoneNumLayout;
 
     DatabaseHandler handler;
     private OnFragmentInteractionListener mListener;
@@ -107,7 +107,7 @@ public class Fragment_Admin extends Fragment implements TextView.OnEditorActionL
 
     long getCodeBtnLastClicked, lockUnlockBtnLastClicked, exportBtnLastClicked, importBtnLastClicked = 0;
     long addAdminBtnLastClicked, removeAdminBtnLastClicked, addTestUserBtnLastClicked, removeTestUserBtnLastClicked = 0;
-    long getCashierCodeBtnLastClicked = 0;
+    long getCashierCodeBtnLastClicked, changePhoneNumBtnLastClicked = 0;
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState){
         handler = new DatabaseHandler(getContext());
@@ -249,6 +249,67 @@ public class Fragment_Admin extends Fragment implements TextView.OnEditorActionL
                 }
             }
         });
+
+        oldPhoneNumLayout = (TextInputLayout) getView().findViewById(R.id.oldPhoneNumberLayout);
+        oldPhoneNum = (EditText) getView().findViewById(R.id.oldPhoneNumber);
+        oldPhoneNum.addTextChangedListener(new PhoneNumberFormattingTextWatcher());
+
+        newPhoneNumLayout = (TextInputLayout) getView().findViewById(R.id.newPhoneNumberLayout);
+        newPhoneNum = (EditText) getView().findViewById(R.id.newPhoneNumber);
+        newPhoneNum.addTextChangedListener(new PhoneNumberFormattingTextWatcher());
+
+        Button clearBtn = (Button) getView().findViewById(R.id.clearBtn);
+        clearBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                oldPhoneNum.setText("");
+                newPhoneNum.setText("");
+            }
+        });
+
+        Button changePhoneNumBtn = (Button) getView().findViewById(R.id.changePhoneNumBtn);
+        changePhoneNumBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (SystemClock.elapsedRealtime() - changePhoneNumBtnLastClicked > Constants.BUTTON_CLICK_ELAPSE_THRESHOLD){
+                    changePhoneNumBtnLastClicked = SystemClock.elapsedRealtime();
+                    validateAndChangePhoneNumber();
+                }
+            }
+        });
+    }
+
+    private void validateAndChangePhoneNumber() {
+        String unformattedOldPhoneNumber = Util.getUnformattedPhoneNumber(oldPhoneNum.getText().toString());
+        if (Util.isPhoneNumberValid(oldPhoneNumLayout, getString(R.string.phone_err_msg), unformattedOldPhoneNumber)){
+            Customer customerByOldNumber = handler.getCustomerById(unformattedOldPhoneNumber);
+            if (customerByOldNumber == null){
+                oldPhoneNumLayout.setError("Customer does not exist");
+            }
+            else {
+                //continue to check the new number
+                oldPhoneNumLayout.setErrorEnabled(false);
+
+                String unformattedNewPhoneNumber = Util.getUnformattedPhoneNumber(newPhoneNum.getText().toString());
+                if (Util.isPhoneNumberValid(newPhoneNumLayout, getString(R.string.phone_err_msg), unformattedNewPhoneNumber)){
+                    Customer customerByNewNumber = handler.getCustomerById(unformattedNewPhoneNumber);
+                    if (customerByNewNumber != null){
+                        newPhoneNumLayout.setError("Customer already exists");
+                    }
+                    else {
+                        newPhoneNumLayout.setErrorEnabled(false);
+                        //everything ok, swap the number
+                        boolean isSuccess = handler.changePhoneNumber(unformattedOldPhoneNumber, unformattedNewPhoneNumber);
+                        if (isSuccess) {
+                            Util.displayToast(getContext(), "Phone number changed");
+                        }
+                        else {
+                            Util.displayToast(getContext(), "Unable to change phone number");
+                        }
+                    }
+                }
+            }
+        }
     }
 
     @Override

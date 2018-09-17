@@ -72,6 +72,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     private static final String TABLE_BROADCAST_CRITERIA = "broadcastCriteria";
 
+    private static final String TABLE_CUSTOMER_ID_CHANGE = "customerIdChange";
+    private static final String KEY_OLD_CUSTOMER_ID = "oldCustomerId";
+    private static final String KEY_NEW_CUSTOMER_ID = "newCustomerId";
+    private static final String KEY_CHANGE_TIMESTAMP = "changeTimeStamp";
 
     private static final String TABLE_ADMIN = "admin";
     public static final String NOT_NULL_AND_NOT_EMPTY_PATTERN = "({0} is NOT NULL and {0} != '''') AND ";
@@ -107,6 +111,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         //this table has all the customers in a recipient list
         String CREATE_RECIPIENT_LIST_CUSTOMER_TABLE = "CREATE TABLE {0} ({1} INTEGER, {2} TEXT,  PRIMARY KEY({1}, {2}), FOREIGN KEY({1}) REFERENCES {3}({4}) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY({2}) REFERENCES {5}({2}) ON DELETE CASCADE ON UPDATE CASCADE)";
         sqLiteDatabase.execSQL(MessageFormat.format(CREATE_RECIPIENT_LIST_CUSTOMER_TABLE, TABLE_RECIPIENT_LIST_CUSTOMER, KEY_RECIPIENT_LIST_ID, KEY_CUSTOMER_ID, TABLE_CUSTOMER_BROADCAST, KEY_BROADCAST_ID, TABLE_CUSTOMER));
+
+        String CREATE_CUSTOMER_ID_CHANGE_TABLE = "CREATE TABLE {0} ({1} TEXT, {2} TEXT, {3} INTEGER, PRIMARY KEY({1}, {2}))";
+        sqLiteDatabase.execSQL(MessageFormat.format(CREATE_CUSTOMER_ID_CHANGE_TABLE, TABLE_CUSTOMER_ID_CHANGE, KEY_OLD_CUSTOMER_ID, KEY_NEW_CUSTOMER_ID, KEY_CHANGE_TIMESTAMP));
 
         String CREATE_ADMIN_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY)";
         sqLiteDatabase.execSQL(String.format(CREATE_ADMIN_TABLE, TABLE_ADMIN, KEY_CUSTOMER_ID));
@@ -1174,4 +1181,40 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
 
+    public boolean changePhoneNumber(String unformattedOldPhoneNumber, String unformattedNewPhoneNumber) {
+        boolean isSuccess = false;
+        SQLiteDatabase db = null;
+        try {
+            db = this.getWritableDatabase();
+            db.beginTransaction();
+
+            ContentValues values = new ContentValues();
+            values.put(KEY_CUSTOMER_ID, unformattedNewPhoneNumber);
+            db.update(TABLE_CUSTOMER, values, KEY_CUSTOMER_ID + " = ?", new String[] { unformattedOldPhoneNumber });
+
+            insertIntoCustomerIdChangeTable(db, unformattedOldPhoneNumber, unformattedNewPhoneNumber);
+
+            db.setTransactionSuccessful();
+            isSuccess = true;
+        } catch (Exception e){
+
+        } finally {
+            if (db != null){
+                db.endTransaction();
+                db.close();
+            }
+        }
+
+        return isSuccess;
+    }
+
+    private void insertIntoCustomerIdChangeTable(SQLiteDatabase db, String oldNumber, String newNumber) {
+        ContentValues values = new ContentValues();
+
+        values.put(KEY_OLD_CUSTOMER_ID, oldNumber);
+        values.put(KEY_NEW_CUSTOMER_ID, newNumber);
+        values.put(KEY_CHANGE_TIMESTAMP, System.currentTimeMillis());
+
+        db.insert(TABLE_CUSTOMER_ID_CHANGE, null, values);
+    }
 }

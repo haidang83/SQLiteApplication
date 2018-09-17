@@ -1,225 +1,296 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#FFF"
-    android:clickable="true"
-    android:id="@+id/adminFragment"
-    tools:context="com.kpblog.tt.Fragment_Admin">
-
-    <LinearLayout
-        android:id="@+id/fragmentLayout"
+    android:layout_height="match_parent">
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_marginTop="10dp"
-        android:orientation="vertical"
-        android:layout_marginLeft="3dp"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent"
+        android:background="#FFF"
+        android:clickable="true"
+        android:id="@+id/adminFragment"
+        tools:context="com.kpblog.tt.Fragment_Admin">
 
         <LinearLayout
-            android:id="@+id/adminAuthLayout"
+            android:id="@+id/fragmentLayout"
             android:layout_width="match_parent"
-            android:orientation="horizontal"
-            android:layout_height="wrap_content">
-
-            <android.support.design.widget.TextInputLayout
-                android:id="@+id/adminCodeLayout"
-                android:layout_weight="1"
-                android:layout_width="0dip"
-                app:hintTextAppearance="@style/FloatingLabel"
-                android:layout_height="wrap_content">
-
-                <EditText
-                    android:id="@+id/adminCode"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/adminCode"
-                    android:inputType="numberPassword"
-                    android:imeOptions="actionDone">
-                </EditText>
-            </android.support.design.widget.TextInputLayout>
-
-            <Spinner
-                android:id="@+id/adminPhoneDropdown"
-                android:layout_weight="2"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginRight="0dp"
-                android:paddingRight="0dp"
-                android:spinnerMode="dropdown"/>
-
-            <Button android:id="@+id/getCodeBtn"
-                android:layout_weight="1.3"
-                android:layout_width="0dip"
-                android:layout_marginLeft="5dp"
-                android:text="@string/getCode"
-                style="@style/buttonStyle"
-                android:textColor="@android:color/white"/>
-
-            <Button android:id="@+id/lockUnlockBtn"
-                android:layout_weight="1.2"
-                android:layout_width="0dip"
-                android:layout_marginLeft="5dp"
-                android:layout_marginRight="5dp"
-                android:text="@string/unlock"
-                style="@style/buttonStyle"
-                android:textColor="@android:color/white"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/adminLayout"
-            android:visibility="invisible"
-            android:layout_marginTop="20dp"
-            android:layout_width="match_parent"
+            android:layout_marginTop="10dp"
             android:orientation="vertical"
+            android:layout_marginLeft="3dp"
             android:layout_height="wrap_content">
 
             <LinearLayout
-                android:id="@+id/importExportFrame"
+                android:id="@+id/adminAuthLayout"
                 android:layout_width="match_parent"
-                android:orientation="vertical"
+                android:orientation="horizontal"
                 android:layout_height="wrap_content">
 
                 <android.support.design.widget.TextInputLayout
-                    android:id="@+id/locationLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <EditText
-                        android:id="@+id/locationInput"
-                        android:enabled="false"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/dbLocation"
-                        android:inputType="none"
-                        android:imeOptions="actionNext">
-                    </EditText>
-                </android.support.design.widget.TextInputLayout>
-
-                <LinearLayout
-                    android:id="@+id/importExportButtonFrame"
-                    android:layout_width="match_parent"
-                    android:orientation="horizontal"
-                    android:layout_height="wrap_content">
-
-                    <Button android:id="@+id/importBtn"
-                        android:layout_weight="1"
-                        android:layout_width="0dip"
-                        android:layout_marginLeft="2dp"
-                        android:text="@string/importLabel"
-                        style="@style/buttonStyle"
-                        android:textColor="@android:color/white"/>
-
-                    <Button android:id="@+id/exportBtn"
-                        android:layout_weight="1"
-                        android:layout_width="0dip"
-                        android:layout_marginLeft="10dp"
-                        android:layout_marginRight="5dp"
-                        android:text="@string/exportLabel"
-                        style="@style/buttonStyle"
-                        android:textColor="@android:color/white"/>
-                </LinearLayout>
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/addRemoveAdminTestUserFrame"
-                android:layout_marginTop="30dp"
-                android:layout_width="match_parent"
-                android:orientation="vertical"
-                android:layout_height="wrap_content">
-
-                <android.support.design.widget.TextInputLayout
-                    android:id="@+id/phoneLayout"
-                    android:layout_width="match_parent"
+                    android:id="@+id/adminCodeLayout"
+                    android:layout_weight="1"
+                    android:layout_width="0dip"
                     app:hintTextAppearance="@style/FloatingLabel"
                     android:layout_height="wrap_content">
 
                     <EditText
-                        android:id="@+id/phone"
+                        android:id="@+id/adminCode"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="@string/phoneNumber"
-                        android:inputType="phone"
+                        android:hint="@string/adminCode"
+                        android:inputType="numberPassword"
                         android:imeOptions="actionDone">
                     </EditText>
                 </android.support.design.widget.TextInputLayout>
 
-                <LinearLayout
-                    android:id="@+id/addRemoveAdminButtonFrame"
-                    android:layout_width="match_parent"
-                    android:orientation="horizontal"
-                    android:layout_height="wrap_content">
+                <Spinner
+                    android:id="@+id/adminPhoneDropdown"
+                    android:layout_weight="2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="0dp"
+                    android:paddingRight="0dp"
+                    android:spinnerMode="dropdown"/>
 
-                    <Button android:id="@+id/addAdminBtn"
-                        android:layout_weight="1"
-                        android:layout_width="0dip"
-                        android:layout_marginLeft="2dp"
-                        android:text="@string/addAdmin"
-                        style="@style/buttonStyle"
-                        android:textColor="@android:color/white"/>
+                <Button android:id="@+id/getCodeBtn"
+                    android:layout_weight="1.3"
+                    android:layout_width="0dip"
+                    android:layout_marginLeft="5dp"
+                    android:text="@string/getCode"
+                    style="@style/buttonStyle"
+                    android:textColor="@android:color/white"/>
 
-                    <Button android:id="@+id/removeAdminBtn"
-                        android:layout_weight="1"
-                        android:layout_width="0dip"
-                        android:layout_marginLeft="10dp"
-                        android:layout_marginRight="5dp"
-                        android:text="@string/removeAdmin"
-                        style="@style/buttonStyle"
-                        android:textColor="@android:color/white"/>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/addRemoveTestUserButtonFrame"
-                    android:layout_marginTop="5dp"
-                    android:layout_width="match_parent"
-                    android:orientation="horizontal"
-                    android:layout_height="wrap_content">
-
-                    <Button android:id="@+id/addTestUserBtn"
-                        android:layout_weight="1"
-                        android:layout_width="0dip"
-                        android:layout_marginLeft="2dp"
-                        android:text="@string/addTestUer"
-                        style="@style/buttonStyle"
-                        android:textColor="@android:color/white"/>
-
-                    <Button android:id="@+id/removeTestUserBtn"
-                        android:layout_weight="1"
-                        android:layout_width="0dip"
-                        android:layout_marginLeft="10dp"
-                        android:layout_marginRight="5dp"
-                        android:text="@string/removeTestUser"
-                        style="@style/buttonStyle"
-                        android:textColor="@android:color/white"/>
-                </LinearLayout>
+                <Button android:id="@+id/lockUnlockBtn"
+                    android:layout_weight="1.2"
+                    android:layout_width="0dip"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginRight="5dp"
+                    android:text="@string/unlock"
+                    style="@style/buttonStyle"
+                    android:textColor="@android:color/white"/>
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/getCashierCodeButtonFrame"
-                android:layout_width="match_parent"
-                android:orientation="horizontal"
+                android:id="@+id/adminLayout"
+                android:visibility="invisible"
                 android:layout_marginTop="20dp"
+                android:layout_width="match_parent"
+                android:orientation="vertical"
                 android:layout_height="wrap_content">
 
-                <Button android:id="@+id/getCashierCodeBtn"
-                    android:layout_weight="1"
-                    android:layout_width="0dip"
-                    android:layout_marginLeft="2dp"
-                    android:text="Get Cashier Code"
-                    style="@style/buttonStyle"
-                    android:textColor="@android:color/white"/>
+                <LinearLayout
+                    android:id="@+id/importExportFrame"
+                    android:layout_width="match_parent"
+                    android:orientation="vertical"
+                    android:layout_height="wrap_content">
 
-                <Button android:id="@+id/blankBtn"
-                    android:layout_weight="1"
-                    android:layout_width="0dip"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginRight="5dp"
-                    android:text="blank"
-                    style="@style/buttonStyle"
-                    android:textColor="@android:color/white"/>
+                    <android.support.design.widget.TextInputLayout
+                        android:id="@+id/locationLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <EditText
+                            android:id="@+id/locationInput"
+                            android:enabled="false"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/dbLocation"
+                            android:inputType="none"
+                            android:imeOptions="actionNext">
+                        </EditText>
+                    </android.support.design.widget.TextInputLayout>
+
+                    <LinearLayout
+                        android:id="@+id/importExportButtonFrame"
+                        android:layout_width="match_parent"
+                        android:orientation="horizontal"
+                        android:layout_height="wrap_content">
+
+                        <Button android:id="@+id/importBtn"
+                            android:layout_weight="1"
+                            android:layout_width="0dip"
+                            android:layout_marginLeft="2dp"
+                            android:text="@string/importLabel"
+                            style="@style/buttonStyle"
+                            android:textColor="@android:color/white"/>
+
+                        <Button android:id="@+id/exportBtn"
+                            android:layout_weight="1"
+                            android:layout_width="0dip"
+                            android:layout_marginLeft="10dp"
+                            android:layout_marginRight="5dp"
+                            android:text="@string/exportLabel"
+                            style="@style/buttonStyle"
+                            android:textColor="@android:color/white"/>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/addRemoveAdminTestUserFrame"
+                    android:layout_marginTop="30dp"
+                    android:layout_width="match_parent"
+                    android:orientation="vertical"
+                    android:layout_height="wrap_content">
+
+                    <android.support.design.widget.TextInputLayout
+                        android:id="@+id/phoneLayout"
+                        android:layout_width="match_parent"
+                        app:hintTextAppearance="@style/FloatingLabel"
+                        android:layout_height="wrap_content">
+
+                        <EditText
+                            android:id="@+id/phone"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/phoneNumber"
+                            android:inputType="phone"
+                            android:imeOptions="actionDone">
+                        </EditText>
+                    </android.support.design.widget.TextInputLayout>
+
+                    <LinearLayout
+                        android:id="@+id/addRemoveAdminButtonFrame"
+                        android:layout_width="match_parent"
+                        android:orientation="horizontal"
+                        android:layout_height="wrap_content">
+
+                        <Button android:id="@+id/addAdminBtn"
+                            android:layout_weight="1"
+                            android:layout_width="0dip"
+                            android:layout_marginLeft="2dp"
+                            android:text="@string/addAdmin"
+                            style="@style/buttonStyle"
+                            android:textColor="@android:color/white"/>
+
+                        <Button android:id="@+id/removeAdminBtn"
+                            android:layout_weight="1"
+                            android:layout_width="0dip"
+                            android:layout_marginLeft="10dp"
+                            android:layout_marginRight="5dp"
+                            android:text="@string/removeAdmin"
+                            style="@style/buttonStyle"
+                            android:textColor="@android:color/white"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/addRemoveTestUserButtonFrame"
+                        android:layout_marginTop="5dp"
+                        android:layout_width="match_parent"
+                        android:orientation="horizontal"
+                        android:layout_height="wrap_content">
+
+                        <Button android:id="@+id/addTestUserBtn"
+                            android:layout_weight="1"
+                            android:layout_width="0dip"
+                            android:layout_marginLeft="2dp"
+                            android:text="@string/addTestUer"
+                            style="@style/buttonStyle"
+                            android:textColor="@android:color/white"/>
+
+                        <Button android:id="@+id/removeTestUserBtn"
+                            android:layout_weight="1"
+                            android:layout_width="0dip"
+                            android:layout_marginLeft="10dp"
+                            android:layout_marginRight="5dp"
+                            android:text="@string/removeTestUser"
+                            style="@style/buttonStyle"
+                            android:textColor="@android:color/white"/>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/getCashierCodeButtonFrame"
+                    android:layout_width="match_parent"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="20dp"
+                    android:layout_height="wrap_content">
+
+                    <Button android:id="@+id/getCashierCodeBtn"
+                        android:layout_weight="1"
+                        android:layout_width="0dip"
+                        android:layout_marginLeft="2dp"
+                        android:text="Get Cashier Code"
+                        style="@style/buttonStyle"
+                        android:textColor="@android:color/white"/>
+
+                    <Button android:id="@+id/blankBtn"
+                        android:layout_weight="1"
+                        android:layout_width="0dip"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginRight="5dp"
+                        android:text="blank"
+                        style="@style/buttonStyle"
+                        android:textColor="@android:color/white"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/changeCustomerPhoneNumFrame"
+                    android:layout_width="match_parent"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="20dp"
+                    android:layout_height="wrap_content">
+
+                    <android.support.design.widget.TextInputLayout
+                        android:id="@+id/oldPhoneNumberLayout"
+                        android:layout_weight="1"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        app:hintTextAppearance="@style/FloatingLabel"
+                        android:layout_marginLeft="2dp">
+
+                        <EditText
+                            android:id="@+id/oldPhoneNumber"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Old Phone Number"
+                            android:inputType="phone"
+                            android:imeOptions="actionNext">
+                        </EditText>
+                    </android.support.design.widget.TextInputLayout>
+
+                    <android.support.design.widget.TextInputLayout
+                        android:id="@+id/newPhoneNumberLayout"
+                        android:layout_weight="1"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        app:hintTextAppearance="@style/FloatingLabel"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginRight="5dp">
+
+                        <EditText
+                            android:id="@+id/newPhoneNumber"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="New Phone Number"
+                            android:inputType="phone"
+                            android:imeOptions="actionDone">
+                        </EditText>
+                    </android.support.design.widget.TextInputLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/changePhoneNumButtonFrame"
+                    android:layout_width="match_parent"
+                    android:orientation="horizontal"
+                    android:layout_height="wrap_content">
+
+                    <Button android:id="@+id/clearBtn"
+                        android:layout_weight="1"
+                        android:layout_width="0dip"
+                        android:layout_marginLeft="2dp"
+                        android:text="@string/clearBtn"
+                        style="@style/buttonStyle"
+                        android:textColor="@android:color/white"/>
+
+                    <Button android:id="@+id/changePhoneNumBtn"
+                        android:layout_weight="1"
+                        android:layout_width="0dip"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginRight="5dp"
+                        android:text="@string/changePhoneNum"
+                        style="@style/buttonStyle"
+                        android:textColor="@android:color/white"/>
+                </LinearLayout>
             </LinearLayout>
-
         </LinearLayout>
-    </LinearLayout>
-
-</FrameLayout>
+    </FrameLayout>
+</ScrollView>

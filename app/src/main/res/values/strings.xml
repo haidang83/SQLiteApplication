@@ -166,4 +166,5 @@
     </string-array>
     <string name="promoDisplayName">Promotion Name (to show on Claim Tab)</string>
     <string name="dbAccessToken">xrFncsgDuhoAAAAAAAAEznCuMZiIQTDjglRe-VMHR21BdZmguRaje9IWpL5sQx9l</string>
+    <string name="changePhoneNum">change number</string>
 </resources>
