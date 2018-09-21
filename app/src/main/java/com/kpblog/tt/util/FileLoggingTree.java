@@ -1,7 +1,6 @@
 package com.kpblog.tt.util;
 
 import android.content.Context;
-import android.os.Environment;
 import android.util.Log;
 
 import java.io.File;
@@ -28,7 +27,7 @@ public class FileLoggingTree extends Timber.DebugTree {
 
         try {
 
-            File logFolder = Util.getLogFolder();
+            File logFolder = Util.getLocalLogFolder();
 
             if (!logFolder.exists()) {
                 logFolder.mkdirs();

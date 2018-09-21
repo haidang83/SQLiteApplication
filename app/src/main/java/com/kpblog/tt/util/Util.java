@@ -43,6 +43,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
+import timber.log.Timber;
+
 public class Util {
 
     public static String getUnformattedPhoneNumber(String phoneStr) {
@@ -76,7 +78,7 @@ public class Util {
         File exportedFile = exportDatabaseAsFile(ctx);
 
         //test code
-        //uploadToServer(ctx, exportedFile);
+        //synchLocalAndRemoteFolder(ctx, exportedFile);
 
         String fileName = getExportedFileDisplayName(exportedFile.getAbsolutePath());
         return fileName;
@@ -141,7 +143,7 @@ public class Util {
         return new File (getAppStorageFolder(), Constants.EXPORTED_FOLDER_NAME);
     }
 
-    public static File getLogFolder(){
+    public static File getLocalLogFolder(){
         return new File(getAppStorageFolder(), Constants.LOG_FOLDER_NAME);
     }
 
@@ -568,57 +570,65 @@ public class Util {
         Util.setAlarmForScheduledJob(context, scheduledTime, promoReminderBroadcastId);
     }
 
-    public static void uploadToServer(Context ctx, File file, String remoteFolder) {
-        try {
-            final Resources resources = ctx.getResources();
-            String accessToken = resources.getString(R.string.dbAccessToken);
 
-            DbxRequestConfig config = DbxRequestConfig.newBuilder("traTemptation").build();
-            DbxClientV2 client = new DbxClientV2(config, accessToken);
+    @NonNull
+    public static DbxClientV2 getDbxClientV2(Context ctx) {
+        final Resources resources = ctx.getResources();
+        String accessToken = resources.getString(R.string.dbAccessToken);
 
-            uploadFile(client, file, remoteFolder);
-
-            synchLocalAndRemoteFolder(file.getParentFile(), client, remoteFolder);
-        } catch (DbxException | IOException e) {
-            e.printStackTrace();
-        }
+        DbxRequestConfig config = DbxRequestConfig.newBuilder("traTemptation").build();
+        return new DbxClientV2(config, accessToken);
     }
 
-    private static void synchLocalAndRemoteFolder(File localFolder, DbxClientV2 dropboxClient, String remoteFolder) throws DbxException, IOException {
-        long deleteTimeCutOff = System.currentTimeMillis() - (Constants.DAYS_TO_KEEP_DB_BACKUP * Constants.DAYS_TO_MILLIS);
+    public static void synchLocalAndRemoteFolder(File localFolder,
+                                                 DbxClientV2 dropboxClient,
+                                                 String remoteFolder) {
 
-        List<String> remoteFilesToKeep = new ArrayList<String>();
-        List<String> remoteFilesToDelete = new ArrayList<String>();
-        ListFolderResult listFolderResult = dropboxClient.files().listFolder("");
-        for (Metadata metadata : listFolderResult.getEntries()) {
-            String name = metadata.getName();
-            if (name.endsWith(".db")) {
-                if (isFileUpForDeletion(name, deleteTimeCutOff)){
-                    remoteFilesToDelete.add(name);
+        try {
+
+            if (!localFolder.exists()){
+                //if local folder doesnt exist, then there's nothing to sync
+                Timber.w("trying to sync localFolder=%s, but it doesn't exist", localFolder.getAbsolutePath());
+                return;
+            }
+
+            long deleteTimeCutOff = System.currentTimeMillis() - (Constants.DAYS_TO_KEEP_DB_BACKUP * Constants.DAYS_TO_MILLIS);
+
+            List<String> remoteFilesToKeep = new ArrayList<String>();
+            List<String> remoteFilesToDelete = new ArrayList<String>();
+            ListFolderResult listFolderResult = dropboxClient.files().listFolder(remoteFolder);
+            for (Metadata metadata : listFolderResult.getEntries()) {
+                String name = metadata.getName();
+                if (name.endsWith(".db")) {
+                    if (isFileUpForDeletion(name, deleteTimeCutOff)){
+                        remoteFilesToDelete.add(name);
+                    }
+                    else {
+                        remoteFilesToKeep.add(name);
+                    }
                 }
-                else {
-                    remoteFilesToKeep.add(name);
+            }
+
+            File[] localFiles = localFolder.listFiles();
+            List<File> localFilesToUpload = new ArrayList<File>();
+            List<File> localFilesToDelete = new ArrayList<File>();
+            for (File localFile : localFiles){
+                if (Util.isFileUpForDeletion(localFile.getName(), deleteTimeCutOff)){
+                    localFilesToDelete.add(localFile);
+                }
+                else if (!remoteFilesToKeep.contains(localFile.getName())){
+                    //local file not uploaded, add to list to upload
+                    localFilesToUpload.add(localFile);
                 }
             }
+
+
+            Util.deleteLocalFiles(localFilesToDelete);
+            uploadFile(localFilesToUpload, dropboxClient, remoteFolder);
+            deleteRemoteFiles(remoteFilesToDelete, dropboxClient);
+        } catch (Exception e){
+            Timber.e(e.getCause(), "exception occurred in synchLocalAndRemoteFolder(): localFolder=%s, remoteFolder=%s", localFolder.getAbsolutePath(), remoteFolder);
         }
-
-        File[] localFiles = localFolder.listFiles();
-        List<File> localFilesToUpload = new ArrayList<File>();
-        List<File> localFilesToDelete = new ArrayList<File>();
-        for (File localFile : localFiles){
-            if (Util.isFileUpForDeletion(localFile.getName(), deleteTimeCutOff)){
-                localFilesToDelete.add(localFile);
-            }
-            else if (!remoteFilesToKeep.contains(localFile.getName())){
-                //local file not uploaded, add to list to upload
-                localFilesToUpload.add(localFile);
-            }
-        }
-
-
-        Util.deleteLocalFiles(localFilesToDelete);
-        uploadFile(localFilesToUpload, dropboxClient, remoteFolder);
-        deleteRemoteFiles(remoteFilesToDelete, dropboxClient);
     }
 
     private static void deleteRemoteFiles(List<String> remoteFilesToDelete, DbxClientV2 dropboxClient) {
@@ -628,7 +638,7 @@ public class Util {
             }
         } catch (DbxException e) {
             e.printStackTrace();
-            Log.e("Util", e.toString());
+            Timber.e(e.getCause(), "Exception occurred in deleteRemoteFiles() with remoteFilesToDelete=%s", remoteFilesToDelete.toString());
         }
     }
 

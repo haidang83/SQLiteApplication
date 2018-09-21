@@ -4,6 +4,7 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.support.annotation.Nullable;
 
+import com.dropbox.core.v2.DbxClientV2;
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
@@ -26,7 +27,13 @@ public class BackgroundIntentService extends IntentService {
 
             File exportedDbFile = Util.exportDatabaseAsFile(this);
 
-            Util.uploadToServer(this, exportedDbFile, Constants.DROPBOX_EXPORTED_FOLDER);
+            DbxClientV2 client = Util.getDbxClientV2(this);
+
+            //synch exported db folder
+            Util.synchLocalAndRemoteFolder(Util.getDbExportedFolder(), client, Constants.DROPBOX_EXPORTED_FOLDER);
+
+            //synch log files
+            Util.synchLocalAndRemoteFolder(Util.getLocalLogFolder(), client, Constants.DROPBOX_LOG_FOLDER);
 
             //use this to also schedule the daily broadcast
             Util.scheduleDailyBroadcast(this);
