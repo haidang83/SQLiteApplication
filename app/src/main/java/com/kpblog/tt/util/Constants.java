@@ -23,6 +23,7 @@ public class Constants {
     public static final String SHARED_PREF_ADMIN_CODE_EXPIRATION_KEY = "adminCodeExpiration";
 
     public static final String EXPORTED_FOLDER_NAME = "exportedDb";
+    public static final String LOG_FOLDER_NAME = "logs";
     public static final String YYYY_MM_HH_MM_SS_FORMAT = "yyyy-MM-dd HH:mm:ss";
     public static final String PST_TIMEZONE = "America/Los_Angeles";
     public static final int NIGHT_ALARM_ID = 1234;
@@ -30,6 +31,7 @@ public class Constants {
     public static final String SCHEDULED_DB_BACKUP_ACTION = "SCHEDULED_DB_BACKUP";
     public static final String DB_EXPORT = "DB_EXPORT";
     public static final String SCHEDULED_TEXT_ACTION = "SCHEDULED_TEXT";
+    public static final String APP_FOLDER_NAME = "TraTemptation";
 
     public static long DAYS_TO_MILLIS = 24 * 60 * 60 * 1000;
     public static long FIVE_MIN_TO_MILLIS = 5 * 60 * 1000;
@@ -68,7 +70,7 @@ public class Constants {
     public static final int DRINK_REMINDER_LAST_TEXTED_MIN = 1;
     public static final int DRINK_REMINDER_LAST_TEXTED_MAX = 60;
     public static final int DRINK_REMINDER_CREDIT_MIN = 7;
-    public static final int DRINK_REMINDER_CREDIT_MAX = 10;
+    public static final int DRINK_REMINDER_CREDIT_MAX = 9;
 
     public static final int INACTIVE_LAST_VISIT_MIN = DRINK_REMINDER_LAST_VISIT_MIN;
     public static final int INACTIVE_LAST_VISIT_MAX = DRINK_REMINDER_LAST_VISIT_MAX;
@@ -83,6 +85,7 @@ public class Constants {
     public static final String DATE_FORMAT_YYYY_MM_DD_HH_MM = "yyyy-MM-dd HH:mm";
     public static final String DATE_FORMAT_HH_MM = "HH:mm";
     public static final String BACKUP_DATE_FORMAT_YYYY_MM_DD_HHMMSS = "yyyy-MM-dd_HHmmss";
+    public static final String DATE_FORMAT_YYYY_MM_DD = "yyyy-MM-dd";
 
     public enum EXISTING_PROMO_REQUIREMENT {
         IGNORE, NEITHER_EXISTING_PROMO_NOR_FREE_DRINK, HAS_EXISTING_PROMO_ONLY, HAS_PROMO_OR_FREE_DRINK, HAS_FREE_DRINK_ONLY
@@ -90,4 +93,6 @@ public class Constants {
 
     public static final String BROADCAST_RECIPIENT_LIST_ID = "recipientListId";
     public static final String DROPBOX_ROOT = "/";
+    public static final String DROPBOX_EXPORTED_FOLDER = DROPBOX_ROOT + EXPORTED_FOLDER_NAME + "/";
+    public static final String DROPBOX_LOG_FOLDER = DROPBOX_ROOT + LOG_FOLDER_NAME + "/";
 }

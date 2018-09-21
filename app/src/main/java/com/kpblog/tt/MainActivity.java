@@ -28,6 +28,8 @@ import com.kpblog.tt.util.Util;
 import java.util.ArrayList;
 import java.util.List;
 
+import timber.log.Timber;
+
 /**
  * issues:
  * 1. only update the opt-in, opt-out date when the value was changed from previous value (don't update every time) [DONE]
@@ -95,13 +97,6 @@ public class MainActivity extends AppCompatActivity implements  Fragment_Custome
         }
 
         Util.setNextDbBackupAlarm(getApplicationContext(), Util.getNightlyDbBackupTime());
-
-        //uncomment to see the db entries on screen
-        /*listView = (ListView) findViewById(R.id.addressListView);
-        list = handler.getAllAddress();
-        addressAdapter = new AddressAdapter(this);
-        listView.setAdapter(addressAdapter);*/
-
     }
 
 

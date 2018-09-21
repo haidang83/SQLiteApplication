@@ -26,7 +26,7 @@ public class BackgroundIntentService extends IntentService {
 
             File exportedDbFile = Util.exportDatabaseAsFile(this);
 
-            Util.uploadToServer(this, exportedDbFile);
+            Util.uploadToServer(this, exportedDbFile, Constants.DROPBOX_EXPORTED_FOLDER);
 
             //use this to also schedule the daily broadcast
             Util.scheduleDailyBroadcast(this);

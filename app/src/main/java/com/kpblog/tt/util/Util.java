@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.SmsManager;
@@ -20,7 +21,6 @@ import com.dropbox.core.v2.DbxClientV2;
 import com.dropbox.core.v2.files.ListFolderResult;
 import com.dropbox.core.v2.files.Metadata;
 import com.dropbox.core.v2.files.WriteMode;
-import com.dropbox.core.v2.users.FullAccount;
 import com.kpblog.tt.R;
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
@@ -78,19 +78,24 @@ public class Util {
         //test code
         //uploadToServer(ctx, exportedFile);
 
-        String[] fileNameParts = exportedFile.getAbsolutePath().split(File.separator);
-        String fileName = exportedFile.getName();
+        String fileName = getExportedFileDisplayName(exportedFile.getAbsolutePath());
+        return fileName;
+    }
+
+    //only show the useful part of the exported file name (i.e. only show the parts after Document /emulator/storage/Document/...)
+    public static String getExportedFileDisplayName(String fullPath) {
+        String fileName = fullPath;
+        String[] fileNameParts = fullPath.split(File.separator);
         final int length = fileNameParts.length;
-        if (length > 3){
-            fileName = fileNameParts[length - 3] + File.separator + fileNameParts[length - 2] + File.separator + fileNameParts[length - 1];
+        if (length > 4){
+            fileName = fileNameParts[length - 4] + File.separator + fileNameParts[length - 3] + File.separator + fileNameParts[length - 2] + File.separator + fileNameParts[length - 1];
         }
         return fileName;
     }
 
     public static File exportDatabaseAsFile(Context ctx) {
         final String sourceDbName = ctx.getDatabasePath(DatabaseHandler.DATABASE_NAME).getPath();
-        final File documentPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
-        File exportedFolder = new File (documentPath, Constants.EXPORTED_FOLDER_NAME);
+        File exportedFolder = getDbExportedFolder();
 
         SimpleDateFormat sdf = new SimpleDateFormat(Constants.BACKUP_DATE_FORMAT_YYYY_MM_DD_HHMMSS);
         String fileName = sdf.format(new Date()) + ".db";
@@ -100,7 +105,7 @@ public class Util {
         FileInputStream fis = null;
         try {
             if (!exportedFolder.exists()){
-                exportedFolder.mkdir();
+                exportedFolder.mkdirs();
             }
 
             File dbFile = new File(sourceDbName);
@@ -129,6 +134,19 @@ public class Util {
             }
         }
         return dest;
+    }
+
+    @NonNull
+    public static File getDbExportedFolder() {
+        return new File (getAppStorageFolder(), Constants.EXPORTED_FOLDER_NAME);
+    }
+
+    public static File getLogFolder(){
+        return new File(getAppStorageFolder(), Constants.LOG_FOLDER_NAME);
+    }
+
+    private static File getAppStorageFolder() {
+        return new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), Constants.APP_FOLDER_NAME);
     }
 
     /**
@@ -550,7 +568,7 @@ public class Util {
         Util.setAlarmForScheduledJob(context, scheduledTime, promoReminderBroadcastId);
     }
 
-    public static void uploadToServer(Context ctx, File file) {
+    public static void uploadToServer(Context ctx, File file, String remoteFolder) {
         try {
             final Resources resources = ctx.getResources();
             String accessToken = resources.getString(R.string.dbAccessToken);
@@ -558,15 +576,15 @@ public class Util {
             DbxRequestConfig config = DbxRequestConfig.newBuilder("traTemptation").build();
             DbxClientV2 client = new DbxClientV2(config, accessToken);
 
-            uploadFile(client, file);
+            uploadFile(client, file, remoteFolder);
 
-            synchLocalAndRemoteFolder(file.getParentFile(), client);
+            synchLocalAndRemoteFolder(file.getParentFile(), client, remoteFolder);
         } catch (DbxException | IOException e) {
             e.printStackTrace();
         }
     }
 
-    private static void synchLocalAndRemoteFolder(File localFolder, DbxClientV2 dropboxClient) throws DbxException, IOException {
+    private static void synchLocalAndRemoteFolder(File localFolder, DbxClientV2 dropboxClient, String remoteFolder) throws DbxException, IOException {
         long deleteTimeCutOff = System.currentTimeMillis() - (Constants.DAYS_TO_KEEP_DB_BACKUP * Constants.DAYS_TO_MILLIS);
 
         List<String> remoteFilesToKeep = new ArrayList<String>();
@@ -599,14 +617,14 @@ public class Util {
 
 
         Util.deleteLocalFiles(localFilesToDelete);
-        uploadFile(localFilesToUpload, dropboxClient);
+        uploadFile(localFilesToUpload, dropboxClient, remoteFolder);
         deleteRemoteFiles(remoteFilesToDelete, dropboxClient);
     }
 
     private static void deleteRemoteFiles(List<String> remoteFilesToDelete, DbxClientV2 dropboxClient) {
         try {
             for (String remoteFile : remoteFilesToDelete){
-                dropboxClient.files().deleteV2(Constants.DROPBOX_ROOT + remoteFile);
+                dropboxClient.files().deleteV2(Constants.DROPBOX_EXPORTED_FOLDER + remoteFile);
             }
         } catch (DbxException e) {
             e.printStackTrace();
@@ -634,18 +652,18 @@ public class Util {
         return delete;
     }
 
-    private static void uploadFile(List<File> files, DbxClientV2 client) throws DbxException, IOException {
+    private static void uploadFile(List<File> files, DbxClientV2 client, String remoteFolder) throws DbxException, IOException {
 
         for (File file : files){
-            uploadFile(client, file);
+            uploadFile(client, file, remoteFolder);
         }
     }
 
-    private static void uploadFile(DbxClientV2 client, File file) throws DbxException, IOException {
+    private static void uploadFile(DbxClientV2 client, File file, String remotePath) throws DbxException, IOException {
         InputStream inputStream = new FileInputStream(file);
         final String remoteFileName = file.getName();
 
-        client.files().uploadBuilder(Constants.DROPBOX_ROOT + remoteFileName)
+        client.files().uploadBuilder(remotePath + remoteFileName)
                     .withMode(WriteMode.OVERWRITE)
                     .uploadAndFinish(inputStream);
     }

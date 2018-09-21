@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import com.kpblog.tt.R;
 import com.kpblog.tt.model.CustomerPurchase;
+import com.kpblog.tt.util.Constants;
 
 public class CustomerPurchaseListViewAdapter extends ArrayAdapter<CustomerPurchase> {
     int groupid;
@@ -52,7 +53,7 @@ public class CustomerPurchaseListViewAdapter extends ArrayAdapter<CustomerPurcha
         CustomerPurchase customerPurchase = item_list[position];
         ViewHolder holder = (ViewHolder) rowView.getTag();
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        SimpleDateFormat sdf = new SimpleDateFormat(Constants.DATE_FORMAT_YYYY_MM_DD_HH_MM);
         holder.purchaseDate.setText(sdf.format(customerPurchase.getPurchaseDate()));
 
         holder.quantity.setText(String.valueOf(customerPurchase.getQuantity()));

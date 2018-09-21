@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import com.kpblog.tt.R;
 import com.kpblog.tt.model.Customer;
+import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
 import java.text.SimpleDateFormat;
@@ -54,7 +55,7 @@ public class CustomerListViewAdapter extends ArrayAdapter<Customer> {
         Customer customer = item_list[position];
         CustomerListViewAdapter.ViewHolder holder = (CustomerListViewAdapter.ViewHolder) rowView.getTag();
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat sdf = new SimpleDateFormat(Constants.DATE_FORMAT_YYYY_MM_DD);
         holder.lastVisitDate.setText(sdf.format(customer.getLastVisitDate()));
 
         holder.drinkCredit.setText(String.valueOf(customer.getTotalCredit()));

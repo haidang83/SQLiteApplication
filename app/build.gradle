@@ -29,5 +29,6 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.+'
     compile 'com.android.support:design:25.4.0'
     compile 'com.dropbox.core:dropbox-core-sdk:3.0.8'
+    compile 'com.jakewharton.timber:timber:4.7.1'
     testCompile 'junit:junit:4.12'
 }

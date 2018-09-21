@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import com.kpblog.tt.R;
 import com.kpblog.tt.model.CustomerPurchase;
+import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
 import java.text.SimpleDateFormat;
@@ -53,7 +54,7 @@ public class TransactionListViewAdapter extends ArrayAdapter<CustomerPurchase> {
         CustomerPurchase customerPurchase = item_list[position];
         ViewHolder holder = (ViewHolder) rowView.getTag();
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        SimpleDateFormat sdf = new SimpleDateFormat(Constants.DATE_FORMAT_YYYY_MM_DD_HH_MM);
         holder.transactionTime.setText(sdf.format(customerPurchase.getPurchaseDate()));
 
         holder.quantity.setText(String.valueOf(customerPurchase.getQuantity()));

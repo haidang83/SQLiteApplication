@@ -3,7 +3,6 @@ package com.kpblog.tt;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -30,8 +29,6 @@ import android.widget.Toast;
 
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.Customer;
-import com.kpblog.tt.receiver.TraTemptationReceiver;
-import com.kpblog.tt.service.BackgroundIntentService;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 
@@ -380,8 +377,7 @@ public class Fragment_Admin extends Fragment implements TextView.OnEditorActionL
     }
 
     private void importDb() {
-        final File documentPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
-        File exportedFolder = new File (documentPath, Constants.EXPORTED_FOLDER_NAME);
+        File exportedFolder = Util.getDbExportedFolder();
 
         final String deviceDbPath = getContext().getDatabasePath(DatabaseHandler.DATABASE_NAME).getPath();
         final String latestExportedDb = getLatestExportedDb(exportedFolder);
@@ -404,10 +400,9 @@ public class Fragment_Admin extends Fragment implements TextView.OnEditorActionL
     }
 
     private String getLatestExportedFileName() {
-        final File documentPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
-        File exportedFolder = new File (documentPath, Constants.EXPORTED_FOLDER_NAME);
+        File exportedFolder = Util.getDbExportedFolder();
         String fullPath = getLatestExportedDb(exportedFolder);
-        return getLatestExportPathDisplayName(fullPath);
+        return Util.getExportedFileDisplayName(fullPath);
     }
 
     @NonNull
