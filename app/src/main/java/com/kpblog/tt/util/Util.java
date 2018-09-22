@@ -18,7 +18,10 @@ import android.widget.Toast;
 import com.dropbox.core.DbxException;
 import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.v2.DbxClientV2;
+import com.dropbox.core.v2.files.CreateFolderErrorException;
+import com.dropbox.core.v2.files.GetMetadataErrorException;
 import com.dropbox.core.v2.files.ListFolderResult;
+import com.dropbox.core.v2.files.LookupError;
 import com.dropbox.core.v2.files.Metadata;
 import com.dropbox.core.v2.files.WriteMode;
 import com.kpblog.tt.R;
@@ -591,6 +594,8 @@ public class Util {
                 Timber.w("trying to sync localFolder=%s, but it doesn't exist", localFolder.getAbsolutePath());
                 return;
             }
+            
+            createRemoteFolderIfNotExist(dropboxClient, remoteFolder);
 
             long deleteTimeCutOff = System.currentTimeMillis() - (Constants.DAYS_TO_KEEP_DB_BACKUP * Constants.DAYS_TO_MILLIS);
 
@@ -627,7 +632,34 @@ public class Util {
             uploadFile(localFilesToUpload, dropboxClient, remoteFolder);
             deleteRemoteFiles(remoteFilesToDelete, dropboxClient);
         } catch (Exception e){
-            Timber.e(e.getCause(), "exception occurred in synchLocalAndRemoteFolder(): localFolder=%s, remoteFolder=%s", localFolder.getAbsolutePath(), remoteFolder);
+            Timber.e(e.getCause(), "exception occurred in synchLocalAndRemoteFolder(): localFolder=%s, remoteFolder=%s. ExceptionMsg=%s", localFolder.getAbsolutePath(), remoteFolder, e.getMessage());
+        }
+    }
+
+    private static void createRemoteFolderIfNotExist(DbxClientV2 dropboxClient, String remoteFolder) {
+        try {
+            dropboxClient.files().getMetadata(remoteFolder);
+        }
+        catch (GetMetadataErrorException e) {
+            // TODO Auto-generated catch block
+            if (e.errorValue.isPath()) {
+                LookupError le = e.errorValue.getPathValue();
+                if (le.isNotFound()) {
+                    createRemoteFolder(dropboxClient, remoteFolder);
+                }
+            }
+        }
+        catch (DbxException e) {
+            Timber.e("DbxException caught in createRemoteFolderIfNotExist() for remoteFolder=%s. ExceptionMsg=%s", remoteFolder, e.getMessage());
+        }
+    }
+
+    private static void createRemoteFolder(DbxClientV2 dropboxClient, String remoteFolder) {
+        try {
+            dropboxClient.files().createFolderV2(remoteFolder);
+        }
+        catch (Exception e1) {
+            Timber.e(e1.getCause(), "Exception occurred in createRemoteFolder() for remoteFolder=%s. ExceptionMsg=%s", remoteFolder, e1.getMessage());
         }
     }
 
@@ -673,7 +705,7 @@ public class Util {
         InputStream inputStream = new FileInputStream(file);
         final String remoteFileName = file.getName();
 
-        client.files().uploadBuilder(remotePath + remoteFileName)
+        client.files().uploadBuilder(remotePath + "/" + remoteFileName)
                     .withMode(WriteMode.OVERWRITE)
                     .uploadAndFinish(inputStream);
     }

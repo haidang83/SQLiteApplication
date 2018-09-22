@@ -1,6 +1,7 @@
 package com.kpblog.tt;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -19,6 +20,7 @@ import android.widget.Toast;
 import com.kpblog.tt.adapter.CustomerPurchaseListViewAdapter;
 import com.kpblog.tt.dao.DatabaseHandler;
 import com.kpblog.tt.model.CustomerPurchase;
+import com.kpblog.tt.service.BackgroundIntentService;
 import com.kpblog.tt.util.Constants;
 import com.kpblog.tt.util.Util;
 

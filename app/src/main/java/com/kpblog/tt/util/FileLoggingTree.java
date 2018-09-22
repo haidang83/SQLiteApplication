@@ -47,7 +47,7 @@ public class FileLoggingTree extends Timber.DebugTree {
 
                 OutputStream fileOutputStream = new FileOutputStream(file, true);
 
-                fileOutputStream.write((logTimeStamp + ": " + message).getBytes());
+                fileOutputStream.write((logTimeStamp + ": " + message + "\n").getBytes());
                 fileOutputStream.close();
 
             }

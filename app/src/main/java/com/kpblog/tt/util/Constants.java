@@ -32,6 +32,7 @@ public class Constants {
     public static final String DB_EXPORT = "DB_EXPORT";
     public static final String SCHEDULED_TEXT_ACTION = "SCHEDULED_TEXT";
     public static final String APP_FOLDER_NAME = "TraTemptation";
+    public static final String SYNCH_FOLDERS = "SyncFolders";
 
     public static long DAYS_TO_MILLIS = 24 * 60 * 60 * 1000;
     public static long FIVE_MIN_TO_MILLIS = 5 * 60 * 1000;
@@ -92,7 +93,7 @@ public class Constants {
     }
 
     public static final String BROADCAST_RECIPIENT_LIST_ID = "recipientListId";
-    public static final String DROPBOX_ROOT = "/";
-    public static final String DROPBOX_EXPORTED_FOLDER = DROPBOX_ROOT + EXPORTED_FOLDER_NAME + "/";
-    public static final String DROPBOX_LOG_FOLDER = DROPBOX_ROOT + LOG_FOLDER_NAME + "/";
+    public static final String DROPBOX_ROOT = "/"; //this is relative from the App/TraTemptation/ folder since we already defined that in the console
+    public static final String DROPBOX_EXPORTED_FOLDER = DROPBOX_ROOT + EXPORTED_FOLDER_NAME;
+    public static final String DROPBOX_LOG_FOLDER = DROPBOX_ROOT + LOG_FOLDER_NAME;
 }

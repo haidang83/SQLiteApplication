@@ -49,5 +49,14 @@ public class BackgroundIntentService extends IntentService {
         else if (Constants.DB_EXPORT.equals(intentAction)){
             Util.exportDatabase(this);
         }
+        else if (Constants.SYNCH_FOLDERS.equals(intentAction)){
+            DbxClientV2 client = Util.getDbxClientV2(this);
+
+            //synch exported db folder
+            Util.synchLocalAndRemoteFolder(Util.getDbExportedFolder(), client, Constants.DROPBOX_EXPORTED_FOLDER);
+
+            //synch log files
+            Util.synchLocalAndRemoteFolder(Util.getLocalLogFolder(), client, Constants.DROPBOX_LOG_FOLDER);
+        }
     }
 }
