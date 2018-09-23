@@ -28,6 +28,8 @@ import com.kpblog.tt.util.Util;
 import java.util.ArrayList;
 import java.util.List;
 
+import timber.log.Timber;
+
 /**
  * issues:
  * 1. only update the opt-in, opt-out date when the value was changed from previous value (don't update every time) [DONE]

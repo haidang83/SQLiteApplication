@@ -26,6 +26,7 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import timber.log.Timber;
 
 
 public class DatabaseHandler extends SQLiteOpenHelper {
@@ -71,6 +72,14 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_RECIPIENT_LIST_ID = "recipientListId";
 
     private static final String TABLE_BROADCAST_CRITERIA = "broadcastCriteria";
+    private static final String KEY_BROADCAST_CRITERIA_ID = "broadcastCriteriaId";
+    private static final String KEY_DAYS_NOT_VISITED_MIN = "daysNotVisitedMin";
+    private static final String KEY_DAYS_NOT_VISITED_MAX = "daysNotVisitedMax";
+    private static final String KEY_DAYS_NOT_TEXTED_MIN = "daysNotTextedMin";
+    private static final String KEY_DAYS_NOT_TEXTED_MAX = "daysNotTextedMax";
+    private static final String KEY_TOTAL_CREDIT_MIN = "totalCreditMin";
+    private static final String KEY_TOTAL_CREDIT_MAX = "totalCreditMax";
+    private static final String KEY_EXISTING_PROMO_REQUIREMENT = "existingPromoRequirement";
 
     private static final String TABLE_CUSTOMER_ID_CHANGE = "customerIdChange";
     private static final String KEY_OLD_CUSTOMER_ID = "oldCustomerId";
@@ -92,34 +101,43 @@ public class DatabaseHandler extends SQLiteOpenHelper {
      */
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
-        //using INTEGER for DATE columns (unix time, seconds since epoch)
-        String CREATE_CUSTOMER_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY, %s REAL, %s REAL, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s TEXT)";
-        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_TABLE, TABLE_CUSTOMER, KEY_CUSTOMER_ID, KEY_PURCHASE_CREDIT, KEY_REFERRAL_CREDIT, KEY_LAST_VISIT_DATE, KEY_IS_OPT_IN, KEY_OPT_IN_DATE, KEY_OPT_OUT_DATE, KEY_IS_TEST_USER, KEY_LAST_CONTACTED_DATE, KEY_REFERRER_ID));
 
-        //this table keeps track of all the customer purchases, each row represents a purchase, so there can be multiple rows per each customer
-        String CREATE_CUSTOMER_PURCHASE_TABLE = "CREATE TABLE {0} ({1} TEXT, {2} REAL, {3} INTEGER, {4} INTEGER, {5} TEXT, FOREIGN KEY({1}) REFERENCES {6}({1}) ON DELETE CASCADE ON UPDATE CASCADE)";
-        sqLiteDatabase.execSQL(MessageFormat.format(CREATE_CUSTOMER_PURCHASE_TABLE, TABLE_CUSTOMER_PURCHASE, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE, KEY_NOTES, TABLE_CUSTOMER));
+        try {
 
-        //this table has the outstanding claim code for the customer, only at most 1 outstanding code per customer
-        String CREATE_CUSTOMER_CLAIM_CODE_TABLE = "CREATE TABLE {0} ({1} TEXT, {2} TEXT, {3} INTEGER, {4} INTEGER, {5} TEXT, PRIMARY KEY({1}, {4}), FOREIGN KEY({1}) REFERENCES {6}({1}) ON DELETE CASCADE ON UPDATE CASCADE)";
-        sqLiteDatabase.execSQL(MessageFormat.format(CREATE_CUSTOMER_CLAIM_CODE_TABLE, TABLE_CUSTOMER_CLAIM_CODE, KEY_CUSTOMER_ID, KEY_CLAIM_CODE, KEY_DATE_ISSUED, KEY_CLAIM_CODE_TYPE, KEY_PROMO_NAME, TABLE_CUSTOMER));
+            //using INTEGER for DATE columns (unix time, seconds since epoch)
+            String CREATE_CUSTOMER_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY, %s REAL, %s REAL, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s INTEGER, %s TEXT)";
+            sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_TABLE, TABLE_CUSTOMER, KEY_CUSTOMER_ID, KEY_PURCHASE_CREDIT, KEY_REFERRAL_CREDIT, KEY_LAST_VISIT_DATE, KEY_IS_OPT_IN, KEY_OPT_IN_DATE, KEY_OPT_OUT_DATE, KEY_IS_TEST_USER, KEY_LAST_CONTACTED_DATE, KEY_REFERRER_ID));
 
-        //this table has all the broadcast schedule/sent to customers
-        String CREATE_CUSTOMER_BROADCAST_TABLE = "CREATE TABLE %s (%s INTEGER PRIMARY KEY, %s INTEGER, %s TEXT, %s TEXT, %s TEXT, %s TEXT)";
-        sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_BROADCAST_TABLE, TABLE_CUSTOMER_BROADCAST, KEY_BROADCAST_ID, KEY_BROADCAST_TIME, KEY_BROADCAST_MESSAGE, KEY_BROADCAST_TYPE, KEY_STATUS, KEY_PROMO_NAME));
+            //this table keeps track of all the customer purchases, each row represents a purchase, so there can be multiple rows per each customer
+            String CREATE_CUSTOMER_PURCHASE_TABLE = "CREATE TABLE {0} ({1} TEXT, {2} REAL, {3} INTEGER, {4} INTEGER, {5} TEXT, FOREIGN KEY({1}) REFERENCES {6}({1}) ON DELETE CASCADE ON UPDATE CASCADE)";
+            sqLiteDatabase.execSQL(MessageFormat.format(CREATE_CUSTOMER_PURCHASE_TABLE, TABLE_CUSTOMER_PURCHASE, KEY_CUSTOMER_ID, KEY_QUANTITY, KEY_RECEIPT_NUM, KEY_PURCHASE_DATE, KEY_NOTES, TABLE_CUSTOMER));
 
-        //this table has all the customers in a recipient list
-        String CREATE_RECIPIENT_LIST_CUSTOMER_TABLE = "CREATE TABLE {0} ({1} INTEGER, {2} TEXT,  PRIMARY KEY({1}, {2}), FOREIGN KEY({1}) REFERENCES {3}({4}) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY({2}) REFERENCES {5}({2}) ON DELETE CASCADE ON UPDATE CASCADE)";
-        sqLiteDatabase.execSQL(MessageFormat.format(CREATE_RECIPIENT_LIST_CUSTOMER_TABLE, TABLE_RECIPIENT_LIST_CUSTOMER, KEY_RECIPIENT_LIST_ID, KEY_CUSTOMER_ID, TABLE_CUSTOMER_BROADCAST, KEY_BROADCAST_ID, TABLE_CUSTOMER));
+            //this table has the outstanding claim code for the customer, only at most 1 outstanding code per customer
+            String CREATE_CUSTOMER_CLAIM_CODE_TABLE = "CREATE TABLE {0} ({1} TEXT, {2} TEXT, {3} INTEGER, {4} INTEGER, {5} TEXT, PRIMARY KEY({1}, {4}), FOREIGN KEY({1}) REFERENCES {6}({1}) ON DELETE CASCADE ON UPDATE CASCADE)";
+            sqLiteDatabase.execSQL(MessageFormat.format(CREATE_CUSTOMER_CLAIM_CODE_TABLE, TABLE_CUSTOMER_CLAIM_CODE, KEY_CUSTOMER_ID, KEY_CLAIM_CODE, KEY_DATE_ISSUED, KEY_CLAIM_CODE_TYPE, KEY_PROMO_NAME, TABLE_CUSTOMER));
 
-        String CREATE_CUSTOMER_ID_CHANGE_TABLE = "CREATE TABLE {0} ({1} TEXT, {2} TEXT, {3} INTEGER, PRIMARY KEY({1}, {2}))";
-        sqLiteDatabase.execSQL(MessageFormat.format(CREATE_CUSTOMER_ID_CHANGE_TABLE, TABLE_CUSTOMER_ID_CHANGE, KEY_OLD_CUSTOMER_ID, KEY_NEW_CUSTOMER_ID, KEY_CHANGE_TIMESTAMP));
+            //this table has all the broadcast schedule/sent to customers
+            String CREATE_CUSTOMER_BROADCAST_TABLE = "CREATE TABLE %s (%s INTEGER PRIMARY KEY, %s INTEGER, %s TEXT, %s TEXT, %s TEXT, %s TEXT)";
+            sqLiteDatabase.execSQL(String.format(CREATE_CUSTOMER_BROADCAST_TABLE, TABLE_CUSTOMER_BROADCAST, KEY_BROADCAST_ID, KEY_BROADCAST_TIME, KEY_BROADCAST_MESSAGE, KEY_BROADCAST_TYPE, KEY_STATUS, KEY_PROMO_NAME));
 
-        String CREATE_ADMIN_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY)";
-        sqLiteDatabase.execSQL(String.format(CREATE_ADMIN_TABLE, TABLE_ADMIN, KEY_CUSTOMER_ID));
-        ContentValues values = new ContentValues();
-        values.put(KEY_CUSTOMER_ID, "4084257660");
-        sqLiteDatabase.insertWithOnConflict(TABLE_ADMIN, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+            //this table has all the customers in a recipient list
+            String CREATE_RECIPIENT_LIST_CUSTOMER_TABLE = "CREATE TABLE {0} ({1} INTEGER, {2} TEXT,  PRIMARY KEY({1}, {2}), FOREIGN KEY({1}) REFERENCES {3}({4}) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY({2}) REFERENCES {5}({2}) ON DELETE CASCADE ON UPDATE CASCADE)";
+            sqLiteDatabase.execSQL(MessageFormat.format(CREATE_RECIPIENT_LIST_CUSTOMER_TABLE, TABLE_RECIPIENT_LIST_CUSTOMER, KEY_RECIPIENT_LIST_ID, KEY_CUSTOMER_ID, TABLE_CUSTOMER_BROADCAST, KEY_BROADCAST_ID, TABLE_CUSTOMER));
+
+            String CREATE_CUSTOMER_ID_CHANGE_TABLE = "CREATE TABLE {0} ({1} TEXT, {2} TEXT, {3} INTEGER, PRIMARY KEY({1}, {2}))";
+            sqLiteDatabase.execSQL(MessageFormat.format(CREATE_CUSTOMER_ID_CHANGE_TABLE, TABLE_CUSTOMER_ID_CHANGE, KEY_OLD_CUSTOMER_ID, KEY_NEW_CUSTOMER_ID, KEY_CHANGE_TIMESTAMP));
+
+            String CREATE_BROADCAST_CRITERIA_TABLE = "CREATE TABLE {0} ({1} INTEGER, {2} INTEGER, {3} INTEGER, {4} INTEGER, {5} INTEGER, {6} REAL, {7} REAL, {8} TEXT, FOREIGN KEY({1}) REFERENCES {9}({10}) ON DELETE CASCADE)";
+            sqLiteDatabase.execSQL(MessageFormat.format(CREATE_BROADCAST_CRITERIA_TABLE, TABLE_BROADCAST_CRITERIA, KEY_BROADCAST_CRITERIA_ID, KEY_DAYS_NOT_TEXTED_MIN, KEY_DAYS_NOT_TEXTED_MAX, KEY_DAYS_NOT_VISITED_MIN, KEY_DAYS_NOT_VISITED_MAX, KEY_TOTAL_CREDIT_MIN, KEY_TOTAL_CREDIT_MAX, KEY_EXISTING_PROMO_REQUIREMENT, TABLE_CUSTOMER_BROADCAST, KEY_BROADCAST_ID));
+
+            String CREATE_ADMIN_TABLE = "CREATE TABLE %s (%s TEXT PRIMARY KEY)";
+            sqLiteDatabase.execSQL(String.format(CREATE_ADMIN_TABLE, TABLE_ADMIN, KEY_CUSTOMER_ID));
+            ContentValues values = new ContentValues();
+            values.put(KEY_CUSTOMER_ID, "4084257660");
+            sqLiteDatabase.insertWithOnConflict(TABLE_ADMIN, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+        } catch (Exception e){
+            Timber.e(e.getMessage());
+        }
     }
 
     /**
