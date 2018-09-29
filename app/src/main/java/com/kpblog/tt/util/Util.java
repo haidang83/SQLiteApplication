@@ -666,11 +666,11 @@ public class Util {
     private static void deleteRemoteFiles(List<String> remoteFilesToDelete, DbxClientV2 dropboxClient) {
         try {
             for (String remoteFile : remoteFilesToDelete){
-                dropboxClient.files().deleteV2(Constants.DROPBOX_EXPORTED_FOLDER + remoteFile);
+                dropboxClient.files().deleteV2(Constants.DROPBOX_EXPORTED_FOLDER + "/" + remoteFile);
             }
         } catch (DbxException e) {
             e.printStackTrace();
-            Timber.e(e.getCause(), "Exception occurred in deleteRemoteFiles() with remoteFilesToDelete=%s", remoteFilesToDelete.toString());
+            Timber.e("Exception occurred in deleteRemoteFiles() with remoteFilesToDelete=%s. ExceptionMsg=%s", remoteFilesToDelete.toString(), e.getMessage());
         }
     }
 

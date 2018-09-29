@@ -16,7 +16,7 @@ public class Constants {
     public static final long BUTTON_CLICK_ELAPSE_THRESHOLD = 3000;
 
     public static final int SINGLE_PURCHASE_QUANTITY_LIMIT = 5;
-    public static final int DAYS_TO_KEEP_DB_BACKUP = 7;
+    public static final int DAYS_TO_KEEP_DB_BACKUP = 3;
 
     public static final String SHARED_PREF_ADMIN_CODE_KEY = "adminCode";
     public static final String SHARED_PREF_DAILY_CODE_KEY = "dailyCode";
